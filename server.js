@@ -20,7 +20,7 @@ const clone = x => JSON.parse(JSON.stringify(x));
 
 app.use(express.json({ limit: '12mb' }));
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
-app.get('/health', (_, res) => res.json({ ok: true, version: '1.1.1' }));
+app.get('/health', (_, res) => res.json({ ok: true, version: '1.1.2' }));
 app.use((req, res, next) => {
   if (req.method !== 'GET') return next();
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -33,6 +33,10 @@ function send(pid, msg) {
 function broadcast(g) { for (const p of g.players) send(p.id, { type: 'STATE', state: stateFor(g, p.id) }); }
 function stateFor(g, pid) {
   const s = clone(g);
+  // Keep image traffic small: during submission, ordinary players only need their own images.
+  if (g.phase === 'IMAGE_SUBMISSION' && !g.players.find(x => x.id === pid)?.host) {
+    s.sources = g.sources.filter(x => x.ownerId === pid);
+  }
   // Hide source images outside a player's personal R1 selection.
   if (g.phase === 'ROUND' && g.round === 0) {
     const allowed = new Set(g.roundSources[pid] || []);
