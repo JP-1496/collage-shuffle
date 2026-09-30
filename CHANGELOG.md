@@ -1,31 +1,36 @@
 # Collage Changelog
 
-## V1.2.0 — Testing Mode & Freehand Cutting
-- Added a 2-player minimum for testing builds so two PCs can run a complete Shuffle game.
-- Final/public rule remains a 3-player minimum; this is controlled by `COLLAGE_TEST_MODE` and can be disabled for production.
-- Replaced circular cutting with a freehand lasso: players draw any closed shape around the material they want.
-- The cut piece preserves the irregular shape with transparency.
-- The selected material is removed from the player's working source image.
-- Added a live freehand cut-path preview.
-- Updated the editor instructions to describe freehand cutting.
+## V1.1.0 — Online test build
+- Reworked into a single browser-first Node/Express/WebSocket app.
+- Added Render-ready deployment configuration.
+- Added public WebSocket path and health endpoint.
+- Rebuilt UI with colourful, playful visual language.
+- Added persistent local nickname/avatar.
+- Added upload, drag/drop and Ctrl+V image paste.
+- Added automatic image-submission progression.
+- Added random Round 1 source subsets.
+- Added travelling piece sets between rounds.
+- Added server-controlled creation/voting timers.
+- Retained anonymous voting, reveal and final scoring.
+- Added this changelog.
 
-## V1.1.3 — Gameplay Interaction Fixes
-- Join Lobby nickname field.
-- Local image upload fixes.
-- Editor timer no longer rebuilds the page repeatedly.
-- Cutting interaction rewritten.
+## V1.0.0 — Initial prototype
+- Initial Shuffle multiplayer skeleton.
+- Host/join lobby.
+- Prompt submission.
+- Image submission.
+- Round/voting state machine.
+- Basic canvas editor shell.
+- Voting and final scores.
 
-## V1.1.2 — Editor & Performance Fix
-- Fixed prompt input resets.
-- Reduced editor re-rendering and unnecessary state traffic.
-- Added circular cutting prototype.
 
-## V1.1.1 — Online Deployment Fix
-- Fixed production static serving and Render port handling.
-- Added health endpoint and deployment robustness.
-
-## V1.1.0 — Online Test Build
-- First Render-ready browser multiplayer build.
-
-## V1.0.0 — Initial Prototype
-- Initial Shuffle lobby, prompts, rounds, voting and scoring prototype.
+## V1.2.1 — Input & Editor Reliability
+- Added nickname entry directly to Join Game.
+- Added explicit Continue/Submit Images action after required uploads are present.
+- Fixed file picker upload path.
+- Kept Ctrl+V and drag/drop image import.
+- Reworked editor rendering so timer updates do not rebuild the editor.
+- Reworked piece dragging to update the DOM directly while dragging.
+- Added freehand lasso cutting: draw any closed shape and extract only that shape as a transparent piece.
+- Removed the selected area from the player's local working copy of the source image.
+- Testing minimum remains 2 players.
