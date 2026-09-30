@@ -1,5 +1,13 @@
 # Changelog
 
+## V1.4.1
+- Rebuilt the Host Game settings screen into a compact, card-based Gartic Phone-style layout.
+- Host settings now use compact controls arranged in a responsive grid instead of a long vertical list.
+- Lobby name, player count, image pool, Round 1 images, creation time, voting time and image approval all fit into one viewport.
+- Added clear icons, helper text, mode badge, build badge and a dedicated bottom action bar.
+- Kept the no-scroll requirement: the host setup is designed to fit the available viewport rather than hiding overflow.
+
+
 ## V1.4.0
 - Fixed viewport layout so screens are designed to fit within one browser page rather than simply hiding overflow.
 - Removed all mid-game creation reveals: collages remain hidden through every creation round.
