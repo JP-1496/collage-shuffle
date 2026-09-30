@@ -1,4 +1,4 @@
-# Collage — Shuffle V1.1.0
+# Collage — Shuffle V1.1.1
 
 A browser-first multiplayer party game prototype. The server is Node.js + Express + WebSocket; the client is plain browser HTML/CSS/JS so it can be deployed directly as one Render Web Service.
 
@@ -31,7 +31,7 @@ The app uses the browser's WebSocket connection automatically. Do not use `local
 Host a lobby, send them the Render URL, and tell them the 4-letter lobby code. Everyone opens the same URL in their own browser/device.
 
 ## Changelog
-### V1.1.0 — Online test build
+### V1.1.1 — Online test build
 - Browser-first Node/Express/WebSocket server.
 - Render deployment configuration included.
 - Public WebSocket path `/ws` and health endpoint `/health`.
@@ -46,7 +46,7 @@ Host a lobby, send them the Render URL, and tell them the 4-letter lobby code. E
 - Creation and voting timers are server controlled.
 - Anonymous voting and round reveal retained.
 - Final leaderboard retained.
-- Version shown as V1.1.0.
+- Version shown as V1.1.1.
 
 ### Known limitations
 - The cut tool currently creates a circular-style piece from a click rather than true pixel-accurate circular extraction; this is the next editor refinement.

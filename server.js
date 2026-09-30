@@ -2,8 +2,12 @@ import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const http = createServer(app);
 const wss = new WebSocketServer({ server: http, path: '/ws' });
 const PORT = process.env.PORT || 10000;
@@ -14,9 +18,13 @@ const code = () => Math.random().toString(36).slice(2, 6).toUpperCase();
 const shuffle = a => [...a].sort(() => Math.random() - .5);
 const clone = x => JSON.parse(JSON.stringify(x));
 
-app.use(express.static('public'));
-app.get('/health', (_, res) => res.json({ ok: true, version: '1.1.0' }));
-app.use((_, res) => res.sendFile(process.cwd() + '/public/index.html'));
+app.use(express.json({ limit: '12mb' }));
+app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
+app.get('/health', (_, res) => res.json({ ok: true, version: '1.1.1' }));
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 function send(pid, msg) {
   const ws = sockets.get(pid);
@@ -124,4 +132,4 @@ wss.on('connection', ws => {
   ws.on('close',()=>{ for(const g of games.values()){ const p=g.players.find(p=>sockets.get(p.id)===ws); if(p){p.connected=false; broadcast(g);} } });
 });
 
-http.listen(PORT,'0.0.0.0',()=>console.log(`Collage 1.1.0 listening on ${PORT}`));
+http.listen(PORT,'0.0.0.0',()=>console.log(`Collage 1.1.1 listening on 0.0.0.0:${PORT}`));
