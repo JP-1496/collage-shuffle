@@ -1,5 +1,12 @@
 # Collage Changelog
 
+## V1.3.1 — Join Screen / Cache Fix
+- Join Game now presents a large, explicit nickname field directly on the join screen.
+- Added visible instruction that the profile screen is not required.
+- Added cache-busting to the frontend script so deployed browsers do not keep an older join screen.
+- Version label updated to V1.3.1.
+
+
 ## V1.3.0 — Verified Join, Upload & 2-Player Test Build
 - Join Game now has a nickname field directly on the join screen.
 - Testing minimum is 2 players throughout the host/start flow and server validation.
