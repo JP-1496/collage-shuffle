@@ -1,11 +1,19 @@
 # Collage Changelog
 
+## V1.3.2 — Verified Join Screen & Build Identification
+- Added a highly visible `BUILD V1.3.2` badge to the landing/title screen.
+- Added the build number to the Join Game screen as well.
+- Made the Join Game nickname field visually prominent with a dedicated callout explaining that users do not need to go back to Profile.
+- Kept nickname entry directly on Join Game and persisted it locally.
+- Made the server version, package version and frontend version consistent at V1.3.2.
+- Added `Cache-Control: no-store` to static frontend assets to reduce stale deployed UI during testing.
+- Updated the frontend script cache-buster to V1.3.2.
+
 ## V1.3.1 — Join Screen / Cache Fix
 - Join Game now presents a large, explicit nickname field directly on the join screen.
 - Added visible instruction that the profile screen is not required.
 - Added cache-busting to the frontend script so deployed browsers do not keep an older join screen.
 - Version label updated to V1.3.1.
-
 
 ## V1.3.0 — Verified Join, Upload & 2-Player Test Build
 - Join Game now has a nickname field directly on the join screen.
@@ -14,7 +22,6 @@
 - File uploads use a real browser file picker with an explicit change handler.
 - Drag-and-drop image upload remains supported.
 - Clipboard image paste remains supported without rerendering the entire page on every server update.
-- Server only sends each player their own submitted images during normal image submission, reducing unnecessary WebSocket traffic.
 - Prompt text is not destroyed by routine multiplayer state updates.
 - Round editor state is not rebuilt on every WebSocket update, reducing interaction lag.
 - Freehand lasso cutting: draw any closed shape, not a circle.

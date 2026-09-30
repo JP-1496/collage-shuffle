@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.3.0';
+const VERSION = '1.3.2';
 const app = express();
 const http = createServer(app);
 const wss = new WebSocketServer({ server: http, path: '/ws' });
@@ -16,7 +16,7 @@ const code = () => { let c; do c=Math.random().toString(36).slice(2,6).toUpperCa
 const shuffle = a => [...a].sort(() => Math.random() - 0.5);
 const clone = x => JSON.parse(JSON.stringify(x));
 
-app.use(express.static('public'));
+app.use(express.static('public', { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 app.get('/health', (_, res) => res.json({ ok:true, version:VERSION }));
 app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
