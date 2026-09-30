@@ -11,6 +11,8 @@ const __dirname = path.dirname(__filename);
 const http = createServer(app);
 const wss = new WebSocketServer({ server: http, path: '/ws' });
 const PORT = process.env.PORT || 10000;
+const TEST_MODE = process.env.COLLAGE_TEST_MODE !== 'false';
+const MIN_PLAYERS = TEST_MODE ? 2 : 3;
 const games = new Map();
 const sockets = new Map();
 const id = () => crypto.randomUUID();
@@ -20,7 +22,7 @@ const clone = x => JSON.parse(JSON.stringify(x));
 
 app.use(express.json({ limit: '12mb' }));
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
-app.get('/health', (_, res) => res.json({ ok: true, version: '1.1.2' }));
+app.get('/health', (_, res) => res.json({ ok: true, version: '1.2.0' }));
 app.use((req, res, next) => {
   if (req.method !== 'GET') return next();
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -104,7 +106,7 @@ function handle(g,pid,m) {
   switch(m.type) {
     case 'SET_READY': if(g.phase==='LOBBY'&&!p.host)p.ready=!!m.ready; break;
     case 'SET_SETTINGS': if(g.phase==='LOBBY'&&p.host) g.settings={...g.settings,...m.settings}; break;
-    case 'START': if(g.phase==='LOBBY'&&p.host&&g.players.length>=3) startGame(g); break;
+    case 'START': if(g.phase==='LOBBY'&&p.host&&g.players.length>=MIN_PLAYERS) startGame(g); break;
     case 'ADD_SOURCE': if(g.phase==='IMAGE_SUBMISSION'&&sourceCount(g,pid)<g.settings.imagesPerPlayer&&typeof m.data==='string'&&m.data.startsWith('data:image/')) { g.sources.push({id:id(),data:m.data,ownerId:pid,approved:true}); if(g.players.every(x=>sourceCount(g,x.id)>=g.settings.imagesPerPlayer)) { if(g.settings.hostApproval) transition(g,'HOST_APPROVAL'); else beginPrompts(g); } } break;
     case 'APPROVAL_DONE': if(g.phase==='HOST_APPROVAL'&&p.host) { g.sources=g.sources.filter(x=>x.approved!==false); if(g.sources.length) beginPrompts(g); } break;
     case 'DELETE_SOURCE': if(g.phase==='HOST_APPROVAL'&&p.host) g.sources=g.sources.filter(x=>x.id!==m.sourceId); break;
@@ -122,7 +124,7 @@ wss.on('connection', ws => {
       const m=JSON.parse(String(raw));
       if(m.type==='HOST_CREATE') {
         const pid=id(); const host={id:pid,name:String(m.name||'Player').slice(0,24),avatar:m.avatar||'😀',host:true,ready:true,connected:true};
-        const settings={capacity:Math.max(3,Math.min(16,Number(m.settings?.capacity)||8)),imagesPerPlayer:Math.max(1,Math.min(10,Number(m.settings?.imagesPerPlayer)||2)),round1Images:Math.max(1,Math.min(12,Number(m.settings?.round1Images)||4)),hostApproval:!!m.settings?.hostApproval,creationSeconds:Math.max(30,Number(m.settings?.creationSeconds)||120),votingSeconds:Math.max(15,Number(m.settings?.votingSeconds)||45)};
+        const settings={capacity:Math.max(MIN_PLAYERS,Math.min(16,Number(m.settings?.capacity)||8)),imagesPerPlayer:Math.max(1,Math.min(10,Number(m.settings?.imagesPerPlayer)||2)),round1Images:Math.max(1,Math.min(12,Number(m.settings?.round1Images)||4)),hostApproval:!!m.settings?.hostApproval,creationSeconds:Math.max(30,Number(m.settings?.creationSeconds)||120),votingSeconds:Math.max(15,Number(m.settings?.votingSeconds)||45)};
         const g=newGame(String(m.lobbyName||'Collage Game').slice(0,40),settings,host); sockets.set(pid,ws); ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code})); broadcast(g); return;
       }
       if(m.type==='JOIN') {
@@ -136,4 +138,4 @@ wss.on('connection', ws => {
   ws.on('close',()=>{ for(const g of games.values()){ const p=g.players.find(p=>sockets.get(p.id)===ws); if(p){p.connected=false; broadcast(g);} } });
 });
 
-http.listen(PORT,'0.0.0.0',()=>console.log(`Collage 1.1.1 listening on 0.0.0.0:${PORT}`));
+http.listen(PORT,'0.0.0.0',()=>console.log(`Collage test server listening on 0.0.0.0:${PORT} (min players: ${MIN_PLAYERS})`));

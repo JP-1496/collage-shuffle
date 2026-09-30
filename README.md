@@ -1,10 +1,11 @@
-# Collage — Shuffle V1.1.2
+# Collage — Shuffle
 
 Browser-first multiplayer party game prototype.
 
-## Local development
-Requires Node.js for local development only:
+## V1.2.0 testing
+This build allows **2 players** so gameplay can be tested with two PCs. The final game rule remains a minimum of 3 players. Set `COLLAGE_TEST_MODE=false` on the server to restore the 3-player minimum.
 
+### Local
 ```bash
 npm install
 npm start
@@ -12,15 +13,9 @@ npm start
 
 Open http://localhost:10000
 
-## Render deployment
-Use a Render Web Service connected to this repository.
-- Runtime: Node
+### Render
 - Build command: `npm install`
 - Start command: `npm start`
-- Plan: Free
-- No environment variables required
+- Free Web Service is sufficient for prototype testing.
 
-The server listens on `0.0.0.0` and uses Render's `PORT` environment variable automatically.
-
-## Testing notes
-V1.1.2 specifically fixes prompt input resets, image traffic during submission, editor drag lag, and Round 1 circular cutting.
+The app serves the browser client and WebSocket multiplayer server from the same service.
