@@ -1,4 +1,4 @@
-# Collage — Shuffle V1.3.5
+# Collage — Shuffle V1.4.0
 
 Browser-first multiplayer party game prototype.
 

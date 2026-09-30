@@ -1,3 +1,13 @@
+# Changelog
+
+## V1.4.0
+- Fixed viewport layout so screens are designed to fit within one browser page rather than simply hiding overflow.
+- Removed all mid-game creation reveals: collages remain hidden through every creation round.
+- Added a single Final Showcase phase where finished collages are shown prompt-by-prompt and voting happens.
+- Final scores are calculated from Final Showcase votes only.
+- Final results show each player’s highest-voted collage(s), including ties.
+- Added `All` option for Images per player, allowing unlimited image submissions until the player presses Continue.
+
 # Collage Changelog
 
 ## V1.3.5 — Editor Controls & Screen Fit
