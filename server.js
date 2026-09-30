@@ -3,7 +3,8 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.3.2';
+const VERSION = '1.3.3';
+const MIN_PLAYERS = 2;
 const app = express();
 const http = createServer(app);
 const wss = new WebSocketServer({ server: http, path: '/ws' });
@@ -34,7 +35,7 @@ function stateFor(g,pid){
   if(g.phase==='VOTING' || g.phase==='REVEAL') s.collages=Object.fromEntries(Object.entries(g.collages).map(([k,c])=>[k,{...c,playerId:k}]));
   return s;
 }
-function newGame(name,settings,host){ const g={code:code(),name,phase:'LOBBY',settings,players:[host],sources:[],submittedSources:{},prompts:[],promptOrder:[],round:0,currentPromptId:null,roundSources:{},roundPlayerSets:{},collages:{},travelingSets:{},votes:{},scores:{},lastTally:{},timerEndsAt:null}; games.set(g.code,g); return g; }
+function newGame(name,settings,host){ const g={code:code(),name,phase:'LOBBY',minPlayers:MIN_PLAYERS,settings,players:[host],sources:[],submittedSources:{},prompts:[],promptOrder:[],round:0,currentPromptId:null,roundSources:{},roundPlayerSets:{},collages:{},travelingSets:{},votes:{},scores:{},lastTally:{},timerEndsAt:null}; games.set(g.code,g); return g; }
 function cancelTimer(g){ const t=timers.get(g.code); if(t) clearTimeout(t); timers.delete(g.code); }
 function schedule(g,ms,fn){ cancelTimer(g); const marker=Date.now()+':'+g.phase+':'+g.round; g.timerMarker=marker; timers.set(g.code,setTimeout(()=>{timers.delete(g.code);if(g.timerMarker===marker)fn();},ms)); }
 function transition(g,phase){cancelTimer(g);g.phase=phase;g.timerEndsAt=null;broadcast(g);}
@@ -64,7 +65,7 @@ function handle(g,pid,a){
   const p=g.players.find(x=>x.id===pid);if(!p)return;
   switch(a.type){
     case 'SET_READY': if(g.phase==='LOBBY'&&!p.host)p.ready=!!a.ready; break;
-    case 'START': if(g.phase==='LOBBY'&&p.host&&g.players.length>=2)startGame(g); break;
+    case 'START': if(g.phase==='LOBBY'&&p.host&&g.players.filter(x=>x.connected).length>=MIN_PLAYERS)startGame(g); break;
     case 'ADD_SOURCE': if(g.phase==='IMAGE_SUBMISSION'&&g.sources.filter(s=>s.ownerId===pid).length<g.settings.imagesPerPlayer&&typeof a.data==='string'&&a.data.startsWith('data:image/'))g.sources.push({id:id(),data:a.data,ownerId:pid,approved:true}); break;
     case 'SUBMIT_SOURCES': if(g.phase==='IMAGE_SUBMISSION'&&g.sources.filter(s=>s.ownerId===pid).length>=g.settings.imagesPerPlayer){g.submittedSources[pid]=true;if(g.players.every(x=>g.submittedSources[x.id]))g.settings.hostApproval?transition(g,'HOST_APPROVAL'):beginPrompts(g);} break;
     case 'DELETE_SOURCE': if(g.phase==='HOST_APPROVAL'&&p.host)g.sources=g.sources.filter(x=>x.id!==a.sourceId); break;
