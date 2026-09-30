@@ -1,36 +1,21 @@
 # Collage Changelog
 
-## V1.1.0 — Online test build
-- Reworked into a single browser-first Node/Express/WebSocket app.
-- Added Render-ready deployment configuration.
-- Added public WebSocket path and health endpoint.
-- Rebuilt UI with colourful, playful visual language.
-- Added persistent local nickname/avatar.
-- Added upload, drag/drop and Ctrl+V image paste.
-- Added automatic image-submission progression.
-- Added random Round 1 source subsets.
-- Added travelling piece sets between rounds.
-- Added server-controlled creation/voting timers.
-- Retained anonymous voting, reveal and final scoring.
-- Added this changelog.
+## V1.3.0 — Verified Join, Upload & 2-Player Test Build
+- Join Game now has a nickname field directly on the join screen.
+- Testing minimum is 2 players throughout the host/start flow and server validation.
+- Default test lobby capacity is 2, while the host can raise it to 16.
+- File uploads use a real browser file picker with an explicit change handler.
+- Drag-and-drop image upload remains supported.
+- Clipboard image paste remains supported without rerendering the entire page on every server update.
+- Server only sends each player their own submitted images during normal image submission, reducing unnecessary WebSocket traffic.
+- Prompt text is not destroyed by routine multiplayer state updates.
+- Round editor state is not rebuilt on every WebSocket update, reducing interaction lag.
+- Freehand lasso cutting: draw any closed shape, not a circle.
+- Cut pieces are extracted with transparency and removed from the player's working source image.
+- Round 1 source images are shuffled independently for each player.
+- V1 remains a browser-first online test build for Render.
 
-## V1.0.0 — Initial prototype
-- Initial Shuffle multiplayer skeleton.
-- Host/join lobby.
-- Prompt submission.
-- Image submission.
-- Round/voting state machine.
-- Basic canvas editor shell.
-- Voting and final scores.
-
-
-## V1.2.1 — Input & Editor Reliability
-- Added nickname entry directly to Join Game.
-- Added explicit Continue/Submit Images action after required uploads are present.
-- Fixed file picker upload path.
-- Kept Ctrl+V and drag/drop image import.
-- Reworked editor rendering so timer updates do not rebuild the editor.
-- Reworked piece dragging to update the DOM directly while dragging.
-- Added freehand lasso cutting: draw any closed shape and extract only that shape as a transparent piece.
-- Removed the selected area from the player's local working copy of the source image.
-- Testing minimum remains 2 players.
+## Known testing scope
+- Copycat mode is not included.
+- Active games are stored in server memory for testing; a server restart ends active games.
+- Two-player minimum is a testing-only setting; the intended production minimum remains 3 players.

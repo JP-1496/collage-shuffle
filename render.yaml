@@ -1,8 +1,7 @@
 services:
   - type: web
-    name: collage-shuffle-test
+    name: collage-shuffle
     runtime: node
     plan: free
     buildCommand: npm install
     startCommand: npm start
-    autoDeployTrigger: commit
