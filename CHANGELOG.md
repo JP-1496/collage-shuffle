@@ -1,3 +1,10 @@
+## V1.4.29
+
+- Preserved unsent prompt text when another player submits, preventing live state updates from clearing the draft.
+- Removed client-side round auto-submission so the server remains authoritative for timer expiry.
+- Prevented the submit button from becoming stuck when the WebSocket is unavailable.
+- Bumped runtime, frontend, package and cache-busting version to V1.4.29.
+
 ## V1.4.28
 
 - Fixed image search adding so a failed full-resolution image download falls back to the search thumbnail instead of silently dropping the selected image.
