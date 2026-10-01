@@ -1,5 +1,12 @@
 # Changelog
 
+## V1.4.26
+- Added explicit collage submission acknowledgement so the submitting player receives immediate accepted-submission feedback.
+- Fixed freehand cut pointer handling so drawing continues outside the image area while the cut path is clamped to the image boundary.
+- Bumped the runtime, frontend, package and cache-busting version to V1.4.26.
+
+# Changelog
+
 ## V1.4.25
 - Fixed the multi-round submission lock by resetting the round-finish guard when a new round begins, allowing the final round to transition into Final Showcase after all players submit.
 - Bumped the runtime, frontend, package and cache-busting version to V1.4.25.
