@@ -68,6 +68,9 @@ async function main(){
     action(host,hj.playerId,{type:'SYNC_COLLAGE',pieces:p1});
     action(guest,gj.playerId,{type:'SYNC_COLLAGE',pieces:p2});
     action(host,hj.playerId,{type:'SUBMIT_COLLAGE',pieces:p1});
+    const submittedHost=await nextState(host,s=>s.phase==='ROUND'&&s.round===0&&s.submissionStatus?.[hj.playerId]===true);
+    assert.equal(submittedHost.submissionStatus[hj.playerId],true);
+    assert.equal(submittedHost.submissionStatus[gj.playerId],false);
     action(guest,gj.playerId,{type:'SUBMIT_COLLAGE',pieces:p2});
 
     const r2h=await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
