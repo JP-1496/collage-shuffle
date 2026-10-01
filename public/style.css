@@ -140,3 +140,9 @@ body{height:auto;min-height:100vh;overflow:auto}.shell{height:auto;min-height:10
   }
   .searchResult{height:120px;min-height:120px;}
 }
+
+
+/* V1.4.21 live-test UI fixes */
+.hostShell{height:100dvh;min-height:0;overflow:hidden}
+.hostFooter{flex:0 0 auto}
+@media(max-height:760px) and (min-width:651px){.hostTitle{margin:3px 0 6px}.hostTitle h2{font-size:27px}.hostNameCard{min-height:58px;padding:6px 10px;margin-bottom:6px}.hostSettingsGrid{gap:6px}.settingCard{min-height:64px;padding:6px 8px}.settingCard small{margin:2px 0 3px}.hostFooter{margin-top:6px}.hostActions button{padding:8px 12px}}
