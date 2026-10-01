@@ -41,6 +41,12 @@
 
 # Collage Changelog
 
+## V1.4.6 — Image Search Results
+- Increased in-game image search results from 24 to 100 images per search.
+- Added a dedicated vertical scrollbar to the image results area so large result sets remain accessible.
+- Added descriptive Wikimedia API User-Agent headers for image search/fetch requests.
+
+
 ## V1.3.5 — Editor Controls & Screen Fit
 - All game screens are designed to fit within one viewport without page scrolling.
 - Added cut-tool zoom controls for more precise freehand cuts.
