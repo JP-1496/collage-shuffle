@@ -1,5 +1,12 @@
 # Changelog
 
+## V1.4.11
+- Image pool Ready button now shows the live ready count as `Ready! X/X`.
+- Collage rounds now advance immediately when every player submits instead of waiting for the timer.
+- When a round timer expires, each player's latest server-synced collage is automatically submitted before advancing.
+- Timers now use the server's clock reference on clients and prevent duplicate browser intervals from making countdowns appear to restart.
+- The latest collage edits are synced to the server so timeout auto-submit uses the current collage.
+
 ## V1.4.10
 - Fixed image search cards overlapping vertically.
 - Result rows now use fixed card heights so each row stays clearly separated while remaining five-wide on desktop.
