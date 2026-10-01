@@ -1,3 +1,9 @@
+# Changelog
+
+## V1.4.4
+- Image search result cards now enlarge and lift on hover/focus so the full image is easier to inspect before selecting.
+- Search result cards keep their selection tick while previewing.
+
 ## V1.4.3
 - Reworked image-pool stage: players add the exact host-configured number of images, remove mistakes, and ready up.
 - Image-pool timer automatically advances the game when time expires.
