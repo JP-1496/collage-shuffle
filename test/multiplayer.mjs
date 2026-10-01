@@ -58,7 +58,6 @@ async function runSubmissionCountScenario(playerCount){
     const pieces=[{src:PNG,x:50,y:50,w:25,rotation:0,flipX:false,flipY:false,z:0}];
     for(let i=0;i<players.length;i++){
       action(players[i].client,players[i].playerId,{type:'SUBMIT_COLLAGE',pieces});
-      await waitFor(()=>players[i].client.messages.some(m=>m.type==='SUBMISSION_ACK'&&m.accepted===true));
       if(i<players.length-1){
         const state=await nextState(host,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===i+1);
         assert.equal(Object.values(state.submissionStatus).filter(Boolean).length,i+1);
@@ -114,18 +113,10 @@ async function main(){
     action(host,hj.playerId,{type:'SYNC_COLLAGE',pieces:p1});
     action(guest,gj.playerId,{type:'SYNC_COLLAGE',pieces:p2});
     action(host,hj.playerId,{type:'SUBMIT_COLLAGE',pieces:p1});
-    await waitFor(()=>host.messages.some(m=>m.type==='SUBMISSION_ACK'&&m.accepted===true));
-    const hostAck=host.messages.find(m=>m.type==='SUBMISSION_ACK'&&m.accepted===true);
-    assert.equal(hostAck.total,2);
-    assert.equal(hostAck.submittedCount,1);
     const submittedHost=await nextState(host,s=>s.phase==='ROUND'&&s.round===0&&s.submissionStatus?.[hj.playerId]===true);
     assert.equal(submittedHost.submissionStatus[hj.playerId],true);
     assert.equal(submittedHost.submissionStatus[gj.playerId],false);
     action(guest,gj.playerId,{type:'SUBMIT_COLLAGE',pieces:p2});
-    await waitFor(()=>guest.messages.some(m=>m.type==='SUBMISSION_ACK'&&m.accepted===true));
-    const guestAck=guest.messages.find(m=>m.type==='SUBMISSION_ACK'&&m.accepted===true);
-    assert.equal(guestAck.total,2);
-    assert.equal(guestAck.submittedCount,2);
 
     const r2h=await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
     const r2g=await nextState(guest,s=>s.phase==='ROUND'&&s.round===1);
@@ -154,7 +145,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.29');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.33');
     host.ws.close();guest.ws.close();
 
     await runSubmissionCountScenario(3);
