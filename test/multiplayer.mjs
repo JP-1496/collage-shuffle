@@ -81,6 +81,8 @@ async function main(){
     const host=await connect();
     host.ws.send(JSON.stringify({type:'HOST_CREATE',name:'Host',lobbyName:'Test',settings:{capacity:2,imagesPerPlayer:1,round1Images:1,hostApproval:false}}));
     const hj=await waitFor(()=>host.messages.find(m=>m.type==='JOINED'));
+    assert.match(hj.code,/^[A-HJ-NP-Z2-9]{4}$/);
+    assert.ok(!/[O01I]/.test(hj.code));
     const guest=await connect();
     guest.ws.send(JSON.stringify({type:'JOIN',name:'Guest',code:hj.code}));
     const gj=await waitFor(()=>guest.messages.find(m=>m.type==='JOINED'));
@@ -149,7 +151,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.36');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.37');
     host.ws.close();guest.ws.close();
 
     await runSubmissionCountScenario(3);
