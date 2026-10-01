@@ -1,5 +1,7 @@
 ## V1.4.29
 
+- Expanded automated multiplayer coverage to 2, 3, 4 and 8 players, including per-player submission counts.
+- Added a server-authoritative timer-expiry regression test using a test-only 1-second creation timer.
 - Preserved unsent prompt text when another player submits, preventing live state updates from clearing the draft.
 - Removed client-side round auto-submission so the server remains authoritative for timer expiry.
 - Prevented the submit button from becoming stuck when the WebSocket is unavailable.
