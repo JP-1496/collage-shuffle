@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.24';
+const VERSION = '1.4.25';
 const MIN_PLAYERS = 2;
 const app = express();
 const http = createServer(app);
@@ -88,6 +88,7 @@ function assignRound1Sources(g){
 }
 function scatter(pieces){ return pieces.map((p,i)=>({...clone(p),id:id(),x:15+((i*37)%70),y:15+((i*53)%70),z:i})); }
 function beginRound(g){
+  g.roundFinishing=false;
   if(!g.promptOrder.length) g.promptOrder=shuffle(g.prompts.map(p=>p.id));
   if(g.round>=g.players.length){transition(g,'FINAL');return;}
   const ids=g.players.map(p=>p.id);
