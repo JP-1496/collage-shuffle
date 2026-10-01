@@ -72,7 +72,7 @@ async function runSubmissionCountScenario(playerCount){
 }
 
 async function main(){
-  const server=spawn(process.execPath,['server.js'],{env:{...process.env,PORT:String(PORT)},stdio:['ignore','pipe','pipe']});
+  const server=spawn(process.execPath,['server.js'],{env:{...process.env,PORT:String(PORT),COLLAGE_TEST_MODE:'1'},stdio:['ignore','pipe','pipe']});
   let output='';
   server.stdout.on('data',d=>output+=d);
   server.stderr.on('data',d=>output+=d);
@@ -151,6 +151,28 @@ async function main(){
 
     await runSubmissionCountScenario(3);
     await runSubmissionCountScenario(4);
+    await runSubmissionCountScenario(8);
+
+    const expiryHost=await connect();
+    expiryHost.ws.send(JSON.stringify({type:'HOST_CREATE',name:'ExpiryHost',lobbyName:'Timer Expiry Test',settings:{capacity:2,imagesPerPlayer:1,round1Images:1,hostApproval:false,creationSeconds:1}}));
+    const ehj=await waitFor(()=>expiryHost.messages.find(m=>m.type==='JOINED'));
+    const expiryGuest=await connect();
+    expiryGuest.ws.send(JSON.stringify({type:'JOIN',name:'ExpiryGuest',code:ehj.code}));
+    const egj=await waitFor(()=>expiryGuest.messages.find(m=>m.type==='JOINED'));
+    action(expiryGuest,egj.playerId,{type:'SET_READY',ready:true});
+    action(expiryHost,ehj.playerId,{type:'START'});
+    await nextState(expiryHost,s=>s.phase==='IMAGE_SUBMISSION');
+    action(expiryHost,ehj.playerId,{type:'ADD_SOURCE',data:PNG});
+    action(expiryGuest,egj.playerId,{type:'ADD_SOURCE',data:PNG});
+    action(expiryHost,ehj.playerId,{type:'IMAGE_READY'});
+    action(expiryGuest,egj.playerId,{type:'IMAGE_READY'});
+    await nextState(expiryHost,s=>s.phase==='PROMPT_SUBMISSION');
+    action(expiryHost,ehj.playerId,{type:'ADD_PROMPT',text:'Expiry prompt host'});
+    action(expiryGuest,egj.playerId,{type:'ADD_PROMPT',text:'Expiry prompt guest'});
+    await nextState(expiryHost,s=>s.phase==='ROUND'&&s.round===0);
+    await nextState(expiryHost,s=>s.phase==='ROUND'&&s.round===1,4000);
+    expiryHost.ws.close();
+    expiryGuest.ws.close();
 
     const dhost=await connect();
     dhost.ws.send(JSON.stringify({type:'HOST_CREATE',name:'DisconnectHost',lobbyName:'Disconnect Test',settings:{capacity:2,imagesPerPlayer:1,round1Images:1,hostApproval:false}}));
