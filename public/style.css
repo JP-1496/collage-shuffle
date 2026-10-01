@@ -96,32 +96,47 @@ body{height:auto;min-height:100vh;overflow:auto}.shell{height:auto;min-height:10
 .searchResult .check{position:absolute;top:5px;right:5px;width:27px;height:27px;border-radius:50%;background:var(--green);border:2px solid var(--ink);font-weight:1000;display:grid;place-items:center}.searchEmpty{grid-column:1/-1;display:grid;place-items:center;min-height:220px;font-weight:800;text-align:center}.searchFooter{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:3px dashed #999}.searchFooter span{font-weight:1000}.searchFooter button{min-width:180px}
 @media(max-width:700px){.stageTop{align-items:flex-start}.imageMethods{grid-template-columns:1fr 1fr}.poolGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.poolCard img{height:110px}.searchResults{grid-template-columns:repeat(3,minmax(0,1fr))}.searchBox{max-height:96vh}.searchResults{max-height:65vh}.searchForm{grid-template-columns:1fr}.imageFooter{align-items:stretch;flex-direction:column}.imageFooter button{width:100%}}
 
-/* V1.4.9 — five image cards per row, with full images visible and vertical scrolling */
+/* V1.4.10 — fixed-height result cards prevent vertical overlap */
 .searchResults{
   grid-template-columns:repeat(5,minmax(0,1fr));
-  grid-auto-rows:auto;
+  grid-auto-rows:160px;
   align-content:start;
   gap:10px;
   padding:12px 12px 20px;
 }
 .searchResult{
   width:100%;
-  height:auto;
-  aspect-ratio:1;
+  height:160px;
+  min-height:160px;
+  aspect-ratio:auto;
   justify-self:stretch;
+  align-self:start;
   padding:4px;
 }
 .searchResult img{
+  display:block;
   width:100%;
   height:100%;
   object-fit:contain;
 }
 @media(max-width:900px){
-  .searchResults{grid-template-columns:repeat(4,minmax(0,1fr));}
+  .searchResults{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    grid-auto-rows:140px;
+  }
+  .searchResult{height:140px;min-height:140px;}
 }
 @media(max-width:700px){
-  .searchResults{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .searchResults{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-auto-rows:125px;
+  }
+  .searchResult{height:125px;min-height:125px;}
 }
 @media(max-width:480px){
-  .searchResults{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .searchResults{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-auto-rows:120px;
+  }
+  .searchResult{height:120px;min-height:120px;}
 }
