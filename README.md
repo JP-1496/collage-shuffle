@@ -1,4 +1,4 @@
-# Collage — Shuffle V1.4.9
+# Collage — Shuffle V1.4.10
 
 Browser-first multiplayer party game prototype.
 
@@ -23,8 +23,8 @@ The app listens on `0.0.0.0` and uses Render's `PORT` environment variable.
 6. In Round 1, select a source image, press Cut freehand, draw any closed shape, and cut it out.
 
 
-### V1.4.9
-- Search result gallery now shows five cards across on desktop, with complete images visible using contain-fit.
+### V1.4.10
+- Search result gallery now shows five cards across on desktop, with complete images visible using contain-fit. Fixed card heights keep each row separated without vertical overlap.
 - Removed hover enlargement and edge-shifting behaviour that could clip cards.
 - Search results remain in a dedicated vertical scroll area for browsing large result sets.
 
