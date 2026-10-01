@@ -1,6 +1,10 @@
-# Collage — Shuffle V1.4.39
+# Collage — Shuffle V1.4.40
 
 Browser-first multiplayer party game prototype.
+
+### V1.4.40
+- Fixed round progression when the final connected player submits a collage.
+- Round completion now uses the same server-side finish path as timer expiry, based on all connected players having submitted.
 
 ### V1.4.39
 - Restored the agreed immediate collage submission UI: clicking Submit immediately shows the normal submitted state and count.
