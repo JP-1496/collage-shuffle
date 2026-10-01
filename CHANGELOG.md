@@ -1,5 +1,16 @@
 # Changelog
 
+## V1.4.21
+- Fixed Image Pool ready-state counts by sending authoritative ready state to clients.
+- Fixed the Prompt Submission count not rerendering after a player submits; the live count now shows 1/2, 2/2, etc.
+- Prompt submission now advances correctly once every player has submitted.
+- Simplified Join Game wording to remove the unnecessary profile-screen instruction.
+- Host setup action buttons are kept within the main viewport on shorter desktop screens instead of requiring page scrolling.
+- Image search now searches automatically while typing with a short debounce; the Search button remains available.
+- Image search image fetching now runs in parallel when adding multiple selected images, reducing unnecessary waiting.
+- Added automated coverage for prompt count updates and image-pool ready state.
+
+
 ## V1.4.20
 - Added an automated two-player WebSocket multiplayer test harness.
 - Reduced WebSocket state payloads to player-specific data instead of cloning and broadcasting the full game state.
