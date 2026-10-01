@@ -26,7 +26,7 @@ async function nextState(client, predicate){
 }
 function action(client,playerId,action){client.ws.send(JSON.stringify({type:'ACTION',playerId,action}));}
 
-async function runSubmissionCountScenario(playerCount){
+async function runSubmissionCountScenario(playerCount, reverseOrder=false){
   const clients=[];
   try{
     const host=await connect();
@@ -56,8 +56,9 @@ async function runSubmissionCountScenario(playerCount){
     await nextState(host,s=>s.phase==='ROUND'&&s.round===0);
 
     const pieces=[{src:PNG,x:50,y:50,w:25,rotation:0,flipX:false,flipY:false,z:0}];
-    for(let i=0;i<players.length;i++){
-      action(players[i].client,players[i].playerId,{type:'SUBMIT_COLLAGE',pieces});
+    const submitOrder=reverseOrder?[...players].reverse():players;
+    for(let i=0;i<submitOrder.length;i++){
+      action(submitOrder[i].client,submitOrder[i].playerId,{type:'SUBMIT_COLLAGE',pieces});
       if(i<players.length-1){
         const state=await nextState(host,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===i+1);
         assert.equal(Object.values(state.submissionStatus).filter(Boolean).length,i+1);
@@ -65,7 +66,12 @@ async function runSubmissionCountScenario(playerCount){
       }
     }
 
-    await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
+    const r2=await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
+    assert.equal(r2.round,1);
+    assert.ok(r2.timerEndsAt>Date.now());
+    await sleep(250);
+    const stillR2=await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
+    assert.equal(stillR2.round,1);
   }finally{
     for(const client of clients)client.ws.close();
   }
@@ -151,12 +157,16 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.40');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version  ,'1.4.41');
     host.ws.close();guest.ws.close();
 
-    await runSubmissionCountScenario(3);
-    await runSubmissionCountScenario(4);
-    await runSubmissionCountScenario(8);
+    // Repeat the final-submission transition repeatedly and in both orders.
+    for(let i=0;i<5;i++) await runSubmissionCountScenario(2,i%2===1);
+    for(let i=0;i<3;i++) await runSubmissionCountScenario(3,i%2===1);
+    await runSubmissionCountScenario(4,false);
+    await runSubmissionCountScenario(4,true);
+    await runSubmissionCountScenario(8,false);
+    await runSubmissionCountScenario(8,true);
 
     const expiryHost=await connect();
     expiryHost.ws.send(JSON.stringify({type:'HOST_CREATE',name:'ExpiryHost',lobbyName:'Timer Expiry Test',settings:{capacity:2,imagesPerPlayer:1,round1Images:1,hostApproval:false,creationSeconds:1}}));
