@@ -1,5 +1,12 @@
 # Changelog
 
+## V1.4.17
+- Removed the fragile per-submission acknowledgement message.
+- The server's normal `STATE` message is now the single authoritative source for submitted status.
+- When the final player submits, the server transitions directly through the normal round-completion path without leaving the submitting client stuck on `Submitting…`.
+- Timer expiry uses the same authoritative round-completion path.
+- Updated build/User-Agent version strings to V1.4.17.
+
 ## V1.4.16
 - Added explicit server acknowledgement for canvas submissions.
 - The submitting client now receives an immediate accepted-submission state instead of relying only on the next general state update.
