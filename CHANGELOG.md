@@ -1,5 +1,10 @@
 # Changelog
 
+## V1.4.9
+- Changed the image search gallery to five cards across on desktop.
+- Each card keeps a square layout and shows the complete image with contain-fit.
+- Results remain vertically scrollable, with responsive 4/3/2-column layouts on smaller screens.
+
 ## V1.4.8
 - Changed the image search results to a single vertical gallery.
 - Each result now has its own full-height card instead of being compressed into stacked grid rows.
