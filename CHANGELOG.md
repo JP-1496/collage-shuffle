@@ -1,5 +1,14 @@
 # Changelog
 
+## V1.4.19
+- Fixed live Prompt Submission count updates when another player submits.
+- Fixed prompt-stage disconnects so a disconnected player's missing prompt is replaced with a placeholder and the game can continue.
+- Fixed the server build/version mismatch; current runtime and API version strings are V1.4.19.
+- Fixed image-set rotation so no set can ever return to its original owner.
+- Round-to-round set assignments now use derangements and avoid repeating the exact previous assignment where possible.
+- Clarified the rotation rule: with N rounds, sets cannot both visit every other player exactly once and never return to their owner; the no-owner-return rule takes priority.
+- Host Approval retains the requirement for at least one image before continuing; the client handles the zero-image state clearly.
+
 ## V1.4.18
 - Fixed the Prompt Submission screen not visibly updating after a prompt was submitted.
 - Added immediate `✓ Prompt submitted!` feedback and prevents duplicate prompt submissions.
