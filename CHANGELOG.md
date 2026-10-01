@@ -1,5 +1,10 @@
 # Changelog
 
+## V1.4.8
+- Changed the image search results to a single vertical gallery.
+- Each result now has its own full-height card instead of being compressed into stacked grid rows.
+- The complete image remains visible with contain-fit, and the results area is scrolled vertically.
+
 ## V1.4.7
 - Search result cards now show the complete image immediately using contain-fit.
 - Removed hover enlargement and edge-shifting behaviour that could clip cards.
