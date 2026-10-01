@@ -1,6 +1,11 @@
-# Collage — Shuffle V1.4.40
+# Collage — Shuffle V1.4.41
 
 Browser-first multiplayer party game prototype.
+
+### V1.4.41
+- Made round completion a single server-authoritative path: the round is locked, the active timer is cancelled, missing submissions are filled, and the server immediately starts the next round or final showcase.
+- Removed the previous split between submission-triggered advancement and timer-triggered advancement.
+- Expanded automated multiplayer coverage with repeated 2-player runs in both submission orders plus 3-, 4- and 8-player runs, explicitly asserting the transition to Round 2.
 
 ### V1.4.40
 - Fixed round progression when the final connected player submits a collage.
