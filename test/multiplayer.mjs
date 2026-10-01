@@ -190,7 +190,7 @@ async function main(){
     await nextState(partialHost,s=>s.phase==='PROMPT_SUBMISSION');
     action(partialHost,phj.playerId,{type:'ADD_PROMPT',text:'Partial timer host'}); action(partialGuest,pgj.playerId,{type:'ADD_PROMPT',text:'Partial timer guest'});
     await nextState(partialHost,s=>s.phase==='ROUND'&&s.round===0);
-    action(partialHost,phj.playerId,{type:'SUBMIT_COLLAGE',pieces});
+    action(partialHost,phj.playerId,{type:'SUBMIT_COLLAGE',pieces:p1});
     await nextState(partialHost,s=>s.phase==='ROUND'&&s.round===1,4000);
     partialHost.ws.close(); partialGuest.ws.close();
     expiryHost.ws.close();
