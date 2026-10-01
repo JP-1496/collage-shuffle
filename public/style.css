@@ -96,27 +96,32 @@ body{height:auto;min-height:100vh;overflow:auto}.shell{height:auto;min-height:10
 .searchResult .check{position:absolute;top:5px;right:5px;width:27px;height:27px;border-radius:50%;background:var(--green);border:2px solid var(--ink);font-weight:1000;display:grid;place-items:center}.searchEmpty{grid-column:1/-1;display:grid;place-items:center;min-height:220px;font-weight:800;text-align:center}.searchFooter{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:3px dashed #999}.searchFooter span{font-weight:1000}.searchFooter button{min-width:180px}
 @media(max-width:700px){.stageTop{align-items:flex-start}.imageMethods{grid-template-columns:1fr 1fr}.poolGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.poolCard img{height:110px}.searchResults{grid-template-columns:repeat(3,minmax(0,1fr))}.searchBox{max-height:96vh}.searchResults{max-height:65vh}.searchForm{grid-template-columns:1fr}.imageFooter{align-items:stretch;flex-direction:column}.imageFooter button{width:100%}}
 
-/* V1.4.8 — image search uses a simple vertical gallery so every result card is fully visible */
+/* V1.4.9 — five image cards per row, with full images visible and vertical scrolling */
 .searchResults{
-  grid-template-columns:1fr;
+  grid-template-columns:repeat(5,minmax(0,1fr));
   grid-auto-rows:auto;
   align-content:start;
   gap:10px;
   padding:12px 12px 20px;
 }
 .searchResult{
-  width:min(100%,760px);
-  height:190px;
-  aspect-ratio:auto;
-  justify-self:center;
-  padding:5px;
+  width:100%;
+  height:auto;
+  aspect-ratio:1;
+  justify-self:stretch;
+  padding:4px;
 }
 .searchResult img{
   width:100%;
   height:100%;
   object-fit:contain;
 }
+@media(max-width:900px){
+  .searchResults{grid-template-columns:repeat(4,minmax(0,1fr));}
+}
 @media(max-width:700px){
-  .searchResults{grid-template-columns:1fr;}
-  .searchResult{height:160px;width:100%;}
+  .searchResults{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media(max-width:480px){
+  .searchResults{grid-template-columns:repeat(2,minmax(0,1fr));}
 }
