@@ -15,4 +15,6 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - run: node --check public/app.js
+      - run: node --check server.js
       - run: npm test
