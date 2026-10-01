@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.35';
+const VERSION = '1.4.36';
 const MIN_PLAYERS = 2;
 const app = express();
 const http = createServer(app);
@@ -118,6 +118,7 @@ function beginRound(g){
 }
 function finishRound(g){
   if(g.phase!=='ROUND' || g.roundFinishing)return;
+  cancelTimer(g);
   g.roundFinishing=true;
   for(const [pid,c] of Object.entries(g.collages)){
     if(!c.submitted){
@@ -183,7 +184,7 @@ function handle(g,pid,a){
           g.finalResults[g.round].collages[pid]=clone(c);
         }
         const submittedCount=Object.values(g.collages).filter(c=>c.submitted).length;
-        if(submittedCount===g.players.length)finishRound(g);
+        if(submittedCount>=g.players.length)finishRound(g);
       }
       break;
     }
