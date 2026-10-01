@@ -1,5 +1,11 @@
 # Changelog
 
+## V1.4.12
+- Fixed multi-select image search adding only part of the selection or duplicating images.
+- Search selections are now fetched first and sent to the server as one atomic batch.
+- The server applies the batch against the remaining image limit and ignores exact duplicate images.
+- Added an `Adding…` state to prevent double-clicking the Add button while images are being fetched.
+
 ## V1.4.11
 - Image pool Ready button now shows the live ready count as `Ready! X/X`.
 - Collage rounds now advance immediately when every player submits instead of waiting for the timer.
