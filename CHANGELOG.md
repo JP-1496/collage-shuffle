@@ -1,5 +1,14 @@
 # Changelog
 
+## V1.4.20
+- Added an automated two-player WebSocket multiplayer test harness.
+- Reduced WebSocket state payloads to player-specific data instead of cloning and broadcasting the full game state.
+- Creation rounds now expose only the current player's working pieces; travelling sets and previous/future collages stay server-side.
+- Final Showcase now exposes only the current prompt's collages; future showcase images remain private until their turn.
+- Canvas sync now sends the updated state only back to the editing player instead of broadcasting large image payloads to everyone.
+- Locked Final Showcase voting after a player's first vote and validated vote targets against the current showcase.
+- Updated build and Wikimedia User-Agent version strings to V1.4.20.
+
 ## V1.4.19
 - Fixed live Prompt Submission count updates when another player submits.
 - Fixed prompt-stage disconnects so a disconnected player's missing prompt is replaced with a placeholder and the game can continue.
