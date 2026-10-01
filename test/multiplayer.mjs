@@ -47,9 +47,13 @@ async function main(){
     action(host,hj.playerId,{type:'ADD_SOURCE',data:PNG});
     action(guest,gj.playerId,{type:'ADD_SOURCE',data:PNG});
     action(host,hj.playerId,{type:'IMAGE_READY'});
+    const imageReadyState=await nextState(host,s=>s.phase==='IMAGE_SUBMISSION'&&s.imageReady?.[hj.playerId]===true);
+    assert.equal(imageReadyState.imageReady[hj.playerId],true);
     action(guest,gj.playerId,{type:'IMAGE_READY'});
     await nextState(host,s=>s.phase==='PROMPT_SUBMISSION');
     action(host,hj.playerId,{type:'ADD_PROMPT',text:'Make a terrible hat'});
+    const onePrompt=await nextState(host,s=>s.phase==='PROMPT_SUBMISSION'&&s.prompts.length===1);
+    assert.equal(onePrompt.prompts.length,1);
     action(guest,gj.playerId,{type:'ADD_PROMPT',text:'Make a tiny car'});
 
     const r1h=await nextState(host,s=>s.phase==='ROUND'&&s.round===0);
@@ -93,7 +97,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.20');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.21');
     host.ws.close();guest.ws.close();
 
     const dhost=await connect();
