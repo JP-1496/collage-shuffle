@@ -1,3 +1,9 @@
+## V1.4.27
+
+- Hardened collage submission acknowledgement so every submission receives an explicit accepted/count response, including repeat/idempotent submits.
+- Added a multiplayer regression assertion that the first collage submission is explicitly acknowledged before the second player submits.
+- Bumped runtime, frontend, package and cache-busting version to V1.4.27.
+
 # Changelog
 
 ## V1.4.26
