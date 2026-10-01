@@ -1,3 +1,9 @@
+## V1.4.28
+
+- Fixed image search adding so a failed full-resolution image download falls back to the search thumbnail instead of silently dropping the selected image.
+- Shows an error when fewer images could be loaded than were selected.
+- Bumped runtime, frontend, package and cache-busting version to V1.4.28.
+
 ## V1.4.27
 
 - Hardened collage submission acknowledgement so every submission receives an explicit accepted/count response, including repeat/idempotent submits.
