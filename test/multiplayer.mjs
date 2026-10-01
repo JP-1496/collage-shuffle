@@ -92,7 +92,28 @@ async function main(){
 
     assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.20');
     host.ws.close();guest.ws.close();
-    console.log('PASS: multiplayer flow, privacy filtering, rotation, vote locking and version endpoint');
+
+    const dhost=await connect();
+    dhost.ws.send(JSON.stringify({type:'HOST_CREATE',name:'DisconnectHost',lobbyName:'Disconnect Test',settings:{capacity:2,imagesPerPlayer:1,round1Images:1,hostApproval:false}}));
+    const dhj=await waitFor(()=>dhost.messages.find(m=>m.type==='JOINED'));
+    const dguest=await connect();
+    dguest.ws.send(JSON.stringify({type:'JOIN',name:'DisconnectGuest',code:dhj.code}));
+    const dgj=await waitFor(()=>dguest.messages.find(m=>m.type==='JOINED'));
+    await nextState(dhost,s=>s.phase==='LOBBY'&&s.players.length===2);
+    action(dhost,dhj.playerId,{type:'START'});
+    await nextState(dhost,s=>s.phase==='IMAGE_SUBMISSION');
+    action(dhost,dhj.playerId,{type:'ADD_SOURCE',data:PNG});
+    action(dguest,dgj.playerId,{type:'ADD_SOURCE',data:PNG});
+    action(dhost,dhj.playerId,{type:'IMAGE_READY'});
+    action(dguest,dgj.playerId,{type:'IMAGE_READY'});
+    await nextState(dhost,s=>s.phase==='PROMPT_SUBMISSION');
+    action(dhost,dhj.playerId,{type:'ADD_PROMPT',text:'Continue after disconnect'});
+    dguest.ws.close();
+    const disconnectedRound=await nextState(dhost,s=>s.phase==='ROUND'&&s.round===0);
+    assert.ok(disconnectedRound.prompts.some(p=>p.ownerId===dgj.playerId&&p.placeholder===true));
+    dhost.ws.close();
+
+    console.log('PASS: multiplayer flow, privacy filtering, rotation, vote locking, disconnect handling and version endpoint');
   }finally{
     server.kill();
     await sleep(100);
