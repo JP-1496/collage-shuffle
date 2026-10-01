@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.15';
+const VERSION = '1.4.16';
 const MIN_PLAYERS = 2;
 const app = express();
 const http = createServer(app);
@@ -25,6 +25,16 @@ app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
 function send(pid, msg){ const ws=sockets.get(pid); if(ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(msg)); }
 function broadcast(g){ for(const p of g.players) send(p.id,{type:'STATE',state:stateFor(g,p.id)}); }
+function checkExpiredRounds(){
+  const now=Date.now();
+  for(const g of games.values()){
+    if(g.timerEndsAt && now>=g.timerEndsAt){
+      if(g.phase==='ROUND') finishRound(g);
+      else if(g.phase==='FINAL_SHOWCASE') finishFinalPrompt(g);
+      else if(g.phase==='IMAGE_SUBMISSION') finishImageSubmission(g);
+    }
+  }
+}
 function stateFor(g,pid){
   const s=clone(g);
   s.serverNow=Date.now();
@@ -125,7 +135,20 @@ function handle(g,pid,a){
     case 'APPROVAL_DONE': if(g.phase==='HOST_APPROVAL'&&p.host){g.sources=g.sources.filter(x=>x.approved!==false);if(g.sources.length)beginPrompts(g);} break;
     case 'ADD_PROMPT': if(g.phase==='PROMPT_SUBMISSION'&&!g.prompts.some(x=>x.ownerId===pid)&&String(a.text||'').trim()){g.prompts.push({id:id(),text:String(a.text).trim().slice(0,500),ownerId:pid});if(g.prompts.length===g.players.length){g.promptOrder=shuffle(g.prompts.map(x=>x.id));g.round=0;beginRound(g);}} break;
     case 'SYNC_COLLAGE': if(g.phase==='ROUND'){const c=g.collages[pid];if(c&&!c.submitted)c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));}break;
-    case 'SUBMIT_COLLAGE': if(g.phase==='ROUND'){const c=g.collages[pid];if(c&&!c.submitted){c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));c.submitted=true;g.travelingSets[pid]=clone(c.pieces);g.finalResults[g.round].collages[pid]=clone(c);}if(Object.values(g.collages).every(c=>c.submitted))finishRound(g);}break;
+    case 'SUBMIT_COLLAGE': {
+      if(g.phase==='ROUND'){
+        const c=g.collages[pid];
+        if(c&&!c.submitted){
+          c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));
+          c.submitted=true;
+          g.travelingSets[pid]=clone(c.pieces);
+          g.finalResults[g.round].collages[pid]=clone(c);
+          send(pid,{type:'SUBMIT_ACCEPTED',round:g.round,submittedCount:Object.values(g.collages).filter(x=>x.submitted).length,total:g.players.length});
+        }
+        if(Object.values(g.collages).every(c=>c.submitted))finishRound(g);
+      }
+      break;
+    }
     case 'FINAL_VOTE': if(g.phase==='FINAL_SHOWCASE'&&a.targetId&&a.targetId!==pid){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=a.targetId;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected)finishFinalPrompt(g);}break;
   }
   broadcast(g);
@@ -138,4 +161,5 @@ wss.on('connection',ws=>{
   }catch(e){ws.send(JSON.stringify({type:'ERROR',message:'Invalid message.'}));}});
   ws.on('close',()=>{for(const g of games.values()){const p=g.players.find(p=>sockets.get(p.id)===ws);if(p){p.connected=false;broadcast(g);}}});
 });
+setInterval(checkExpiredRounds,250);
 http.listen(PORT,'0.0.0.0',()=>console.log(`Collage ${VERSION} listening on ${PORT}`));
