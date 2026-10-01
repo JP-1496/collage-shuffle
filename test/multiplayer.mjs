@@ -113,6 +113,10 @@ async function main(){
     action(host,hj.playerId,{type:'SYNC_COLLAGE',pieces:p1});
     action(guest,gj.playerId,{type:'SYNC_COLLAGE',pieces:p2});
     action(host,hj.playerId,{type:'SUBMIT_COLLAGE',pieces:p1});
+    action(host,hj.playerId,{type:'SUBMIT_COLLAGE',pieces:p1});
+    await sleep(100);
+    const duplicateState=host.messages.slice(-10).reverse().find(m=>m.type==='STATE'&&m.state.phase==='ROUND')?.state;
+    assert.equal(duplicateState?.submissionStatus?.[hj.playerId],true);
     const submittedHost=await nextState(host,s=>s.phase==='ROUND'&&s.round===0&&s.submissionStatus?.[hj.playerId]===true);
     assert.equal(submittedHost.submissionStatus[hj.playerId],true);
     assert.equal(submittedHost.submissionStatus[gj.playerId],false);
@@ -145,7 +149,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.33');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.35');
     host.ws.close();guest.ws.close();
 
     await runSubmissionCountScenario(3);
