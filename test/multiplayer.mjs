@@ -26,6 +26,49 @@ async function nextState(client, predicate){
 }
 function action(client,playerId,action){client.ws.send(JSON.stringify({type:'ACTION',playerId,action}));}
 
+async function runSubmissionCountScenario(playerCount){
+  const clients=[];
+  try{
+    const host=await connect();
+    clients.push(host);
+    host.ws.send(JSON.stringify({type:'HOST_CREATE',name:'CountHost',lobbyName:`Count Test ${playerCount}`,settings:{capacity:playerCount,imagesPerPlayer:1,round1Images:1,hostApproval:false}}));
+    const joined=await waitFor(()=>host.messages.find(m=>m.type==='JOINED'));
+    const players=[{client:host,playerId:joined.playerId}];
+
+    for(let i=1;i<playerCount;i++){
+      const guest=await connect();
+      clients.push(guest);
+      guest.ws.send(JSON.stringify({type:'JOIN',name:`CountGuest${i}`,code:joined.code}));
+      const gj=await waitFor(()=>guest.messages.find(m=>m.type==='JOINED'));
+      players.push({client:guest,playerId:gj.playerId});
+    }
+
+    await nextState(host,s=>s.phase==='LOBBY'&&s.players.length===playerCount);
+    for(const p of players.slice(1))action(p.client,p.playerId,{type:'SET_READY',ready:true});
+    action(host,joined.playerId,{type:'START'});
+    await nextState(host,s=>s.phase==='IMAGE_SUBMISSION');
+
+    for(const p of players)action(p.client,p.playerId,{type:'ADD_SOURCE',data:PNG});
+    for(const p of players)action(p.client,p.playerId,{type:'IMAGE_READY'});
+    await nextState(host,s=>s.phase==='PROMPT_SUBMISSION');
+
+    for(let i=0;i<players.length;i++)action(players[i].client,players[i].playerId,{type:'ADD_PROMPT',text:`Count prompt ${i+1}`});
+    await nextState(host,s=>s.phase==='ROUND'&&s.round===0);
+
+    const pieces=[{src:PNG,x:50,y:50,w:25,rotation:0,flipX:false,flipY:false,z:0}];
+    for(let i=0;i<players.length;i++){
+      action(players[i].client,players[i].playerId,{type:'SUBMIT_COLLAGE',pieces});
+      const state=await nextState(host,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===i+1);
+      assert.equal(Object.values(state.submissionStatus).filter(Boolean).length,i+1);
+      assert.equal(state.players.length,playerCount);
+    }
+
+    await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
+  }finally{
+    for(const client of clients)client.ws.close();
+  }
+}
+
 async function main(){
   const server=spawn(process.execPath,['server.js'],{env:{...process.env,PORT:String(PORT)},stdio:['ignore','pipe','pipe']});
   let output='';
@@ -100,8 +143,11 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.23');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.24');
     host.ws.close();guest.ws.close();
+
+    await runSubmissionCountScenario(3);
+    await runSubmissionCountScenario(4);
 
     const dhost=await connect();
     dhost.ws.send(JSON.stringify({type:'HOST_CREATE',name:'DisconnectHost',lobbyName:'Disconnect Test',settings:{capacity:2,imagesPerPlayer:1,round1Images:1,hostApproval:false}}));
