@@ -1,5 +1,10 @@
 # Changelog
 
+## V1.4.7
+- Search result cards now show the complete image immediately using contain-fit.
+- Removed hover enlargement and edge-shifting behaviour that could clip cards.
+- Search results remain in a dedicated vertical scroll area for browsing large result sets.
+
 ## V1.4.5
 - Search image hover previews no longer get clipped at the left/right edges of the results grid.
 - Search results overflow is allowed so enlarged previews can rise above neighbouring cards.
