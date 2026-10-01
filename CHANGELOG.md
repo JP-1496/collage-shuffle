@@ -1,5 +1,13 @@
 # Changelog
 
+## V1.4.24
+- Fixed round progression after the final collage submission so the transition happens atomically and cannot be triggered twice.
+- Added regression coverage for 2-player submission progression.
+- Added explicit 3-player and 4-player submission-count coverage, verifying the round advances only after all players submit.
+- Bumped the runtime, frontend, package and test version to V1.4.24.
+
+# Changelog
+
 ## V1.4.21
 - Fixed Image Pool ready-state counts by sending authoritative ready state to clients.
 - Fixed the Prompt Submission count not rerendering after a player submits; the live count now shows 1/2, 2/2, etc.
