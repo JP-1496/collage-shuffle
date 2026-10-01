@@ -1,3 +1,8 @@
+## V1.4.34
+- Hardened collage submission with explicit server acknowledgement and bounded retry handling.
+- Fixed prompt input focus/cursor preservation when another player submits.
+- Bumped server, client and package versions to 1.4.34.
+
 ## V1.4.31
 
 - Corrective release: synchronised the live server runtime with the V1.4.30 submission-acknowledgement client changes.
