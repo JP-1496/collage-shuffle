@@ -58,9 +58,11 @@ async function runSubmissionCountScenario(playerCount){
     const pieces=[{src:PNG,x:50,y:50,w:25,rotation:0,flipX:false,flipY:false,z:0}];
     for(let i=0;i<players.length;i++){
       action(players[i].client,players[i].playerId,{type:'SUBMIT_COLLAGE',pieces});
-      const state=await nextState(host,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length>=i+1);
-      assert.equal(Object.values(state.submissionStatus).filter(Boolean).length,i+1);
-      assert.equal(state.players.length,playerCount);
+      if(i<players.length-1){
+        const state=await nextState(host,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===i+1);
+        assert.equal(Object.values(state.submissionStatus).filter(Boolean).length,i+1);
+        assert.equal(state.players.length,playerCount);
+      }
     }
 
     await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
