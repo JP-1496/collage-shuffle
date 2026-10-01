@@ -180,7 +180,7 @@ function handle(g,pid,a){
           c.submitted=true;
           g.travelingSets[pid]=clone(c.pieces);
           g.finalResults[g.round].collages[pid]=clone(c);
-          // The authoritative submission state is broadcast below via STATE.
+          send(pid,{type:'SUBMISSION_ACK'});
         }
         if(Object.values(g.collages).every(c=>c.submitted))finishRound(g);
       }
