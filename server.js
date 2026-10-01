@@ -20,7 +20,7 @@ const clone = x => JSON.parse(JSON.stringify(x));
 app.use(express.static('public', { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 app.get('/health', (_, res) => res.json({ ok:true, version:VERSION }));
 app.get('/api/image-search', async (req,res)=>{try{const q=String(req.query.q||'').trim().slice(0,120);if(!q)return res.json({results:[]});const u=new URL('https://commons.wikimedia.org/w/api.php');u.searchParams.set('action','query');u.searchParams.set('generator','search');u.searchParams.set('gsrsearch',q);u.searchParams.set('gsrnamespace','6');u.searchParams.set('gsrlimit','100');u.searchParams.set('prop','imageinfo');u.searchParams.set('iiprop','url|mime');u.searchParams.set('iiurlwidth','320');u.searchParams.set('format','json');const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.19 (image search feature)'}});if(!r.ok)throw new Error('search');const j=await r.json();const results=Object.values(j.query?.pages||{}).map(x=>x.imageinfo?.[0]).filter(x=>x?.url&&x?.mime?.startsWith('image/')).map(x=>({thumb:x.thumburl||x.url,url:x.url}));res.json({results});}catch(e){res.status(502).json({error:'Image search unavailable'});}});
-app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.17 (image search feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
+app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.19 (image search feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
 app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
 function send(pid, msg){ const ws=sockets.get(pid); if(ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(msg)); }
@@ -79,6 +79,7 @@ function beginRound(g){
   if(g.round>=g.players.length){transition(g,'FINAL');return;}
   const ids=g.players.map(p=>p.id);
   g.currentPromptId=g.promptOrder[g.round];
+  const previous=g.roundPlayerSets;
   g.roundPlayerSets={};
   // Every round uses a derangement: every set goes to a different player,
   // and no set can ever return to its original owner. This intentionally
@@ -87,11 +88,11 @@ function beginRound(g){
   // also forbidding the original owner.
   const n=ids.length;
   let perm;
-  const previous=g.round>0?g.players.map(p=>g.roundPlayerSets[p.id]):null;
+  const previousMap=g.round>0?previous:null;
   do{
     perm=shuffle(ids);
   }while(n>1 && perm.some((recipient,i)=>recipient===ids[i]) ||
-         (previous && n>2 && perm.some((recipient,i)=>recipient===previous[i])));
+         (previousMap && n>2 && perm.some((recipient,i)=>recipient===previousMap[ids[i]])));
   for(let i=0;i<n;i++)g.roundPlayerSets[ids[i]]=perm[i];
   g.votes={};g.collages={};
   if(g.round===0){assignRound1Sources(g);for(const p of g.players)g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:[],submitted:false};}
