@@ -1,5 +1,10 @@
 # Changelog
 
+## V1.4.25
+- Fixed the multi-round submission lock by resetting the round-finish guard when a new round begins, allowing the final round to transition into Final Showcase after all players submit.
+- Bumped the runtime, frontend, package and cache-busting version to V1.4.25.
+
+
 ## V1.4.24
 - Fixed round progression after the final collage submission so the transition happens atomically and cannot be triggered twice.
 - Added regression coverage for 2-player submission progression.
