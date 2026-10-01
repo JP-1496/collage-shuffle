@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.19';
+const VERSION = '1.4.20';
 const MIN_PLAYERS = 2;
 const app = express();
 const http = createServer(app);
@@ -19,8 +19,8 @@ const clone = x => JSON.parse(JSON.stringify(x));
 
 app.use(express.static('public', { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 app.get('/health', (_, res) => res.json({ ok:true, version:VERSION }));
-app.get('/api/image-search', async (req,res)=>{try{const q=String(req.query.q||'').trim().slice(0,120);if(!q)return res.json({results:[]});const u=new URL('https://commons.wikimedia.org/w/api.php');u.searchParams.set('action','query');u.searchParams.set('generator','search');u.searchParams.set('gsrsearch',q);u.searchParams.set('gsrnamespace','6');u.searchParams.set('gsrlimit','100');u.searchParams.set('prop','imageinfo');u.searchParams.set('iiprop','url|mime');u.searchParams.set('iiurlwidth','320');u.searchParams.set('format','json');const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.19 (image search feature)'}});if(!r.ok)throw new Error('search');const j=await r.json();const results=Object.values(j.query?.pages||{}).map(x=>x.imageinfo?.[0]).filter(x=>x?.url&&x?.mime?.startsWith('image/')).map(x=>({thumb:x.thumburl||x.url,url:x.url}));res.json({results});}catch(e){res.status(502).json({error:'Image search unavailable'});}});
-app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.19 (image search feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
+app.get('/api/image-search', async (req,res)=>{try{const q=String(req.query.q||'').trim().slice(0,120);if(!q)return res.json({results:[]});const u=new URL('https://commons.wikimedia.org/w/api.php');u.searchParams.set('action','query');u.searchParams.set('generator','search');u.searchParams.set('gsrsearch',q);u.searchParams.set('gsrnamespace','6');u.searchParams.set('gsrlimit','100');u.searchParams.set('prop','imageinfo');u.searchParams.set('iiprop','url|mime');u.searchParams.set('iiurlwidth','320');u.searchParams.set('format','json');const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.20 (image search feature)'}});if(!r.ok)throw new Error('search');const j=await r.json();const results=Object.values(j.query?.pages||{}).map(x=>x.imageinfo?.[0]).filter(x=>x?.url&&x?.mime?.startsWith('image/')).map(x=>({thumb:x.thumburl||x.url,url:x.url}));res.json({results});}catch(e){res.status(502).json({error:'Image search unavailable'});}});
+app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.20 (image search feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
 app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
 function send(pid, msg){ const ws=sockets.get(pid); if(ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(msg)); }
@@ -36,17 +36,30 @@ function checkExpiredRounds(){
   }
 }
 function stateFor(g,pid){
-  const s=clone(g);
-  s.serverNow=Date.now();
-  // Never expose every player's source images to everyone during normal submission.
+  const s={
+    code:g.code,name:g.name,phase:g.phase,minPlayers:g.minPlayers,settings:g.settings,
+    players:g.players,prompts:g.prompts,promptOrder:g.promptOrder,round:g.round,
+    currentPromptId:g.currentPromptId,roundPlayerSets:{},timerEndsAt:g.timerEndsAt,
+    serverNow:Date.now(),sources:[],collages:{},submissionStatus:{},
+    finalResults:[],finalIndex:g.finalIndex,scores:g.scores,bestCollages:g.phase==='FINAL'?g.bestCollages:{}
+  };
   if(g.phase==='IMAGE_SUBMISSION') s.sources=g.sources.filter(x=>x.ownerId===pid);
   else if(g.phase==='HOST_APPROVAL') s.sources=g.sources;
-  else if(g.phase==='ROUND' && g.round===0){ const allowed=new Set(g.roundSources[pid]||[]); s.sources=g.sources.filter(x=>allowed.has(x.id)); }
-  else s.sources=[];
-  // Creations are completely hidden during all creation rounds. They are only exposed in the final showcase.
-  if(g.phase==='ROUND'){s.collages={};s.submissionStatus=Object.fromEntries(Object.entries(g.collages).map(([k,c])=>[k,!!c.submitted]));}
-  if(g.phase==='FINAL_SHOWCASE'){const r=g.finalResults[g.finalIndex]||{collages:{}};s.collages=Object.fromEntries(Object.entries(r.collages).map(([k,c])=>[k,{...c,playerId:k}]));}
-  else s.collages={};
+  else if(g.phase==='ROUND' && g.round===0){
+    const allowed=new Set(g.roundSources[pid]||[]);
+    s.sources=g.sources.filter(x=>allowed.has(x.id));
+  }
+  if(g.phase==='ROUND'){
+    s.currentPieces=clone(g.collages[pid]?.pieces||[]);
+    s.roundPlayerSets[pid]=g.roundPlayerSets[pid]||null;
+    s.submissionStatus=Object.fromEntries(Object.entries(g.collages).map(([k,c])=>[k,!!c.submitted]));
+  }
+  if(g.phase==='FINAL_SHOWCASE'){
+    s.finalResults=g.finalResults.map((r,i)=>i===g.finalIndex
+      ? {promptId:r.promptId,collages:Object.fromEntries(Object.entries(r.collages||{}).map(([k,c])=>[k,{...c,playerId:k}]))}
+      : {promptId:r.promptId});
+    s.myFinalVote=g.finalVotes[g.finalIndex]?.[pid]||null;
+  }
   return s;
 }
 function newGame(name,settings,host){ const g={code:code(),name,phase:'LOBBY',minPlayers:MIN_PLAYERS,settings,players:[host],sources:[],submittedSources:{},prompts:[],promptOrder:[],round:0,currentPromptId:null,roundSources:{},roundPlayerSets:{},collages:{},travelingSets:{},votes:{},scores:{},lastTally:{},finalResults:[],finalIndex:0,finalVotes:{},bestCollages:{},timerEndsAt:null}; games.set(g.code,g); return g; }
@@ -156,7 +169,7 @@ function handle(g,pid,a){
     case 'DELETE_SOURCE': if(g.phase==='HOST_APPROVAL'&&p.host)g.sources=g.sources.filter(x=>x.id!==a.sourceId); break;
     case 'APPROVAL_DONE': if(g.phase==='HOST_APPROVAL'&&p.host){g.sources=g.sources.filter(x=>x.approved!==false);if(g.sources.length)beginPrompts(g);} break;
     case 'ADD_PROMPT': if(g.phase==='PROMPT_SUBMISSION'&&!g.prompts.some(x=>x.ownerId===pid)&&String(a.text||'').trim()){g.prompts.push({id:id(),text:String(a.text).trim().slice(0,500),ownerId:pid});if(g.prompts.length===g.players.length){g.promptOrder=shuffle(g.prompts.map(x=>x.id));g.round=0;beginRound(g);}} break;
-    case 'SYNC_COLLAGE': if(g.phase==='ROUND'){const c=g.collages[pid];if(c&&!c.submitted)c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));}break;
+    case 'SYNC_COLLAGE': if(g.phase==='ROUND'){const c=g.collages[pid];if(c&&!c.submitted){c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));send(pid,{type:'STATE',state:stateFor(g,pid)});return;}}break;
     case 'SUBMIT_COLLAGE': {
       if(g.phase==='ROUND'){
         const c=g.collages[pid];
@@ -171,7 +184,7 @@ function handle(g,pid,a){
       }
       break;
     }
-    case 'FINAL_VOTE': if(g.phase==='FINAL_SHOWCASE'&&a.targetId&&a.targetId!==pid){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=a.targetId;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected)finishFinalPrompt(g);}break;
+    case 'FINAL_VOTE': {const result=g.finalResults[g.finalIndex];const target=String(a.targetId||'');if(g.phase==='FINAL_SHOWCASE'&&result?.collages?.[target]&&target!==pid&&!g.finalVotes[g.finalIndex]?.[pid]){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=target;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected)finishFinalPrompt(g);}}break;
   }
   broadcast(g);
 }
