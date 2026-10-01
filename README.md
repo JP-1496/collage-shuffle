@@ -1,6 +1,11 @@
-# Collage — Shuffle V1.4.23
+# Collage — Shuffle V1.4.36
 
 Browser-first multiplayer party game prototype.
+
+### V1.4.36
+- Hardened round completion so the server cancels the active round timer when finishing and immediately advances once all submissions are received.
+- Added client-side timer-expiry submission as a fallback so an unanswered player is submitted automatically when the creation timer reaches zero.
+- Added automated tests for full submission, timer-only expiry, and partial submission followed by timer expiry.
 
 ## Tests
 `npm test` runs the automated two-player multiplayer/WebSocket flow.
