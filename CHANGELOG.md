@@ -1,5 +1,13 @@
 # Changelog
 
+## V1.4.15
+- Fixed the canvas submission client state so a manual Submit click is tracked separately from timer auto-submit.
+- Added an explicit submission-in-flight state so the same client cannot send duplicate canvas submissions.
+- The submitting client now shows `Submitting…` until the server confirms the submission.
+- Once confirmed, the button remains locked as `✓ Submitted X/X`.
+- A player's submission no longer uses the timer auto-submit guard, so the remaining player's timer continues normally.
+- Submission state resets cleanly when the game enters the next round.
+
 ## V1.4.14
 - Fixed image-set rotation so a player's original set is never assigned back to that player.
 - Each set visits every other player exactly once across the game rounds.
