@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.20';
+const VERSION = '1.4.21';
 const MIN_PLAYERS = 2;
 const app = express();
 const http = createServer(app);
@@ -19,7 +19,7 @@ const clone = x => JSON.parse(JSON.stringify(x));
 
 app.use(express.static('public', { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 app.get('/health', (_, res) => res.json({ ok:true, version:VERSION }));
-app.get('/api/image-search', async (req,res)=>{try{const q=String(req.query.q||'').trim().slice(0,120);if(!q)return res.json({results:[]});const u=new URL('https://commons.wikimedia.org/w/api.php');u.searchParams.set('action','query');u.searchParams.set('generator','search');u.searchParams.set('gsrsearch',q);u.searchParams.set('gsrnamespace','6');u.searchParams.set('gsrlimit','100');u.searchParams.set('prop','imageinfo');u.searchParams.set('iiprop','url|mime');u.searchParams.set('iiurlwidth','320');u.searchParams.set('format','json');const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.20 (image search feature)'}});if(!r.ok)throw new Error('search');const j=await r.json();const results=Object.values(j.query?.pages||{}).map(x=>x.imageinfo?.[0]).filter(x=>x?.url&&x?.mime?.startsWith('image/')).map(x=>({thumb:x.thumburl||x.url,url:x.url}));res.json({results});}catch(e){res.status(502).json({error:'Image search unavailable'});}});
+app.get('/api/image-search', async (req,res)=>{try{const q=String(req.query.q||'').trim().slice(0,120);if(!q)return res.json({results:[]});const u=new URL('https://commons.wikimedia.org/w/api.php');u.searchParams.set('action','query');u.searchParams.set('generator','search');u.searchParams.set('gsrsearch',q);u.searchParams.set('gsrnamespace','6');u.searchParams.set('gsrlimit','100');u.searchParams.set('prop','imageinfo');u.searchParams.set('iiprop','url|mime');u.searchParams.set('iiurlwidth','320');u.searchParams.set('format','json');const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.21 (image search feature)'}});if(!r.ok)throw new Error('search');const j=await r.json();const results=Object.values(j.query?.pages||{}).map(x=>x.imageinfo?.[0]).filter(x=>x?.url&&x?.mime?.startsWith('image/')).map(x=>({thumb:x.thumburl||x.url,url:x.url}));res.json({results});}catch(e){res.status(502).json({error:'Image search unavailable'});}});
 app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.20 (image search feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
 app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
