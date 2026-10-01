@@ -1,4 +1,4 @@
-# Collage — Shuffle V1.4.18
+# Collage — Shuffle V1.4.19
 
 Browser-first multiplayer party game prototype.
 
@@ -22,6 +22,9 @@ The app listens on `0.0.0.0` and uses Render's `PORT` environment variable.
 5. Submit prompts.
 6. In Round 1, select a source image, press Cut freehand, draw any closed shape, and cut it out.
 
+
+### V1.4.19
+- Fixed live prompt counts, prompt-stage disconnect handling, image-set rotation, and version consistency.
 
 ### V1.4.18
 - Fixed prompt submission feedback and live submission-state updates.
