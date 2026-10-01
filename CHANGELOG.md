@@ -1,3 +1,10 @@
+## V1.4.30
+
+- Made collage submission acknowledgement robust to delayed or missed state updates by accepting the server ACK locally and retrying the idempotent submission up to three times when confirmation is delayed.
+- Clears pending submission retries as soon as authoritative submitted state arrives or the round changes.
+- Added direct client-side handling for rejected submission acknowledgements.
+- Bumped runtime, frontend, package and cache-busting version to V1.4.30.
+
 ## V1.4.29
 
 - Expanded automated multiplayer coverage to 2, 3, 4 and 8 players, including per-player submission counts.
