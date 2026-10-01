@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.17';
+const VERSION = '1.4.19';
 const MIN_PLAYERS = 2;
 const app = express();
 const http = createServer(app);
@@ -19,7 +19,7 @@ const clone = x => JSON.parse(JSON.stringify(x));
 
 app.use(express.static('public', { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 app.get('/health', (_, res) => res.json({ ok:true, version:VERSION }));
-app.get('/api/image-search', async (req,res)=>{try{const q=String(req.query.q||'').trim().slice(0,120);if(!q)return res.json({results:[]});const u=new URL('https://commons.wikimedia.org/w/api.php');u.searchParams.set('action','query');u.searchParams.set('generator','search');u.searchParams.set('gsrsearch',q);u.searchParams.set('gsrnamespace','6');u.searchParams.set('gsrlimit','100');u.searchParams.set('prop','imageinfo');u.searchParams.set('iiprop','url|mime');u.searchParams.set('iiurlwidth','320');u.searchParams.set('format','json');const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.17 (image search feature)'}});if(!r.ok)throw new Error('search');const j=await r.json();const results=Object.values(j.query?.pages||{}).map(x=>x.imageinfo?.[0]).filter(x=>x?.url&&x?.mime?.startsWith('image/')).map(x=>({thumb:x.thumburl||x.url,url:x.url}));res.json({results});}catch(e){res.status(502).json({error:'Image search unavailable'});}});
+app.get('/api/image-search', async (req,res)=>{try{const q=String(req.query.q||'').trim().slice(0,120);if(!q)return res.json({results:[]});const u=new URL('https://commons.wikimedia.org/w/api.php');u.searchParams.set('action','query');u.searchParams.set('generator','search');u.searchParams.set('gsrsearch',q);u.searchParams.set('gsrnamespace','6');u.searchParams.set('gsrlimit','100');u.searchParams.set('prop','imageinfo');u.searchParams.set('iiprop','url|mime');u.searchParams.set('iiurlwidth','320');u.searchParams.set('format','json');const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.19 (image search feature)'}});if(!r.ok)throw new Error('search');const j=await r.json();const results=Object.values(j.query?.pages||{}).map(x=>x.imageinfo?.[0]).filter(x=>x?.url&&x?.mime?.startsWith('image/')).map(x=>({thumb:x.thumburl||x.url,url:x.url}));res.json({results});}catch(e){res.status(502).json({error:'Image search unavailable'});}});
 app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.17 (image search feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
 app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
@@ -55,7 +55,20 @@ function schedule(g,ms,fn){ cancelTimer(g); const marker=Date.now()+':'+g.phase+
 function transition(g,phase){cancelTimer(g);g.phase=phase;g.timerEndsAt=null;broadcast(g);}
 function startGame(g){g.phase='IMAGE_SUBMISSION';g.imageReady={};g.timerEndsAt=Date.now()+g.settings.imageSeconds*1000;broadcast(g);schedule(g,g.settings.imageSeconds*1000,()=>finishImageSubmission(g));}
 function finishImageSubmission(g){if(g.phase!=='IMAGE_SUBMISSION')return;for(const p of g.players)g.imageReady[p.id]=true;g.submittedSources={};for(const p of g.players)g.submittedSources[p.id]=true;if(g.settings.hostApproval)transition(g,'HOST_APPROVAL');else beginPrompts(g);}
-function beginPrompts(g){g.phase='PROMPT_SUBMISSION';g.prompts=[];g.promptOrder=[];broadcast(g);}
+function beginPrompts(g){g.phase='PROMPT_SUBMISSION';g.prompts=[];g.promptOrder=[];g.timerEndsAt=null;broadcast(g);}
+function finishPromptSubmission(g){
+  if(g.phase!=='PROMPT_SUBMISSION')return;
+  const connected=g.players.filter(p=>p.connected);
+  for(const p of g.players){
+    if(!p.connected&&!g.prompts.some(x=>x.ownerId===p.id))
+      g.prompts.push({id:id(),text:'Create something for this player who disconnected.',ownerId:p.id,placeholder:true});
+  }
+  if(connected.every(p=>g.prompts.some(x=>x.ownerId===p.id))||connected.length===0){
+    g.promptOrder=shuffle(g.prompts.map(x=>x.id));
+    g.round=0;
+    beginRound(g);
+  }
+}
 function assignRound1Sources(g){
   const pool=g.sources.filter(s=>s.approved!==false);
   for(const p of g.players){ const wanted=g.settings.round1Images==='all'?pool.length:Math.min(g.settings.round1Images,pool.length); g.roundSources[p.id]=shuffle(pool).slice(0,wanted).map(x=>x.id); }
@@ -67,11 +80,19 @@ function beginRound(g){
   const ids=g.players.map(p=>p.id);
   g.currentPromptId=g.promptOrder[g.round];
   g.roundPlayerSets={};
-  // Each image set is assigned to a different player every round and never
-  // returns to its original owner. Over N rounds, each set visits every other player once.
+  // Every round uses a derangement: every set goes to a different player,
+  // and no set can ever return to its original owner. This intentionally
+  // allows a set to revisit a player in later rounds because N rounds and
+  // "visit every other player exactly once" cannot both be true while
+  // also forbidding the original owner.
   const n=ids.length;
-  const offset=(g.round+1)%n;
-  for(let i=0;i<n;i++) g.roundPlayerSets[ids[i]]=ids[(i+offset)%n];
+  let perm;
+  const previous=g.round>0?g.players.map(p=>g.roundPlayerSets[p.id]):null;
+  do{
+    perm=shuffle(ids);
+  }while(n>1 && perm.some((recipient,i)=>recipient===ids[i]) ||
+         (previous && n>2 && perm.some((recipient,i)=>recipient===previous[i])));
+  for(let i=0;i<n;i++)g.roundPlayerSets[ids[i]]=perm[i];
   g.votes={};g.collages={};
   if(g.round===0){assignRound1Sources(g);for(const p of g.players)g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:[],submitted:false};}
   else {for(const p of g.players){const owner=g.roundPlayerSets[p.id];g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:scatter(g.travelingSets[owner]||[]),submitted:false};}}
@@ -159,7 +180,7 @@ wss.on('connection',ws=>{
     if(m.type==='JOIN'){const c=String(m.code||'').trim().toUpperCase(),g=games.get(c),name=String(m.name||'').trim();if(!g||g.phase!=='LOBBY'){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is unavailable.'}));return;}if(g.players.length>=g.settings.capacity){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is full.'}));return;}if(!name){ws.send(JSON.stringify({type:'ERROR',message:'Enter a nickname before joining.'}));return;}const pid=id();const pl={id:pid,name:name.slice(0,24),avatar:m.avatar||'😀',host:false,ready:false,connected:true};g.players.push(pl);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
     if(m.type==='ACTION'){const pid=m.playerId;if(sockets.get(pid)!==ws)return;const g=[...games.values()].find(x=>x.players.some(p=>p.id===pid));if(g)handle(g,pid,m.action);}
   }catch(e){ws.send(JSON.stringify({type:'ERROR',message:'Invalid message.'}));}});
-  ws.on('close',()=>{for(const g of games.values()){const p=g.players.find(p=>sockets.get(p.id)===ws);if(p){p.connected=false;broadcast(g);}}});
+  ws.on('close',()=>{for(const g of games.values()){const p=g.players.find(p=>sockets.get(p.id)===ws);if(p){p.connected=false;if(g.phase==='PROMPT_SUBMISSION')finishPromptSubmission(g);else broadcast(g);}}});
 });
 setInterval(checkExpiredRounds,250);
 http.listen(PORT,'0.0.0.0',()=>console.log(`Collage ${VERSION} listening on ${PORT}`));
