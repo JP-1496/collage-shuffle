@@ -180,8 +180,9 @@ function handle(g,pid,a){
           c.submitted=true;
           g.travelingSets[pid]=clone(c.pieces);
           g.finalResults[g.round].collages[pid]=clone(c);
-          send(pid,{type:'SUBMISSION_ACK'});
         }
+        const submittedCount=Object.values(g.collages).filter(x=>x.submitted).length;
+        send(pid,{type:'SUBMISSION_ACK',accepted:!!c?.submitted,submittedCount,total:g.players.length});
         if(Object.values(g.collages).every(c=>c.submitted))finishRound(g);
       }
       break;
