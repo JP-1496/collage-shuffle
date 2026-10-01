@@ -40,7 +40,7 @@ function stateFor(g,pid){
     code:g.code,name:g.name,phase:g.phase,minPlayers:g.minPlayers,settings:g.settings,
     players:g.players,prompts:g.prompts,promptOrder:g.promptOrder,round:g.round,
     currentPromptId:g.currentPromptId,roundPlayerSets:{},timerEndsAt:g.timerEndsAt,
-    serverNow:Date.now(),sources:[],collages:{},submissionStatus:{},
+    serverNow:Date.now(),sources:[],imageReady:g.phase==='IMAGE_SUBMISSION'?g.imageReady:{},collages:{},submissionStatus:{},
     finalResults:[],finalIndex:g.finalIndex,scores:g.scores,bestCollages:g.phase==='FINAL'?g.bestCollages:{}
   };
   if(g.phase==='IMAGE_SUBMISSION') s.sources=g.sources.filter(x=>x.ownerId===pid);
