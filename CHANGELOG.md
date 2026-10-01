@@ -1,5 +1,9 @@
 # Changelog
 
+## V1.4.10
+- Fixed image search cards overlapping vertically.
+- Result rows now use fixed card heights so each row stays clearly separated while remaining five-wide on desktop.
+
 ## V1.4.9
 - Changed the image search gallery to five cards across on desktop.
 - Each card keeps a square layout and shows the complete image with contain-fit.
