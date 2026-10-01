@@ -1,4 +1,4 @@
-# Collage — Shuffle V1.4.16
+# Collage — Shuffle V1.4.17
 
 Browser-first multiplayer party game prototype.
 
@@ -23,8 +23,12 @@ The app listens on `0.0.0.0` and uses Render's `PORT` environment variable.
 6. In Round 1, select a source image, press Cut freehand, draw any closed shape, and cut it out.
 
 
+### V1.4.17
+- Fixed the final-player submission transition so the submitting client does not remain stuck on `Submitting…`.
+- Submission confirmation now comes from the authoritative server state, with timer expiry using the same round-completion path.
+
 ### V1.4.16
-- Added server-confirmed canvas submission acknowledgement and a server-side timer expiry watchdog.
+- Added a server-side timer expiry watchdog.
 
 ### V1.4.15
 - Fixed the canvas submission handshake and separated manual submission from timer auto-submit state.
