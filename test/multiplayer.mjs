@@ -149,7 +149,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.35');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.36');
     host.ws.close();guest.ws.close();
 
     await runSubmissionCountScenario(3);
@@ -174,6 +174,25 @@ async function main(){
     action(expiryGuest,egj.playerId,{type:'ADD_PROMPT',text:'Expiry prompt guest'});
     await nextState(expiryHost,s=>s.phase==='ROUND'&&s.round===0);
     await nextState(expiryHost,s=>s.phase==='ROUND'&&s.round===1,4000);
+
+    // Partial-submit timer expiry: one player submits, the other does not; the timer must still advance.
+    const partialHost=await connect();
+    partialHost.ws.send(JSON.stringify({type:'HOST_CREATE',name:'PartialHost',lobbyName:'Partial Timer Test',settings:{capacity:2,imagesPerPlayer:1,round1Images:1,hostApproval:false,creationSeconds:1}}));
+    const phj=await waitFor(()=>partialHost.messages.find(m=>m.type==='JOINED'));
+    const partialGuest=await connect();
+    partialGuest.ws.send(JSON.stringify({type:'JOIN',name:'PartialGuest',code:phj.code}));
+    const pgj=await waitFor(()=>partialGuest.messages.find(m=>m.type==='JOINED'));
+    action(partialGuest,pgj.playerId,{type:'SET_READY',ready:true});
+    action(partialHost,phj.playerId,{type:'START'});
+    await nextState(partialHost,s=>s.phase==='IMAGE_SUBMISSION');
+    action(partialHost,phj.playerId,{type:'ADD_SOURCE',data:PNG}); action(partialGuest,pgj.playerId,{type:'ADD_SOURCE',data:PNG});
+    action(partialHost,phj.playerId,{type:'IMAGE_READY'}); action(partialGuest,pgj.playerId,{type:'IMAGE_READY'});
+    await nextState(partialHost,s=>s.phase==='PROMPT_SUBMISSION');
+    action(partialHost,phj.playerId,{type:'ADD_PROMPT',text:'Partial timer host'}); action(partialGuest,pgj.playerId,{type:'ADD_PROMPT',text:'Partial timer guest'});
+    await nextState(partialHost,s=>s.phase==='ROUND'&&s.round===0);
+    action(partialHost,phj.playerId,{type:'SUBMIT_COLLAGE',pieces});
+    await nextState(partialHost,s=>s.phase==='ROUND'&&s.round===1,4000);
+    partialHost.ws.close(); partialGuest.ws.close();
     expiryHost.ws.close();
     expiryGuest.ws.close();
 
