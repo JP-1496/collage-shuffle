@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.10';
+const VERSION = '1.4.11';
 const MIN_PLAYERS = 2;
 const app = express();
 const http = createServer(app);
@@ -19,14 +19,15 @@ const clone = x => JSON.parse(JSON.stringify(x));
 
 app.use(express.static('public', { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 app.get('/health', (_, res) => res.json({ ok:true, version:VERSION }));
-app.get('/api/image-search', async (req,res)=>{try{const q=String(req.query.q||'').trim().slice(0,120);if(!q)return res.json({results:[]});const u=new URL('https://commons.wikimedia.org/w/api.php');u.searchParams.set('action','query');u.searchParams.set('generator','search');u.searchParams.set('gsrsearch',q);u.searchParams.set('gsrnamespace','6');u.searchParams.set('gsrlimit','100');u.searchParams.set('prop','imageinfo');u.searchParams.set('iiprop','url|mime');u.searchParams.set('iiurlwidth','320');u.searchParams.set('format','json');const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.10 (image search feature)'}});if(!r.ok)throw new Error('search');const j=await r.json();const results=Object.values(j.query?.pages||{}).map(x=>x.imageinfo?.[0]).filter(x=>x?.url&&x?.mime?.startsWith('image/')).map(x=>({thumb:x.thumburl||x.url,url:x.url}));res.json({results});}catch(e){res.status(502).json({error:'Image search unavailable'});}});
-app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.10 (image search feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
+app.get('/api/image-search', async (req,res)=>{try{const q=String(req.query.q||'').trim().slice(0,120);if(!q)return res.json({results:[]});const u=new URL('https://commons.wikimedia.org/w/api.php');u.searchParams.set('action','query');u.searchParams.set('generator','search');u.searchParams.set('gsrsearch',q);u.searchParams.set('gsrnamespace','6');u.searchParams.set('gsrlimit','100');u.searchParams.set('prop','imageinfo');u.searchParams.set('iiprop','url|mime');u.searchParams.set('iiurlwidth','320');u.searchParams.set('format','json');const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.11 (image search feature)'}});if(!r.ok)throw new Error('search');const j=await r.json();const results=Object.values(j.query?.pages||{}).map(x=>x.imageinfo?.[0]).filter(x=>x?.url&&x?.mime?.startsWith('image/')).map(x=>({thumb:x.thumburl||x.url,url:x.url}));res.json({results});}catch(e){res.status(502).json({error:'Image search unavailable'});}});
+app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.11 (image search feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
 app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
 function send(pid, msg){ const ws=sockets.get(pid); if(ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(msg)); }
 function broadcast(g){ for(const p of g.players) send(p.id,{type:'STATE',state:stateFor(g,p.id)}); }
 function stateFor(g,pid){
   const s=clone(g);
+  s.serverNow=Date.now();
   // Never expose every player's source images to everyone during normal submission.
   if(g.phase==='IMAGE_SUBMISSION') s.sources=g.sources.filter(x=>x.ownerId===pid);
   else if(g.phase==='HOST_APPROVAL') s.sources=g.sources;
@@ -62,7 +63,19 @@ function beginRound(g){
   else {for(const p of g.players){const owner=g.roundPlayerSets[p.id];g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:scatter(g.travelingSets[owner]||[]),submitted:false};}}
   if(!g.finalResults[g.round])g.finalResults[g.round]={promptId:g.currentPromptId,collages:{}};
   g.phase='ROUND';g.timerEndsAt=Date.now()+g.settings.creationSeconds*1000;broadcast(g);
-  schedule(g,g.settings.creationSeconds*1000,()=>{if(g.phase==='ROUND'){for(const c of Object.values(g.collages))c.submitted=true;for(const [pid,c] of Object.entries(g.collages))g.finalResults[g.round].collages[pid]=clone(c);if(g.round+1>=g.players.length)startFinalShowcase(g);else{g.round++;beginRound(g);}}});
+  schedule(g,g.settings.creationSeconds*1000,()=>finishRound(g));
+}
+function finishRound(g){
+  if(g.phase!=='ROUND')return;
+  for(const [pid,c] of Object.entries(g.collages)){
+    if(!c.submitted){
+      c.submitted=true;
+      g.travelingSets[pid]=clone(c.pieces||[]);
+      g.finalResults[g.round].collages[pid]=clone(c);
+    }
+  }
+  if(g.round+1>=g.players.length)startFinalShowcase(g);
+  else{g.round++;beginRound(g);}
 }
 function startFinalShowcase(g){g.finalIndex=0;g.finalVotes={};g.phase='FINAL_SHOWCASE';g.currentPromptId=g.finalResults[0]?.promptId||null;g.timerEndsAt=Date.now()+g.settings.votingSeconds*1000;broadcast(g);schedule(g,g.settings.votingSeconds*1000,()=>finishFinalPrompt(g));}
 function finishFinalPrompt(g){
@@ -106,7 +119,8 @@ function handle(g,pid,a){
     case 'DELETE_SOURCE': if(g.phase==='HOST_APPROVAL'&&p.host)g.sources=g.sources.filter(x=>x.id!==a.sourceId); break;
     case 'APPROVAL_DONE': if(g.phase==='HOST_APPROVAL'&&p.host){g.sources=g.sources.filter(x=>x.approved!==false);if(g.sources.length)beginPrompts(g);} break;
     case 'ADD_PROMPT': if(g.phase==='PROMPT_SUBMISSION'&&!g.prompts.some(x=>x.ownerId===pid)&&String(a.text||'').trim()){g.prompts.push({id:id(),text:String(a.text).trim().slice(0,500),ownerId:pid});if(g.prompts.length===g.players.length){g.promptOrder=shuffle(g.prompts.map(x=>x.id));g.round=0;beginRound(g);}} break;
-    case 'SUBMIT_COLLAGE': if(g.phase==='ROUND'){const c=g.collages[pid];if(c&&!c.submitted){c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));c.submitted=true;g.travelingSets[pid]=clone(c.pieces);g.finalResults[g.round].collages[pid]=clone(c);}if(Object.values(g.collages).every(c=>c.submitted)){if(g.round+1>=g.players.length)startFinalShowcase(g);else{g.round++;beginRound(g);}}}break;
+    case 'SYNC_COLLAGE': if(g.phase==='ROUND'){const c=g.collages[pid];if(c&&!c.submitted)c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));}break;
+    case 'SUBMIT_COLLAGE': if(g.phase==='ROUND'){const c=g.collages[pid];if(c&&!c.submitted){c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));c.submitted=true;g.travelingSets[pid]=clone(c.pieces);g.finalResults[g.round].collages[pid]=clone(c);}if(Object.values(g.collages).every(c=>c.submitted))finishRound(g);}break;
     case 'FINAL_VOTE': if(g.phase==='FINAL_SHOWCASE'&&a.targetId&&a.targetId!==pid){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=a.targetId;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected)finishFinalPrompt(g);}break;
   }
   broadcast(g);
