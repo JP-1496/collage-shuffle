@@ -1,8 +1,11 @@
-# Collage — Shuffle V1.4.37
+# Collage — Shuffle V1.4.38
 
 Browser-first multiplayer party game prototype.
 
-### V1.4.37
+### V1.4.38
+- Fixed collage submission feedback: the button now shows `Submitting…`, the server explicitly acknowledges an accepted submission, and the client visibly locks the collage once accepted.
+- Added a clear connection error if a submission cannot be sent.
+
 - Rebuilt collage submission from scratch: the client sends one submission and the server owns submission state and round progression.
 - Removed client-side submission retries, ACK-style state, and client timer auto-submit logic.
 - Server immediately advances when every player has submitted; timer expiry fills missing submissions and advances through the same round path.
