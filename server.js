@@ -115,7 +115,8 @@ function beginRound(g){
   schedule(g,g.settings.creationSeconds*1000,()=>finishRound(g));
 }
 function finishRound(g){
-  if(g.phase!=='ROUND')return;
+  if(g.phase!=='ROUND' || g.roundFinishing)return;
+  g.roundFinishing=true;
   for(const [pid,c] of Object.entries(g.collages)){
     if(!c.submitted){
       c.submitted=true;
