@@ -145,7 +145,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.25');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,'1.4.26');
     host.ws.close();guest.ws.close();
 
     await runSubmissionCountScenario(3);
