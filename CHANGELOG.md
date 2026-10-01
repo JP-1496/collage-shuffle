@@ -1,5 +1,12 @@
 # Changelog
 
+## V1.4.16
+- Added explicit server acknowledgement for canvas submissions.
+- The submitting client now receives an immediate accepted-submission state instead of relying only on the next general state update.
+- Added a server-side expiry watchdog so an expired creation round is completed even if a browser timer/client message fails.
+- Server expiry remains authoritative for creation, image-selection and final-showcase timers.
+- Kept the other player's creation timer active while waiting for their submission.
+
 ## V1.4.15
 - Fixed the canvas submission client state so a manual Submit click is tracked separately from timer auto-submit.
 - Added an explicit submission-in-flight state so the same client cannot send duplicate canvas submissions.
