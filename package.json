@@ -1,1 +1,1 @@
-{"name":"collage-shuffle","version":"1.4.21","private":true,"type":"module","scripts":{"start":"node server.js","test":"node test/multiplayer.mjs"},"dependencies":{"express":"^4.21.2","ws":"^8.18.0"},"engines":{"node":">=18"}}
+{"name":"collage-shuffle","version":"1.4.23","private":true,"type":"module","scripts":{"start":"node server.js","test":"node test/multiplayer.mjs"},"dependencies":{"express":"^4.21.2","ws":"^8.18.0"},"engines":{"node":">=18"}}
