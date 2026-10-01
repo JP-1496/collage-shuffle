@@ -1,3 +1,9 @@
+## V1.4.31
+
+- Corrective release: synchronised the live server runtime with the V1.4.30 submission-acknowledgement client changes.
+- Bumped the server, frontend, package and cache-busting version to V1.4.31 so deployment can be verified through /health.
+- Updated Wikimedia image-search/fetch User-Agent version strings to V1.4.31.
+
 ## V1.4.30
 
 - Made collage submission acknowledgement robust to delayed or missed state updates by accepting the server ACK locally and retrying the idempotent submission up to three times when confirmation is delayed.
