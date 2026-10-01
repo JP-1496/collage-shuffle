@@ -1,5 +1,10 @@
 # Changelog
 
+## V1.4.14
+- Fixed image-set rotation so a player's original set is never assigned back to that player.
+- Each set visits every other player exactly once across the game rounds.
+- Kept the live `✓ Submitted X/X` submission status behaviour.
+
 ## V1.4.13
 - Submit button now changes to `✓ Submitted X/X` and shows the live number of submitted collages.
 - Fixed round-to-round piece handling so the previous round's pieces are cleared before the new shuffled set is loaded.
