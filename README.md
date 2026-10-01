@@ -1,6 +1,9 @@
-# Collage — Shuffle V1.4.19
+# Collage — Shuffle V1.4.20
 
 Browser-first multiplayer party game prototype.
+
+## Tests
+`npm test` runs the automated two-player multiplayer/WebSocket flow.
 
 ## Local
 npm install
@@ -22,6 +25,9 @@ The app listens on `0.0.0.0` and uses Render's `PORT` environment variable.
 5. Submit prompts.
 6. In Round 1, select a source image, press Cut freehand, draw any closed shape, and cut it out.
 
+
+### V1.4.20
+- Added the automated multiplayer test harness and tightened state privacy/performance.
 
 ### V1.4.19
 - Fixed live prompt counts, prompt-stage disconnect handling, image-set rotation, and version consistency.
