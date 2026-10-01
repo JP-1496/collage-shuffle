@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.1';
+const VERSION = '1.4.3';
 const MIN_PLAYERS = 2;
 const app = express();
 const http = createServer(app);
@@ -19,6 +19,8 @@ const clone = x => JSON.parse(JSON.stringify(x));
 
 app.use(express.static('public', { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 app.get('/health', (_, res) => res.json({ ok:true, version:VERSION }));
+app.get('/api/image-search', async (req,res)=>{try{const q=String(req.query.q||'').trim().slice(0,120);if(!q)return res.json({results:[]});const u=new URL('https://commons.wikimedia.org/w/api.php');u.searchParams.set('action','query');u.searchParams.set('generator','search');u.searchParams.set('gsrsearch',q);u.searchParams.set('gsrnamespace','6');u.searchParams.set('gsrlimit','24');u.searchParams.set('prop','imageinfo');u.searchParams.set('iiprop','url|mime');u.searchParams.set('iiurlwidth','320');u.searchParams.set('format','json');const r=await fetch(u);if(!r.ok)throw new Error('search');const j=await r.json();const results=Object.values(j.query?.pages||{}).map(x=>x.imageinfo?.[0]).filter(x=>x?.url&&x?.mime?.startsWith('image/')).map(x=>({thumb:x.thumburl||x.url,url:x.url}));res.json({results});}catch(e){res.status(502).json({error:'Image search unavailable'});}});
+app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u);if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
 app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
 function send(pid, msg){ const ws=sockets.get(pid); if(ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(msg)); }
@@ -40,11 +42,12 @@ function newGame(name,settings,host){ const g={code:code(),name,phase:'LOBBY',mi
 function cancelTimer(g){ const t=timers.get(g.code); if(t) clearTimeout(t); timers.delete(g.code); }
 function schedule(g,ms,fn){ cancelTimer(g); const marker=Date.now()+':'+g.phase+':'+g.round; g.timerMarker=marker; timers.set(g.code,setTimeout(()=>{timers.delete(g.code);if(g.timerMarker===marker)fn();},ms)); }
 function transition(g,phase){cancelTimer(g);g.phase=phase;g.timerEndsAt=null;broadcast(g);}
-function startGame(g){g.phase='IMAGE_SUBMISSION';broadcast(g);}
+function startGame(g){g.phase='IMAGE_SUBMISSION';g.imageReady={};g.timerEndsAt=Date.now()+g.settings.imageSeconds*1000;broadcast(g);schedule(g,g.settings.imageSeconds*1000,()=>finishImageSubmission(g));}
+function finishImageSubmission(g){if(g.phase!=='IMAGE_SUBMISSION')return;for(const p of g.players)g.imageReady[p.id]=true;g.submittedSources={};for(const p of g.players)g.submittedSources[p.id]=true;if(g.settings.hostApproval)transition(g,'HOST_APPROVAL');else beginPrompts(g);}
 function beginPrompts(g){g.phase='PROMPT_SUBMISSION';g.prompts=[];g.promptOrder=[];broadcast(g);}
 function assignRound1Sources(g){
   const pool=g.sources.filter(s=>s.approved!==false);
-  for(const p of g.players){ const wanted=Math.min(g.settings.round1Images,pool.length); g.roundSources[p.id]=shuffle(pool).slice(0,wanted).map(x=>x.id); }
+  for(const p of g.players){ const wanted=g.settings.round1Images==='all'?pool.length:Math.min(g.settings.round1Images,pool.length); g.roundSources[p.id]=shuffle(pool).slice(0,wanted).map(x=>x.id); }
 }
 function scatter(pieces){ return pieces.map((p,i)=>({...clone(p),id:id(),x:15+((i*37)%70),y:15+((i*53)%70),z:i})); }
 function beginRound(g){
@@ -95,8 +98,11 @@ function handle(g,pid,a){
   switch(a.type){
     case 'SET_READY': if(g.phase==='LOBBY'&&!p.host)p.ready=!!a.ready; break;
     case 'START': if(g.phase==='LOBBY'&&p.host&&g.players.filter(x=>x.connected).length>=MIN_PLAYERS)startGame(g); break;
-    case 'ADD_SOURCE': if(g.phase==='IMAGE_SUBMISSION'&&(g.settings.imagesPerPlayer==='all'||g.sources.filter(s=>s.ownerId===pid).length<g.settings.imagesPerPlayer)&&typeof a.data==='string'&&a.data.startsWith('data:image/'))g.sources.push({id:id(),data:a.data,ownerId:pid,approved:true}); break;
-    case 'SUBMIT_SOURCES': if(g.phase==='IMAGE_SUBMISSION'&&(g.settings.imagesPerPlayer==='all'||g.sources.filter(s=>s.ownerId===pid).length>=g.settings.imagesPerPlayer)){g.submittedSources[pid]=true;if(g.players.every(x=>g.submittedSources[x.id]))g.settings.hostApproval?transition(g,'HOST_APPROVAL'):beginPrompts(g);} break;
+    case 'ADD_SOURCE': if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid]&&g.sources.filter(s=>s.ownerId===pid).length<g.settings.imagesPerPlayer&&typeof a.data==='string'&&a.data.startsWith('data:image/'))g.sources.push({id:id(),data:a.data,ownerId:pid,approved:true}); break;
+    case 'ADD_SOURCE_URL': if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid]&&g.sources.filter(s=>s.ownerId===pid).length<g.settings.imagesPerPlayer&&typeof a.data==='string'&&a.data.startsWith('data:image/'))g.sources.push({id:id(),data:a.data,ownerId:pid,approved:true}); break;
+    case 'DELETE_OWN_SOURCE': if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid])g.sources=g.sources.filter(s=>!(s.id===a.sourceId&&s.ownerId===pid)); break;
+    case 'IMAGE_READY': if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid]&&g.sources.filter(s=>s.ownerId===pid).length===g.settings.imagesPerPlayer){g.imageReady[pid]=true;if(g.players.filter(x=>x.connected).every(x=>g.imageReady[x.id]))finishImageSubmission(g);} break;
+    case 'IMAGE_UNREADY': if(g.phase==='IMAGE_SUBMISSION'&&g.imageReady?.[pid]){g.imageReady[pid]=false;} break;
     case 'DELETE_SOURCE': if(g.phase==='HOST_APPROVAL'&&p.host)g.sources=g.sources.filter(x=>x.id!==a.sourceId); break;
     case 'APPROVAL_DONE': if(g.phase==='HOST_APPROVAL'&&p.host){g.sources=g.sources.filter(x=>x.approved!==false);if(g.sources.length)beginPrompts(g);} break;
     case 'ADD_PROMPT': if(g.phase==='PROMPT_SUBMISSION'&&!g.prompts.some(x=>x.ownerId===pid)&&String(a.text||'').trim()){g.prompts.push({id:id(),text:String(a.text).trim().slice(0,500),ownerId:pid});if(g.prompts.length===g.players.length){g.promptOrder=shuffle(g.prompts.map(x=>x.id));g.round=0;beginRound(g);}} break;
@@ -107,7 +113,7 @@ function handle(g,pid,a){
 }
 wss.on('connection',ws=>{
   ws.on('message',raw=>{try{const m=JSON.parse(String(raw));
-    if(m.type==='HOST_CREATE'){const pid=id();const host={id:pid,name:String(m.name||'Player').trim().slice(0,24)||'Player',avatar:m.avatar||'😀',host:true,ready:true,connected:true};const st=m.settings||{};const settings={capacity:Math.max(2,Math.min(16,Number(st.capacity)||8)),imagesPerPlayer:st.imagesPerPlayer==='all'?'all':Math.max(1,Math.min(10,Number(st.imagesPerPlayer)||2)),round1Images:Math.max(1,Math.min(12,Number(st.round1Images)||4)),hostApproval:!!st.hostApproval,creationSeconds:Math.max(30,Math.min(600,Number(st.creationSeconds)||120)),votingSeconds:Math.max(15,Math.min(300,Number(st.votingSeconds)||45))};const g=newGame(String(m.lobbyName||'Collage Game').slice(0,40),settings,host);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
+    if(m.type==='HOST_CREATE'){const pid=id();const host={id:pid,name:String(m.name||'Player').trim().slice(0,24)||'Player',avatar:m.avatar||'😀',host:true,ready:true,connected:true};const st=m.settings||{};const settings={capacity:Math.max(2,Math.min(16,Number(st.capacity)||8)),imagesPerPlayer:Math.max(1,Math.min(20,Number(st.imagesPerPlayer)||2)),round1Images:st.round1Images==='all'?'all':Math.max(1,Math.min(20,Number(st.round1Images)||4)),imageSeconds:Math.max(30,Math.min(600,Number(st.imageSeconds)||120)),hostApproval:!!st.hostApproval,creationSeconds:Math.max(30,Math.min(600,Number(st.creationSeconds)||120)),votingSeconds:Math.max(15,Math.min(300,Number(st.votingSeconds)||45))};const g=newGame(String(m.lobbyName||'Collage Game').slice(0,40),settings,host);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
     if(m.type==='JOIN'){const c=String(m.code||'').trim().toUpperCase(),g=games.get(c),name=String(m.name||'').trim();if(!g||g.phase!=='LOBBY'){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is unavailable.'}));return;}if(g.players.length>=g.settings.capacity){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is full.'}));return;}if(!name){ws.send(JSON.stringify({type:'ERROR',message:'Enter a nickname before joining.'}));return;}const pid=id();const pl={id:pid,name:name.slice(0,24),avatar:m.avatar||'😀',host:false,ready:false,connected:true};g.players.push(pl);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
     if(m.type==='ACTION'){const pid=m.playerId;if(sockets.get(pid)!==ws)return;const g=[...games.values()].find(x=>x.players.some(p=>p.id===pid));if(g)handle(g,pid,m.action);}
   }catch(e){ws.send(JSON.stringify({type:'ERROR',message:'Invalid message.'}));}});

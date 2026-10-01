@@ -1,4 +1,4 @@
-# Collage — Shuffle V1.4.1
+# Collage — Shuffle V1.4.3
 
 Browser-first multiplayer party game prototype.
 
@@ -21,3 +21,11 @@ The app listens on `0.0.0.0` and uses Render's `PORT` environment variable.
 4. Upload images using Choose Images, drag/drop, or Ctrl+V.
 5. Submit prompts.
 6. In Round 1, select a source image, press Cut freehand, draw any closed shape, and cut it out.
+
+
+### V1.4.3
+- Image-pool stage with timer, ready/unready and removal.
+- Find an image search panel using Wikimedia Commons results.
+- Surprise Me search shortcut.
+- Round 1 image access now supports All.
+- Restored page scrolling temporarily for accessibility.

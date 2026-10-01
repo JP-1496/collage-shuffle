@@ -1,4 +1,21 @@
+## V1.4.3
+- Reworked image-pool stage: players add the exact host-configured number of images, remove mistakes, and ready up.
+- Image-pool timer automatically advances the game when time expires.
+- Added Ready/Unready state during image selection.
+- Added Find an Image search with selectable results and Surprise Me.
+- Added Wikimedia Commons-backed image search/fetch endpoints for testing.
+- Added Round 1 Images = All; this controls access to the complete shared pool, not submission count.
+- Restored normal page scrolling temporarily so every screen remains accessible during testing.
+
 # Changelog
+
+## V1.4.2 — Gameplay viewport optimisation
+- Reworked the gameplay editor layout to fit the full control stack within the viewport.
+- Compact left sidebar with tighter source thumbnails and controls.
+- Canvas remains the dominant workspace, with controls arranged in a compact grid.
+- Removed the cause of the bottom toolbar being clipped on desktop-sized screens.
+- Preserved no-scroll behaviour: gameplay is designed to fit rather than hide overflow.
+
 
 ## V1.4.1
 - Rebuilt the Host Game settings screen into a compact, card-based Gartic Phone-style layout.
