@@ -1,5 +1,11 @@
 # Changelog
 
+## V1.4.18
+- Fixed the Prompt Submission screen not visibly updating after a prompt was submitted.
+- Added immediate `✓ Prompt submitted!` feedback and prevents duplicate prompt submissions.
+- Live prompt submission count now updates as players submit.
+- Final prompt submission transitions directly into Round 1 without the prompt screen appearing stuck.
+
 ## V1.4.17
 - Removed the fragile per-submission acknowledgement message.
 - The server's normal `STATE` message is now the single authoritative source for submitted status.
