@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.36';
+const VERSION = '1.4.37';
 const MIN_PLAYERS = 2;
 const app = express();
 const http = createServer(app);
@@ -14,7 +14,8 @@ const games = new Map();
 const sockets = new Map();
 const timers = new Map();
 const id = () => crypto.randomUUID();
-const code = () => { let c; do c=Math.random().toString(36).slice(2,6).toUpperCase(); while(games.has(c)); return c; };
+const CODE_CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const code = () => { let c; do { c=''; for(let i=0;i<4;i++) c+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]; } while(games.has(c)); return c; };
 const shuffle = a => [...a].sort(() => Math.random() - 0.5);
 const clone = x => JSON.parse(JSON.stringify(x));
 
@@ -116,10 +117,15 @@ function beginRound(g){
   g.phase='ROUND';g.timerEndsAt=Date.now()+g.settings.creationSeconds*1000;broadcast(g);
   schedule(g,g.settings.creationSeconds*1000,()=>finishRound(g));
 }
-function finishRound(g){
+function advanceRound(g){
   if(g.phase!=='ROUND' || g.roundFinishing)return;
   cancelTimer(g);
   g.roundFinishing=true;
+  if(g.round+1>=g.players.length)startFinalShowcase(g);
+  else{g.round++;beginRound(g);}
+}
+function finishRound(g){
+  if(g.phase!=='ROUND' || g.roundFinishing)return;
   for(const [pid,c] of Object.entries(g.collages)){
     if(!c.submitted){
       c.submitted=true;
@@ -127,8 +133,7 @@ function finishRound(g){
       g.finalResults[g.round].collages[pid]=clone(c);
     }
   }
-  if(g.round+1>=g.players.length)startFinalShowcase(g);
-  else{g.round++;beginRound(g);}
+  advanceRound(g);
 }
 function startFinalShowcase(g){g.finalIndex=0;g.finalVotes={};g.phase='FINAL_SHOWCASE';g.currentPromptId=g.finalResults[0]?.promptId||null;g.timerEndsAt=Date.now()+g.settings.votingSeconds*1000;broadcast(g);schedule(g,g.settings.votingSeconds*1000,()=>finishFinalPrompt(g));}
 function finishFinalPrompt(g){
@@ -175,17 +180,15 @@ function handle(g,pid,a){
     case 'ADD_PROMPT': if(g.phase==='PROMPT_SUBMISSION'&&!g.prompts.some(x=>x.ownerId===pid)&&String(a.text||'').trim()){g.prompts.push({id:id(),text:String(a.text).trim().slice(0,500),ownerId:pid});if(g.prompts.length===g.players.length){g.promptOrder=shuffle(g.prompts.map(x=>x.id));g.round=0;beginRound(g);}} break;
     case 'SYNC_COLLAGE': if(g.phase==='ROUND'){const c=g.collages[pid];if(c&&!c.submitted){c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));send(pid,{type:'STATE',state:stateFor(g,pid)});return;}}break;
     case 'SUBMIT_COLLAGE': {
-      if(g.phase==='ROUND'){
-        const c=g.collages[pid];
-        if(c&&!c.submitted){
-          c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));
-          c.submitted=true;
-          g.travelingSets[pid]=clone(c.pieces);
-          g.finalResults[g.round].collages[pid]=clone(c);
-        }
-        const submittedCount=Object.values(g.collages).filter(c=>c.submitted).length;
-        if(submittedCount>=g.players.length)finishRound(g);
-      }
+      if(g.phase!=='ROUND')break;
+      const c=g.collages[pid];
+      if(!c || c.submitted || g.roundFinishing)break;
+      c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));
+      c.submitted=true;
+      g.travelingSets[pid]=clone(c.pieces);
+      g.finalResults[g.round].collages[pid]=clone(c);
+      const submittedCount=Object.values(g.collages).filter(x=>x.submitted).length;
+      if(submittedCount===g.players.length)advanceRound(g);
       break;
     }
     case 'FINAL_VOTE': {const result=g.finalResults[g.finalIndex];const target=String(a.targetId||'');if(g.phase==='FINAL_SHOWCASE'&&result?.collages?.[target]&&target!==pid&&!g.finalVotes[g.finalIndex]?.[pid]){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=target;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected)finishFinalPrompt(g);}}break;
