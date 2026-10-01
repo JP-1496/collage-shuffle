@@ -115,10 +115,17 @@ async function main(){
     action(guest,gj.playerId,{type:'SYNC_COLLAGE',pieces:p2});
     action(host,hj.playerId,{type:'SUBMIT_COLLAGE',pieces:p1});
     await waitFor(()=>host.messages.some(m=>m.type==='SUBMISSION_ACK'&&m.accepted===true));
+    const hostAck=host.messages.find(m=>m.type==='SUBMISSION_ACK'&&m.accepted===true);
+    assert.equal(hostAck.total,2);
+    assert.equal(hostAck.submittedCount,1);
     const submittedHost=await nextState(host,s=>s.phase==='ROUND'&&s.round===0&&s.submissionStatus?.[hj.playerId]===true);
     assert.equal(submittedHost.submissionStatus[hj.playerId],true);
     assert.equal(submittedHost.submissionStatus[gj.playerId],false);
     action(guest,gj.playerId,{type:'SUBMIT_COLLAGE',pieces:p2});
+    await waitFor(()=>guest.messages.some(m=>m.type==='SUBMISSION_ACK'&&m.accepted===true));
+    const guestAck=guest.messages.find(m=>m.type==='SUBMISSION_ACK'&&m.accepted===true);
+    assert.equal(guestAck.total,2);
+    assert.equal(guestAck.submittedCount,2);
 
     const r2h=await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
     const r2g=await nextState(guest,s=>s.phase==='ROUND'&&s.round===1);
