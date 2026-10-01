@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.37';
+const VERSION = '1.4.38';
 const MIN_PLAYERS = 2;
 const app = express();
 const http = createServer(app);
@@ -187,6 +187,7 @@ function handle(g,pid,a){
       c.submitted=true;
       g.travelingSets[pid]=clone(c.pieces);
       g.finalResults[g.round].collages[pid]=clone(c);
+      send(pid,{type:'SUBMISSION_ACCEPTED',round:g.round});
       const submittedCount=Object.values(g.collages).filter(x=>x.submitted).length;
       if(submittedCount===g.players.length)advanceRound(g);
       break;
