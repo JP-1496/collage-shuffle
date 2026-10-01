@@ -1,4 +1,4 @@
-const VERSION='1.4.35';
+const VERSION='1.4.36';
 const MIN_PLAYERS=2;
 const avatars=['😀','😎','🤠','🤖','👽','🐸','🦊','🐼','🐵','🐙','🦄','👻','🐯','🧠','👾'];
 const state={screen:'home',name:localStorage.getItem('collageName')||'',avatar:localStorage.getItem('collageAvatar')||'😀',ws:null,pid:null,code:'',game:null,error:'',settings:{capacity:2,imagesPerPlayer:2,round1Images:4,imageSeconds:120,hostApproval:false,creationSeconds:120,votingSeconds:45},lobby:'My Collage',prompt:'',promptSubmitted:false,sourceSelected:null,sourceWorking:{},pieces:[],selected:null,drag:null,timerHandle:null,cutCanvas:null,cutPoints:[],cutZoom:1,cutImg:null,lastPhase:null,_lastImageCount:-1,_lastReadyCount:-1,_lastSubmittedCount:-1,serverClockOffset:0,lastTimerEnd:null,timerAutoSubmitted:false,submissionSent:false,submissionRetryHandle:null,submissionAttempts:0,submissionId:null,pendingSubmissionPieces:null,_lastPromptCount:-1};
