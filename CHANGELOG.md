@@ -1,5 +1,10 @@
 # Changelog
 
+## V1.4.13
+- Submit button now changes to `✓ Submitted X/X` and shows the live number of submitted collages.
+- Fixed round-to-round piece handling so the previous round's pieces are cleared before the new shuffled set is loaded.
+- Round assignments pass each player's created piece set to a different player before it can return to its owner on a later round.
+
 ## V1.4.12
 - Fixed multi-select image search adding only part of the selection or duplicating images.
 - Search selections are now fetched first and sent to the server as one atomic batch.
