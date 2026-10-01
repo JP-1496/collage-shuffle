@@ -1,3 +1,10 @@
+## V1.4.35
+- Simplified collage submission to mirror the working prompt-submission model.
+- Removed the visible `Submitting…` state and separate submission acknowledgement flow.
+- Submission immediately locks the player's collage and shows the live X/X count.
+- Added silent bounded retries for transient connection/state delivery issues.
+- Final submission immediately advances the round; duplicate submissions are safely ignored.
+
 ## V1.4.34
 - Hardened collage submission with explicit server acknowledgement and bounded retry handling.
 - Fixed prompt input focus/cursor preservation when another player submits.
