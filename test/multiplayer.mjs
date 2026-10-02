@@ -117,6 +117,12 @@ async function main(){
     assert.ok(avatarSearch.results.length>=10, `Expected at least 10 avatar results, got ${avatarSearch.results.length}`);
     assert.ok(avatarSearch.results.slice(0,20).every(x=>x.searchIntent==='avatar-category'),
       'Avatar results should come from dedicated avatar/profile categories');
+    assert.ok(avatarSearch.results.slice(0,20).every(x=>{
+      const title=String(x.title||'').toLowerCase();
+      const ratio=x.width/x.height;
+      return ratio>=0.65&&ratio<=1.7 &&
+        /(avatar|profile|pfp|userpic|placeholder|default|dummy|user|person|portrait|head|face|icon|silhouette)/.test(title);
+    }), 'Top avatar results should look like profile/person avatars rather than arbitrary media');
     for(const image of imageSearch.results){
       assert.ok(image.width>0&&image.height>0);
       assert.ok(image.width<=3840&&image.height<=2160);
@@ -200,7 +206,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version     ,'1.4.78');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version     ,'1.4.79');
     host.ws.close();guest.ws.close();
 
     // Repeat the final-submission transition repeatedly and in both orders.
