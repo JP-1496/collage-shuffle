@@ -5,13 +5,15 @@ const PORT = 18742;
 const BASE = `http://127.0.0.1:${PORT}`;
 const WS = `ws://127.0.0.1:${PORT}/ws`;
 const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
-const serverSource=await (await import('node:fs/promises')).readFile(new URL('../server.js',import.meta.url),'utf8');
+const fs=await import('node:fs/promises');
+const serverSource=await fs.readFile(new URL('../server.js',import.meta.url),'utf8');
+const appSource=await fs.readFile(new URL('../public/app.js',import.meta.url),'utf8');
 assert.match(serverSource,/MAX_SEARCH_RESULTS=100/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH=3840/);
 assert.match(serverSource,/MAX_IMAGE_HEIGHT=2160/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH\*MAX_IMAGE_HEIGHT/);
 assert.match(serverSource,/OPENVERSE_API/);
-assert.match(serverSource,/loading="lazy"/);
+assert.match(appSource,/loading="lazy"/);
 
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
