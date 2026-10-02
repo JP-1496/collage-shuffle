@@ -115,8 +115,6 @@ async function main(){
     assert.ok(avatarSearch.results.length>0, 'Avatar search returned no results');
     assert.equal(avatarSearch.provider,'Wikimedia title search');
     assert.ok(avatarSearch.results.length>=10, `Expected at least 10 avatar results, got ${avatarSearch.results.length}`);
-    assert.ok(avatarSearch.results.slice(0,20).every(x=>x.searchIntent==='avatar-category'),
-      'Avatar results should come from dedicated avatar/profile categories');
     assert.ok(avatarSearch.results.slice(0,20).every(x=>x.searchIntent==='avatar-franchise'),
       'Avatar results should use the Avatar/Na\'vi franchise search intent');
     const avatarRelevant=avatarSearch.results.slice(0,20).filter(x=>{
