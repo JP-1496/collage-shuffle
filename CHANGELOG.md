@@ -1,5 +1,11 @@
 # Collage Changelog
 
+## V1.4.71 — Stricter image relevance
+- Search results must now have the user's search terms in the image title before they can enter the result pool.
+- Prevents broad Wikimedia content matches from producing visually unrelated images.
+- Preserves the expanded multi-page retrieval and 100-result cap.
+
+
 ## V1.4.70 — Expanded image search retrieval
 - Reworked Wikimedia image search to paginate through multiple result pages instead of relying on one 500-result batch.
 - Added query expansion for broad searches, including plural and photo/photograph variants.
