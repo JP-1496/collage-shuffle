@@ -1,3 +1,9 @@
+## V1.4.72 — Replace Wikimedia search with Openverse relevance search
+- Replaced the unreliable Wikimedia text search with Openverse's relevance-ranked image search.
+- Search results are now filtered using the returned image title and tags, rather than allowing arbitrary Wikimedia page-content matches.
+- Search results are still capped at 100 images and limited to the game's 3840×2160 / 8.3MP image limits.
+- Added Openverse image proxy loading so selected results can be added without exposing arbitrary external image hosts.
+
 # Collage Changelog
 
 ## V1.4.71 — Stricter image relevance
