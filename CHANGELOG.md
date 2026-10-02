@@ -1,6 +1,10 @@
 # Changelog
 
-## V1.4.48
+## V1.4.49
+- Added temporary test-mode diagnostics to trace the Round 1 → Round 2 transition in CI.
+
+
+## V1.4.49
 - Made the server advance to the next round immediately after broadcasting the final submission count.
 - Removes the 50ms delayed round transition that was leaving automated two-player games stuck on Round 1.
 
