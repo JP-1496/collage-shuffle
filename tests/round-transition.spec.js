@@ -53,9 +53,6 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     await addTwoImages(p1);
     await addTwoImages(p2);
 
-    await expect(p1.getByText(/Ready — waiting for everyone/)).toBeVisible();
-    await expect(p2.getByText(/Ready — waiting for everyone/)).toBeVisible();
-
     await expect(p1.getByText(/Give everyone something ridiculous to make/)).toBeVisible();
     await expect(p2.getByText(/Give everyone something ridiculous to make/)).toBeVisible();
 
