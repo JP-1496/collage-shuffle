@@ -118,6 +118,10 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
 
     await expect(p1.getByText('FINAL RESULTS')).toBeVisible({ timeout: 5_000 });
     await expect(p2.getByText('FINAL RESULTS')).toBeVisible({ timeout: 5_000 });
+
+    await p1.getByRole('button', { name: '↩ Leave Game' }).click();
+    await expect(p1.getByText('SHUFFLE • COLLAGE')).toBeVisible({ timeout: 5_000 });
+    await expect(p1.getByRole('button', { name: '🎮 Host Game' })).toBeVisible();
   } finally {
     await player1.context.close();
     await player2.context.close();
