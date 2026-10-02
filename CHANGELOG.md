@@ -1,4 +1,9 @@
-## V1.4.45 — Reduced live collage sync traffic
+## V1.4.46 — Final submission round transition fix
+- Fixed the final collage submission hand-off by explicitly queuing round completion after the accepted submission count is broadcast.
+- Added a short transition delay so both clients can receive the final 2/2 state before the server advances to the next round.
+- Preserved the reduced live collage sync traffic from V1.4.45.
+
+## V1.4.46 — Reduced live collage sync traffic
 - Debounced live collage synchronisation so edits do not continually send large piece payloads.
 - Removed the server's full STATE response to every `SYNC_COLLAGE` message.
 - Submit now cancels any pending sync and sends the latest collage immediately.
