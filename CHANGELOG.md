@@ -1,3 +1,7 @@
+## V1.4.44 — Version bump for live Render testing
+- Updated the application version to V1.4.44 across the runtime, client, package metadata, visible build badge, HTML cache-busting and documentation.
+- This build number is intended to make Render deployment verification immediately visible during live testing.
+
 ## V1.4.43 — Round transition deployment hotfix
 - Confirmed the server correctly advances from Round 1 to Round 2 after all connected players submit.
 - Confirmed the frontend must rerender when the `round` changes even though the WebSocket phase remains `ROUND`.
