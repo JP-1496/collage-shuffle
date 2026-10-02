@@ -1,3 +1,8 @@
+## V1.4.54
+- Added WebSocket heartbeat monitoring so stale connections are detected instead of remaining apparently connected.
+- Added automatic reconnect/resume using the existing player and lobby session.
+- Added regression coverage for reconnecting a player and completing collage submission afterwards.
+
 ## V1.4.53
 - Fixed Final Showcase clients getting stuck on an earlier voting prompt when `finalIndex` changed without a phase change.
 - Clients now rerender when either the showcase index or their vote state changes.
