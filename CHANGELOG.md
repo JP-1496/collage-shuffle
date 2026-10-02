@@ -1,3 +1,8 @@
+## V1.4.82 — fix Bing result scoping
+- Restrict Bing image parsing to the actual image-result grid so unrelated/recommended tiles cannot leak into searches.
+- Added a regression search for “joe rogan” to the automated image-search coverage.
+- Bumped runtime, client, package and cache-busting versions to 1.4.82.
+
 ## V1.4.80 — avatar search means Avatar / Na'vi
 - Corrected the special `avatar` search to target James Cameron's Avatar franchise and Na'vi characters.
 - Searches Wikimedia Commons Na'vi, Jake Sully, Neytiri and Avatar film categories plus targeted title searches.
