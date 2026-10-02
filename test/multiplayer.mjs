@@ -12,7 +12,7 @@ assert.match(serverSource,/MAX_SEARCH_RESULTS=100/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH=3840/);
 assert.match(serverSource,/MAX_IMAGE_HEIGHT=2160/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH\*MAX_IMAGE_HEIGHT/);
-assert.match(serverSource,/OPENVERSE_API/);
+assert.match(serverSource,/SEARCH_THUMB_WIDTH=600/);
 assert.match(appSource,/loading="lazy"/);
 
 
@@ -107,14 +107,14 @@ async function main(){
     assert.ok(Array.isArray(imageSearch.results), JSON.stringify(imageSearch));
     assert.ok(imageSearch.results.length>=50, `Expected at least 50 ocean images, got ${imageSearch.results.length}`);
     assert.ok(imageSearch.results.length<=100);
-    assert.equal(imageSearch.provider,'Openverse');
+    assert.equal(imageSearch.provider,'Wikimedia title search');
     assert.equal(new Set(imageSearch.results.map(x=>x.url)).size,imageSearch.results.length);
     assert.ok(imageSearch.results.every(x=>x.thumb&&x.fetchId&&x.thumbFetchId),'Every result must provide a thumbnail and lazy fetch references');
     const avatarSearch=await (await fetch(BASE+'/api/image-search?q=avatar')).json();
     assert.ok(Array.isArray(avatarSearch.results), JSON.stringify(avatarSearch));
     assert.ok(avatarSearch.results.length>0, 'Avatar search returned no results');
-    assert.equal(avatarSearch.provider,'Openverse');
-    assert.ok(avatarSearch.results.slice(0,20).some(x=>/avatar/i.test(String(x.title||''))),'Avatar results should contain title matches near the top');
+    assert.equal(avatarSearch.provider,'Wikimedia title search');
+    assert.ok(avatarSearch.results.every(x=>/avatar/i.test(String(x.title||''))),'Every avatar result title should contain avatar');
     for(const image of imageSearch.results){
       assert.ok(image.width>0&&image.height>0);
       assert.ok(image.width<=3840&&image.height<=2160);
