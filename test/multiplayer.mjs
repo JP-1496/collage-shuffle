@@ -106,6 +106,13 @@ async function main(){
     assert.equal(imageSearch.results.length,100, `Expected 100 ocean images, got ${imageSearch.results.length}`);
     assert.ok(imageSearch.results.length<=100);
     assert.equal(new Set(imageSearch.results.map(x=>x.sourceUrl||x.url)).size,imageSearch.results.length);
+    const avatarSearch=await (await fetch(BASE+'/api/image-search?q=avatar')).json();
+    assert.ok(Array.isArray(avatarSearch.results), JSON.stringify(avatarSearch));
+    assert.ok(avatarSearch.results.length>0, 'Avatar search returned no results');
+    for(const image of avatarSearch.results){
+      const title=String(image.title||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+      assert.ok(title.split(' ').includes('avatar'), `Irrelevant avatar result: ${image.title}`);
+    }
     for(const image of imageSearch.results){
       assert.ok(image.width>0&&image.height>0);
       assert.ok(image.width<=3840&&image.height<=2160);
@@ -189,7 +196,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version   ,'1.4.70');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version   ,'1.4.71');
     host.ws.close();guest.ws.close();
 
     // Repeat the final-submission transition repeatedly and in both orders.
