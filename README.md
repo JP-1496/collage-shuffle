@@ -1,11 +1,11 @@
-# Collage — Shuffle V1.4.62
+# Collage — Shuffle V1.4.63
 
-### V1.4.62
+### V1.4.63
 - Uses the 20 final cleaned avatar images in a 5×4 profile picker.
 - Avatar artwork is shown beside player names and in the in-game HUD.
 
 
-### V1.4.62
+### V1.4.63
 - Added 24 custom character avatars selectable from the player profile.
 - Player characters now appear beside names and in the top-right in-game identity display.
 
