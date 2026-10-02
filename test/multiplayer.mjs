@@ -9,9 +9,9 @@ const serverSource=await (await import('node:fs/promises')).readFile(new URL('..
 assert.match(serverSource,/MAX_SEARCH_RESULTS=100/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH=3840/);
 assert.match(serverSource,/MAX_IMAGE_HEIGHT=2160/);
-assert.match(serverSource,/SEARCH_CANDIDATES_PER_PAGE=500/);
+assert.match(serverSource,/OPENVERSE_PAGES=3/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH\*MAX_IMAGE_HEIGHT/);
-assert.match(serverSource,/searchScore/);
+assert.match(serverSource,/openverseRelevant/);
 
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
