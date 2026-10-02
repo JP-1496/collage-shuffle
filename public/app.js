@@ -77,6 +77,6 @@ function resizePiece(d){const p=state.pieces.find(x=>x.id===state.selected);if(p
   }
 }
 window.go=go;window.leaveGame=leaveGame;window.setName=setName;window.queueImageSearch=queueImageSearch;window.setAvatar=setAvatar;window.startHost=startHost;window.startJoin=startJoin;window.files=files;window.handleDrop=handleDrop;window.submitSources=submitSources;window.removeSource=removeSource;window.imageReady=imageReady;window.imageUnready=imageUnready;window.pasteHint=pasteHint;window.openImageSearch=openImageSearch;window.searchImages=searchImages;window.toggleSearchImage=toggleSearchImage;window.addSearchSelection=addSearchSelection;window.surpriseMe=surpriseMe;window.submitPrompt=submitPrompt;window.selectSource=selectSource;window.openCutTool=openCutTool;window.closeCut=closeCut;window.finishCut=finishCut;window.pieceDown=pieceDown;window.rotate=rotate;window.flip=flip;window.layer=layer;window.resizePiece=resizePiece;window.cutZoomBy=cutZoomBy;window.cutZoomFit=cutZoomFit;window.submitCollage=submitCollage;
-render(true);
+render(true);loadAvatarSprite();
 const savedSession=(()=>{try{return JSON.parse(localStorage.getItem('collageSession')||'null')}catch{return null}})();
 if(savedSession?.pid&&savedSession?.code){state.pid=savedSession.pid;state.code=savedSession.code;state.name=savedSession.name||state.name;state.avatar=/^(?:[1-9]|1[0-9]|2[0-4])$/.test(savedSession.avatar||'')?savedSession.avatar:state.avatar;state.screen='game';connect(null,true)}
