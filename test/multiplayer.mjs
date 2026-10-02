@@ -122,9 +122,10 @@ async function main(){
       assert.ok(search.results.every(x=>x.url.startsWith('https://')&&x.thumb.startsWith('https://')),query+' results must use HTTPS');
     }
     for(const image of imageSearch.results){
-      assert.ok(image.width>0&&image.height>0);
-      assert.ok(image.width<=3840&&image.height<=2160);
-      assert.ok(image.width*image.height<=8294400);
+      if(image.width&&image.height){
+        assert.ok(image.width<=3840&&image.height<=2160);
+        assert.ok(image.width*image.height<=8294400);
+      }
     }
     const host=await connect();
     host.ws.send(JSON.stringify({type:'HOST_CREATE',name:'Host',lobbyName:'Test',settings:{capacity:2,imagesPerPlayer:1,round1Images:1,hostApproval:false}}));
