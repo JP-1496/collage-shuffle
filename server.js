@@ -191,10 +191,11 @@ function handle(g,pid,a){
       g.finalResults[g.round].collages[pid]=clone(c);
       const connected=g.players.filter(x=>x.connected);
       const submitted=connected.filter(x=>g.collages[x.id]?.submitted).length;
-      // Collage submission now follows the same simple server-authoritative
-      // pattern as prompt submission: record -> broadcast -> advance when all
-      // connected players have submitted.
-      if(connected.length>0 && submitted===connected.length) finishRound(g);
+      // Match the visible prompt-submission mechanic: broadcast the accepted
+      // count first, then advance on the next event-loop turn. This guarantees
+      // every connected player can receive the final 2/2 state before Round 2.
+      broadcast(g);
+      if(connected.length>0 && submitted===connected.length) setImmediate(()=>finishRound(g));
       break;
     }
     case 'FINAL_VOTE': {const result=g.finalResults[g.finalIndex];const target=String(a.targetId||'');if(g.phase==='FINAL_SHOWCASE'&&result?.collages?.[target]&&target!==pid&&!g.finalVotes[g.finalIndex]?.[pid]){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=target;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected)finishFinalPrompt(g);}}break;
