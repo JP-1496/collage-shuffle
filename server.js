@@ -54,22 +54,11 @@ function searchTitleRelevant(title,q){
 function searchQueries(q){
   const clean=normaliseSearchText(q);
   if(!clean)return [];
-  if(clean==='avatar')return [
-    "intitle:Na'vi",
-    'intitle:Jake intitle:Sully',
-    'intitle:Neytiri',
-    'intitle:Avatar intitle:Na\'vi'
-  ];
+  if(clean==='avatar')return ["Na'vi"];
   return [clean.split(' ').filter(Boolean).map(term=>`intitle:${term}`).join(' ')];
 }
 function avatarCategories(){
-  return [
-    "Category:Na'vi",
-    'Category:Jake Sully',
-    'Category:Neytiri',
-    'Category:Avatar (2009 film)',
-    'Category:Avatar: The Way of Water'
-  ];
+  return ["Category:Na'vi"];
 }
 function avatarScore(item){
   const title=normaliseSearchText(String(item.title||'').replace(/^File:/i,''));
@@ -143,23 +132,12 @@ app.get('/api/image-search',async(req,res)=>{try{
   const collected=new Map();
   if(cleanQuery==='avatar'){
     for(const category of avatarCategories()){
-      let continuation=null;
-      for(let page=0;page<MAX_SEARCH_PAGES;page++){
-        const data=await fetchCategoryPage(category,continuation);
-        addSearchResults(collected,Object.values(data.query?.pages||{}),q);
-        continuation=data.continue||null;
-        if(!continuation)break;
-      }
+      const data=await fetchCategoryPage(category,null);
+      addSearchResults(collected,Object.values(data.query?.pages||{}),q);
     }
     for(const query of searchQueries(q)){
-      let continuation=null;
-      for(let page=0;page<MAX_SEARCH_PAGES&&collected.size<MAX_SEARCH_RESULTS;page++){
-        const data=await fetchSearchPage(query,continuation);
-        addSearchResults(collected,Object.values(data.query?.pages||{}),q);
-        continuation=data.continue||null;
-        if(!continuation)break;
-      }
-      if(collected.size>=MAX_SEARCH_RESULTS)break;
+      const data=await fetchSearchPage(query,null);
+      addSearchResults(collected,Object.values(data.query?.pages||{}),q);
     }
   }else{
     for(const query of searchQueries(q)){
