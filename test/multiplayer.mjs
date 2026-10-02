@@ -10,7 +10,7 @@ assert.match(serverSource,/MAX_SEARCH_RESULTS=36/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH=3840/);
 assert.match(serverSource,/MAX_IMAGE_HEIGHT=2160/);
 assert.match(serverSource,/SEARCH_CANDIDATES=500/);
-assert.match(serverSource,/MAX_IMAGE_PIXELS=3840\*2160/);
+assert.match(serverSource,/MAX_IMAGE_WIDTH\*MAX_IMAGE_HEIGHT/);
 assert.match(serverSource,/searchScore/);
 
 
