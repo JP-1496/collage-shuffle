@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.71';
+const VERSION = '1.4.72';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -27,92 +27,60 @@ const MAX_IMAGE_WIDTH=3840;
 const MAX_IMAGE_HEIGHT=2160;
 const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
 const MAX_SEARCH_RESULTS=100;
-const SEARCH_CANDIDATES_PER_PAGE=500;
-const MAX_SEARCH_PAGES=3;
-const SEARCH_USER_AGENT='CollageShuffle/1.4.71 (image search feature)';
-function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim()}
-function searchScore(page,q){
-  const query=normaliseSearchText(q), terms=query.split(' ').filter(Boolean);
-  const title=normaliseSearchText(String(page.title||'').replace(/^File:/i,''));
-  const snippet=normaliseSearchText(page.snippet||'');
-  const titleWords=new Set(title.split(' ').filter(Boolean));
-  const phrase=Boolean(terms.length>1&&query&&title.includes(query));
-  const titleHits=terms.filter(t=>titleWords.has(t)).length;
-  const snippetHits=terms.filter(t=>snippet.includes(t)).length;
-  const titleRelevant=Boolean(terms.length&&(phrase||titleHits===terms.length));
-  if(!titleRelevant)return null;
-  let score=0;
-  if(phrase)score+=120;
-  if(titleHits===terms.length)score+=80;
-  if(snippetHits===terms.length)score+=20;
-  else score+=snippetHits*5;
-  return score;
+const OPENVERSE_PAGES=3;
+const SEARCH_USER_AGENT='CollageShuffle/1.4.72 (image search feature)';
+function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\\p{L}\\p{N}]+/gu,' ').replace(/\\s+/g,' ').trim()}
+function queryTerms(q){return normaliseSearchText(q).split(' ').filter(Boolean)}
+function openverseRelevant(item,q){
+  const terms=queryTerms(q);
+  const title=normaliseSearchText(item.title||'');
+  const tags=(item.tags||[]).map(t=>normaliseSearchText(t?.name||'')).filter(Boolean);
+  const searchable=[title,...tags];
+  return terms.length>0&&terms.every(term=>searchable.some(value=>value===term||value.includes(term)));
 }
-function searchVariants(q){
-  const clean=normaliseSearchText(q);
-  if(!clean)return [];
-  const variants=[clean];
-  if(!/s$/i.test(clean))variants.push(clean+'s');
-  variants.push(clean+' photo',clean+' photograph');
-  return [...new Set(variants)];
-}
-async function fetchSearchPage(query,continuation){
-  const u=new URL('https://commons.wikimedia.org/w/api.php');
-  u.searchParams.set('action','query');
-  u.searchParams.set('generator','search');
-  u.searchParams.set('gsrsearch',query);
-  u.searchParams.set('gsrnamespace','6');
-  u.searchParams.set('gsrlimit',String(SEARCH_CANDIDATES_PER_PAGE));
-  u.searchParams.set('prop','imageinfo');
-  u.searchParams.set('iiprop','url|mime|size');
-  u.searchParams.set('iiurlwidth',String(MAX_IMAGE_WIDTH));
-  u.searchParams.set('iiurlheight',String(MAX_IMAGE_HEIGHT));
-  u.searchParams.set('format','json');
-  if(continuation)for(const [key,value] of Object.entries(continuation))u.searchParams.set(key,String(value));
-  const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT}});
-  if(!r.ok)throw new Error('search');
+async function fetchOpenversePage(q,page){
+  const u=new URL('https://api.openverse.org/v1/images/');
+  u.searchParams.set('q',q);
+  u.searchParams.set('page',String(page));
+  u.searchParams.set('page_size',String(MAX_SEARCH_RESULTS));
+  u.searchParams.set('mature','false');
+  const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'application/json'}});
+  if(!r.ok)throw new Error('openverse search');
   return r.json();
 }
-function addSearchPages(target,pages,q){
-  for(const page of pages){
-    const info=page.imageinfo?.[0];
-    if(!info?.url||!info.mime?.startsWith('image/'))continue;
-    const thumb=info.thumburl||info.url;
-    const width=Number(info.thumbwidth||info.width||0);
-    const height=Number(info.thumbheight||info.height||0);
+function addOpenverseResults(target,items,q){
+  for(const item of items||[]){
+    if(!item?.id||!item?.thumbnail)continue;
+    if(!openverseRelevant(item,q))continue;
+    const width=Number(item.width||0),height=Number(item.height||0);
     if(width<=0||height<=0||width>MAX_IMAGE_WIDTH||height>MAX_IMAGE_HEIGHT||width*height>MAX_IMAGE_PIXELS)continue;
-    const key=String(info.sha1||info.url);
-    const score=searchScore(page,q);
-    if(score===null)continue;
-    const candidate={title:page.title,snippet:page.snippet||'',thumb,url:thumb,sourceUrl:info.url,mime:info.mime,width,height,score};
-    const previous=target.get(key);
-    if(!previous||candidate.score>previous.score)target.set(key,candidate);
+    const thumb=`https://api.openverse.org/v1/images/${encodeURIComponent(item.id)}/thumb/`;
+    const url=`https://api.openverse.org/v1/images/${encodeURIComponent(item.id)}/thumb/?full_size=true`;
+    const key=String(item.id);
+    const candidate={
+      title:String(item.title||'Untitled image'),
+      snippet:Array.isArray(item.tags)?item.tags.slice(0,8).map(t=>t?.name).filter(Boolean).join(', '):'',
+      thumb,url,
+      sourceUrl:item.foreign_landing_url||item.url||'',
+      mime:item.filetype?String(item.filetype):'image/jpeg',
+      width,height,
+      tags:Array.isArray(item.tags)?item.tags.map(t=>String(t?.name||'')).filter(Boolean):[]
+    };
+    if(!target.has(key))target.set(key,candidate);
   }
 }
 app.get('/api/image-search', async (req,res)=>{try{
   const q=String(req.query.q||'').trim().slice(0,120);
   if(!q)return res.json({results:[]});
-  const variants=searchVariants(q);
   const collected=new Map();
-  for(const variant of variants){
-    let continuation=null;
-    for(let pageNo=0;pageNo<MAX_SEARCH_PAGES;pageNo++){
-      let j;
-      try{j=await fetchSearchPage(variant,continuation);}
-      catch(e){console.error('Image search page failed:',e);break;}
-      addSearchPages(collected,Object.values(j.query?.pages||{}),q);
-      continuation=j.continue||null;
-      if(!continuation)break;
-    }
-    if(collected.size>=MAX_SEARCH_RESULTS)break;
+  for(let page=1;page<=OPENVERSE_PAGES&&collected.size<MAX_SEARCH_RESULTS;page++){
+    const j=await fetchOpenversePage(q,page);
+    addOpenverseResults(collected,j.results,q);
   }
-  const results=[...collected.values()]
-    .sort((a,b)=>b.score-a.score||a.title.localeCompare(b.title))
-    .slice(0,MAX_SEARCH_RESULTS)
-    .map(({title,snippet,thumb,url,sourceUrl,mime,width,height})=>({title,snippet,thumb,url,sourceUrl,mime,width,height}));
-  res.json({results,maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS});
+  const results=[...collected.values()].slice(0,MAX_SEARCH_RESULTS);
+  res.json({results,maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Openverse'});
 }catch(e){console.error('Image search failed:',e);res.status(502).json({error:'Image search unavailable',...(TEST_MODE?{detail:String(e?.message||e)}:{})});}});
-app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.70 (image fetch feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
+app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org','api.openverse.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.72 (image fetch feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
 app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
 function send(pid, msg){ const ws=sockets.get(pid); if(ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(msg)); }
