@@ -98,6 +98,26 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
 
     await expect(p1.getByText('ROUND 2 OF 2')).toBeVisible({ timeout: 5_000 });
     await expect(p2.getByText('ROUND 2 OF 2')).toBeVisible({ timeout: 5_000 });
+
+    await p1.getByRole('button', { name: /Submit collage/ }).click();
+    await p2.getByRole('button', { name: /Submit collage/ }).click();
+
+    await expect(p1.getByText('FINAL PROMPT')).toBeVisible({ timeout: 5_000 });
+    await expect(p2.getByText('FINAL PROMPT')).toBeVisible({ timeout: 5_000 });
+    await expect(p1.getByRole('button', { name: 'Vote for this' })).toHaveCount(1);
+    await expect(p2.getByRole('button', { name: 'Vote for this' })).toHaveCount(1);
+
+    await p1.getByRole('button', { name: 'Vote for this' }).click();
+    await p2.getByRole('button', { name: 'Vote for this' }).click();
+
+    await expect(p1.getByText('FINAL SHOWCASE • 2 OF 2')).toBeVisible({ timeout: 5_000 });
+    await expect(p2.getByText('FINAL SHOWCASE • 2 OF 2')).toBeVisible({ timeout: 5_000 });
+
+    await p1.getByRole('button', { name: 'Vote for this' }).click();
+    await p2.getByRole('button', { name: 'Vote for this' }).click();
+
+    await expect(p1.getByText('FINAL RESULTS')).toBeVisible({ timeout: 5_000 });
+    await expect(p2.getByText('FINAL RESULTS')).toBeVisible({ timeout: 5_000 });
   } finally {
     await player1.context.close();
     await player2.context.close();
