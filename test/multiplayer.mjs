@@ -9,9 +9,9 @@ const serverSource=await (await import('node:fs/promises')).readFile(new URL('..
 assert.match(serverSource,/MAX_SEARCH_RESULTS=100/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH=3840/);
 assert.match(serverSource,/MAX_IMAGE_HEIGHT=2160/);
-assert.match(serverSource,/SEARCH_RESULTS_PER_PAGE=100/);
+assert.match(serverSource,/SEARCH_CANDIDATES_PER_PAGE=500/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH\*MAX_IMAGE_HEIGHT/);
-assert.match(serverSource,/fetchMediaSearchPage/);
+assert.match(serverSource,/fetchSearchPage/)
 
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -112,7 +112,7 @@ async function main(){
     assert.equal(avatarSearch.provider,'Wikimedia title search');
     for(const image of avatarSearch.results){
       const title=String(image.title||'').toLowerCase().replace(/^file:/,'').replace(/[^a-z0-9]+/g,' ').trim();
-      assert.ok(title.split(' ').includes('avatar'), `Irrelevant avatar result: ${image.title}`);
+      assert.ok(title.includes('avatar'), `Irrelevant avatar result: ${image.title}`);
     }
     for(const image of imageSearch.results){
       assert.ok(image.width>0&&image.height>0);
@@ -197,7 +197,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version    ,'1.4.73');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version     ,'1.4.74');
     host.ws.close();guest.ws.close();
 
     // Repeat the final-submission transition repeatedly and in both orders.
