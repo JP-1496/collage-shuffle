@@ -1,4 +1,4 @@
-const VERSION='1.4.75';
+const VERSION='1.4.76';
 const MIN_PLAYERS=2;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
@@ -26,11 +26,79 @@ function join(){return `<div class="shell joinScreen"><div class="brand">JOIN GA
 function lobby(){const g=state.game,me=g.players.find(p=>p.id===state.pid),connected=g.players.filter(p=>p.connected).length,minPlayers=g.minPlayers||MIN_PLAYERS,canStart=connected>=minPlayers;return `<div class="shell"><div class="brand">LOBBY</div><h2>${esc(g.name)}</h2><div class="code">${state.code}</div><p style="text-align:center">Send this code to your friends. Everyone joins from their own PC.</p><div class="players">${g.players.map(p=>`<div class="player">${avatarSVG(p.avatar,'playerAvatar')}<b>${esc(p.name)}</b>${p.host?' 👑':''}<span class="status">${p.connected?(p.host?'Host':p.ready?'Ready':'Not ready'):'✕ Offline'}</span></div>`).join('')}</div><div class="row" style="margin-top:18px">${me.host?`<button ${canStart?'':'disabled'} onclick="send({type:'START'})">${canStart?'Start Game 🚀':`Waiting for ${minPlayers} players…`}</button>`:`<button onclick="send({type:'SET_READY',ready:${!me.ready}})">${me.ready?'✓ Ready — click to undo':'Ready up'}</button>`}<span class="notice">${connected}/${g.settings.capacity} players • minimum ${minPlayers}</span></div></div>`}
 function imageSubmit(){const g=state.game,me=g.players.find(p=>p.id===state.pid),mine=g.sources.filter(s=>s.ownerId===state.pid),need=g.settings.imagesPerPlayer,ready=!!g.imageReady?.[state.pid],readyCount=Object.values(g.imageReady||{}).filter(Boolean).length,remaining=Math.max(0,Math.ceil((g.timerEndsAt-(Date.now()+state.serverClockOffset))/1000));return `<div class="shell imageShell"><div class="stageTop"><div><div class="brand">IMAGE POOL</div><h2>🖼️ Build your image pool</h2><p>Find, upload or paste your images. Add exactly <b>${need}</b>.</p></div><div class="timer bigTimer">⏱ <span id="timerValue">${remaining}</span>s</div></div><div class="imageMethods"><button onclick="openImageSearch()">🔎 Find an image</button><button onclick="document.getElementById('file').click()">📁 Upload</button><button onclick="pasteHint()">📋 Paste</button><button class="secondary" onclick="surpriseMe()">🔀 Surprise me</button><input id="file" class="fileInput" type="file" accept="image/*" multiple onchange="files(this.files)"></div><div class="poolHeader"><h3>Your images</h3><span>${mine.length} / ${need}</span></div><div class="poolGrid">${mine.map(s=>`<div class="poolCard"><img src="${s.data}"><button class="removeBtn" onclick="removeSource('${s.id}')">✕ Remove</button></div>`).join('')||'<div class="emptyPool">Your pool is empty — find something weird.</div>'}</div><div class="imageFooter"><div class="notice">${ready?'✓ Ready — waiting for everyone':`${mine.length}/${need} added`}</div><button ${(!ready&&mine.length!==need)?'disabled':''} onclick="${ready?'imageUnready()':'imageReady()'}">${ready?`✓ Ready! ${readyCount}/${g.players.length}`:`Ready! ${readyCount}/${g.players.length}`}</button></div>${state.error?`<p class="error">${esc(state.error)}</p>`:''}</div>`}
 function openImageSearch(){const modal=document.createElement('div');modal.className='searchModal';modal.innerHTML=`<div class="searchBox"><div class="searchHead"><div><h2>🔎 Find an image</h2><p>Select images, then add them to your pool.</p></div><button class="secondary" onclick="this.closest('.searchModal').remove()">✕</button></div><form class="searchForm" onsubmit="event.preventDefault();searchImages(this.q.value)"><input name="q" autofocus oninput="queueImageSearch(this.value)" placeholder="What are you looking for?"><button>Search</button></form><div id="searchResults" class="searchResults"><div class="searchEmpty">Search for anything — or try <b>Surprise me</b>.</div></div><div class="searchFooter"><span id="searchSelected">0 selected</span><button id="addSearchBtn" disabled onclick="addSearchSelection()">Add images</button></div></div>`;document.body.appendChild(modal);state.searchSelected=[];state.searchResults=[]}
-let searchDebounce=null;function queueImageSearch(q){clearTimeout(searchDebounce);const term=String(q||'').trim();if(!term)return;searchDebounce=setTimeout(()=>searchImages(term),350)}
-async function searchImages(q){q=String(q||'').trim();if(!q)return;const box=document.querySelector('#searchResults');if(box)box.innerHTML='<div class="searchEmpty">Searching…</div>';try{const r=await fetch(`/api/image-search?q=${encodeURIComponent(q)}`);const data=await r.json();if(!r.ok)throw new Error(data.error||'Search failed');state.searchResults=data.results||[];state.searchSelected=[];renderSearchResults()}catch(e){if(box)box.innerHTML=`<div class="searchEmpty">Could not search right now.</div>`}}
-function renderSearchResults(){const box=document.querySelector('#searchResults');if(!box)return;box.innerHTML=state.searchResults.map((x,i)=>`<button class="searchResult ${state.searchSelected.includes(i)?'selected':''}" onclick="toggleSearchImage(${i})"><img src="${x.thumb}"><span class="check">${state.searchSelected.includes(i)?'✓':''}</span></button>`).join('')||'<div class="searchEmpty">No images found.</div>';const count=state.searchSelected.length;const el=document.querySelector('#searchSelected');if(el)el.textContent=`${count} selected`;const btn=document.querySelector('#addSearchBtn');const remaining=(state.game?.settings.imagesPerPlayer||2)-(state.game?.sources?.filter(s=>s.ownerId===state.pid).length||0);if(btn){btn.disabled=count===0||count>remaining;btn.textContent=count?`Add ${count} image${count===1?'':'s'}`:'Add images'}}
-function toggleSearchImage(i){const max=(state.game?.settings.imagesPerPlayer||2)-(state.game?.sources?.filter(s=>s.ownerId===state.pid).length||0);if(state.searchSelected.includes(i))state.searchSelected=state.searchSelected.filter(x=>x!==i);else if(state.searchSelected.length<max)state.searchSelected.push(i);renderSearchResults()}
-async function addSearchSelection(){const selected=state.searchSelected.map(i=>state.searchResults[i]);const btn=document.querySelector('#addSearchBtn');if(!selected.length||!btn||btn.disabled)return;btn.disabled=true;btn.textContent='Adding…';const results=await Promise.all(selected.map(async x=>{for(const url of [x.url,x.thumb]){if(!url)continue;try{const r=await fetch('/api/image-fetch?url='+encodeURIComponent(url));const data=await r.json();if(r.ok&&data.data)return data.data}catch{}}return null}));const images=results.filter(Boolean);if(images.length)send({type:'ADD_SOURCES_BATCH',images});if(images.length<selected.length)state.error='Added '+images.length+' of '+selected.length+' selected images — one or more could not be loaded.';document.querySelector('.searchModal')?.remove();state.searchSelected=[]}
+let searchDebounce=null;let searchController=null;let searchRequestId=0;
+function queueImageSearch(q){
+  clearTimeout(searchDebounce);
+  const term=String(q||'').trim();
+  if(!term){
+    searchController?.abort();
+    const box=document.querySelector('#searchResults');
+    if(box)box.innerHTML='<div class="searchEmpty">Search for anything — or try <b>Surprise me</b>.</div>';
+    return;
+  }
+  searchDebounce=setTimeout(()=>searchImages(term),500);
+}
+async function searchImages(q){
+  q=String(q||'').trim();
+  if(!q)return;
+  searchController?.abort();
+  const controller=new AbortController();
+  searchController=controller;
+  const requestId=++searchRequestId;
+  const box=document.querySelector('#searchResults');
+  if(box)box.innerHTML='<div class="searchEmpty">Searching…</div>';
+  try{
+    const r=await fetch(`/api/image-search?q=${encodeURIComponent(q)}`,{signal:controller.signal});
+    const data=await r.json();
+    if(requestId!==searchRequestId)return;
+    if(!r.ok)throw new Error(data.error||'Search failed');
+    state.searchResults=data.results||[];
+    state.searchSelected=[];
+    renderSearchResults();
+  }catch(e){
+    if(e.name==='AbortError'||requestId!==searchRequestId)return;
+    if(box)box.innerHTML='<div class="searchEmpty">Could not search right now.</div>';
+  }
+}
+function renderSearchResults(){
+  const box=document.querySelector('#searchResults');
+  if(!box)return;
+  box.innerHTML=state.searchResults.map((x,i)=>`<button class="searchResult ${state.searchSelected.includes(i)?'selected':''}" onclick="toggleSearchImage(${i})"><img src="${x.thumb}" loading="lazy" decoding="async" alt=""><span class="check">${state.searchSelected.includes(i)?'✓':''}</span></button>`).join('')||'<div class="searchEmpty">No images found.</div>';
+  const count=state.searchSelected.length;
+  const el=document.querySelector('#searchSelected');
+  if(el)el.textContent=`${count} selected`;
+  const btn=document.querySelector('#addSearchBtn');
+  const remaining=(state.game?.settings.imagesPerPlayer||2)-(state.game?.sources?.filter(s=>s.ownerId===state.pid).length||0);
+  if(btn){btn.disabled=count===0||count>remaining;btn.textContent=count?`Add ${count} image${count===1?'':'s'}`:'Add images'}
+}
+function toggleSearchImage(i){
+  const max=(state.game?.settings.imagesPerPlayer||2)-(state.game?.sources?.filter(s=>s.ownerId===state.pid).length||0);
+  if(state.searchSelected.includes(i))state.searchSelected=state.searchSelected.filter(x=>x!==i);
+  else if(state.searchSelected.length<max)state.searchSelected.push(i);
+  renderSearchResults()
+}
+async function addSearchSelection(){
+  const selected=state.searchSelected.map(i=>state.searchResults[i]);
+  const btn=document.querySelector('#addSearchBtn');
+  if(!selected.length||!btn||btn.disabled)return;
+  btn.disabled=true;btn.textContent='Adding…';
+  const results=await Promise.all(selected.map(async x=>{
+    for(const id of [x.fetchId,x.thumbFetchId]){
+      if(!id)continue;
+      try{
+        const r=await fetch('/api/image-fetch?id='+encodeURIComponent(id));
+        const data=await r.json();
+        if(r.ok&&data.data)return data.data
+      }catch{}
+    }
+    return null
+  }));
+  const images=results.filter(Boolean);
+  if(images.length)send({type:'ADD_SOURCES_BATCH',images});
+  if(images.length<selected.length)state.error='Added '+images.length+' of '+selected.length+' selected images — one or more could not be loaded.';
+  document.querySelector('.searchModal')?.remove();
+  state.searchSelected=[]
+}
 async function surpriseMe(){const terms=['funny animals','weird objects','space','cars','food','animals wearing clothes','random people','nature','retro','fantasy'];const q=terms[Math.floor(Math.random()*terms.length)];openImageSearch();setTimeout(()=>{const input=document.querySelector('.searchForm input');if(input)input.value=q;searchImages(q)},50)}
 function approval(){const host=state.game.players.find(p=>p.id===state.pid)?.host;const empty=!state.game.sources.length;return `<div class="shell"><div class="brand">HOST CHECK</div><h2>🕵️ Approve the image pool</h2>${empty?'<div class="notice" style="margin-top:18px">No images in the pool — At least 1 image is required to start the game.</div>':`<div class="thumbs">${state.game.sources.map(s=>`<div class="thumb"><img src="${s.data}"><button onclick="send({type:'DELETE_SOURCE',sourceId:'${s.id}'})">Delete</button></div>`).join('')}</div>`}${host?(empty?'<button style="margin-top:18px" disabled>Need at least 1 image</button>':`<button style="margin-top:18px" onclick="send({type:'APPROVAL_DONE'})">Looks good — continue →</button>`):'<p class="notice">Waiting for the host…</p>'}</div>`}
 function prompts(){const count=state.game.prompts.length,total=state.game.players.length;const submitted=state.promptSubmitted||state.game.prompts.some(p=>p.ownerId===state.pid);return `<div class="shell"><div class="brand">PROMPT ROUND</div><h2>✍️ Give everyone something ridiculous to make</h2>${submitted?`<div class="promptSubmitted">✓ Prompt submitted!</div><div class="row" style="margin-top:14px"><span class="notice">${count}/${total} submitted • Waiting for the others…</span></div>`:`<textarea id="prompt" class="promptInput" style="min-height:130px" placeholder="Write a sentence, scenario or idea…">${esc(state.prompt)}</textarea><div class="row" style="margin-top:14px"><button onclick="submitPrompt()">Submit Prompt →</button><span class="notice">${count}/${total} submitted</span></div>`}</div>`}
