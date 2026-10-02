@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.55';
+const VERSION = '1.4.56';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -19,6 +19,7 @@ const CODE_CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const code = () => { let c; do { c=''; for(let i=0;i<4;i++) c+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]; } while(games.has(c)); return c; };
 const shuffle = a => [...a].sort(() => Math.random() - 0.5);
 const clone = x => JSON.parse(JSON.stringify(x));
+const avatar = a => /^(?:[1-9]|1[0-9]|2[0-4])$/.test(String(a||'')) ? String(a) : '1';
 
 app.use(express.static('public', { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 app.get('/health', (_, res) => res.json({ ok:true, version:VERSION }));
@@ -209,8 +210,8 @@ wss.on('connection',ws=>{
   ws.on('message',raw=>{try{const m=JSON.parse(String(raw));
     if(m.type==='CLIENT_PING'){if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'CLIENT_PONG'}));return;}
     if(m.type==='RESUME'){const c=String(m.code||'').trim().toUpperCase(),g=games.get(c),pid=String(m.playerId||'');const p=g?.players.find(x=>x.id===pid);if(!g||!p){ws.send(JSON.stringify({type:'ERROR',message:'That game session is no longer available.'}));return;}const old=sockets.get(pid);if(old&&old!==ws){try{old.close(4000,'Reconnected')}catch{}}p.connected=true;sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code,resumed:true}));broadcast(g);return;}
-    if(m.type==='HOST_CREATE'){const pid=id();const host={id:pid,name:String(m.name||'Player').trim().slice(0,24)||'Player',avatar:m.avatar||'😀',host:true,ready:true,connected:true};const st=m.settings||{};const settings={capacity:Math.max(2,Math.min(16,Number(st.capacity)||8)),imagesPerPlayer:Math.max(1,Math.min(20,Number(st.imagesPerPlayer)||2)),round1Images:st.round1Images==='all'?'all':Math.max(1,Math.min(20,Number(st.round1Images)||4)),imageSeconds:Math.max(30,Math.min(600,Number(st.imageSeconds)||120)),hostApproval:!!st.hostApproval,creationSeconds:Math.max(TEST_MODE?1:30,Math.min(600,Number(st.creationSeconds)||120)),votingSeconds:Math.max(15,Math.min(300,Number(st.votingSeconds)||45))};const g=newGame(String(m.lobbyName||'Collage Game').slice(0,40),settings,host);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
-    if(m.type==='JOIN'){const c=String(m.code||'').trim().toUpperCase(),g=games.get(c),name=String(m.name||'').trim();if(!g||g.phase!=='LOBBY'){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is unavailable.'}));return;}if(g.players.length>=g.settings.capacity){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is full.'}));return;}if(!name){ws.send(JSON.stringify({type:'ERROR',message:'Enter a nickname before joining.'}));return;}const pid=id();const pl={id:pid,name:name.slice(0,24),avatar:m.avatar||'😀',host:false,ready:false,connected:true};g.players.push(pl);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
+    if(m.type==='HOST_CREATE'){const pid=id();const host={id:pid,name:String(m.name||'Player').trim().slice(0,24)||'Player',avatar:avatar(m.avatar),host:true,ready:true,connected:true};const st=m.settings||{};const settings={capacity:Math.max(2,Math.min(16,Number(st.capacity)||8)),imagesPerPlayer:Math.max(1,Math.min(20,Number(st.imagesPerPlayer)||2)),round1Images:st.round1Images==='all'?'all':Math.max(1,Math.min(20,Number(st.round1Images)||4)),imageSeconds:Math.max(30,Math.min(600,Number(st.imageSeconds)||120)),hostApproval:!!st.hostApproval,creationSeconds:Math.max(TEST_MODE?1:30,Math.min(600,Number(st.creationSeconds)||120)),votingSeconds:Math.max(15,Math.min(300,Number(st.votingSeconds)||45))};const g=newGame(String(m.lobbyName||'Collage Game').slice(0,40),settings,host);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
+    if(m.type==='JOIN'){const c=String(m.code||'').trim().toUpperCase(),g=games.get(c),name=String(m.name||'').trim();if(!g||g.phase!=='LOBBY'){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is unavailable.'}));return;}if(g.players.length>=g.settings.capacity){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is full.'}));return;}if(!name){ws.send(JSON.stringify({type:'ERROR',message:'Enter a nickname before joining.'}));return;}const pid=id();const pl={id:pid,name:name.slice(0,24),avatar:avatar(m.avatar),host:false,ready:false,connected:true};g.players.push(pl);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
     if(m.type==='ACTION'){const pid=m.playerId;if(sockets.get(pid)!==ws)return;const g=[...games.values()].find(x=>x.players.some(p=>p.id===pid));if(g)handle(g,pid,m.action);}
   }catch(e){ws.send(JSON.stringify({type:'ERROR',message:'Invalid message.'}));}});
   ws.on('error',()=>{});
