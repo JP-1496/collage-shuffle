@@ -1,3 +1,9 @@
+## V1.4.73 — Reliable title-focused image search
+- Reworked image search to use Wikimedia's title-only search mode instead of the heavier MediaSearch result retrieval.
+- This avoids the intermittent "cannot search right now" failure caused by multiple search/info API requests while keeping avatar searches genuinely relevant.
+- Avatar regression now requires every returned result to contain "avatar" as a whole word in the image title.
+- Search remains capped at 100 images and the existing image dimension/pixel limits.
+
 ## V1.4.72 — Switch to Wikimedia MediaSearch ranking
 - Replaced the unreliable Wikimedia generator search with Wikimedia's MediaSearch search profile.
 - MediaSearch uses image-focused ranking built from titles, captions, categories, structured data and Wikidata rather than arbitrary page-content matches.
