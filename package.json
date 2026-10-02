@@ -1,1 +1,21 @@
-{"name":"collage-shuffle","version":"1.4.46","private":true,"type":"module","scripts":{"start":"node server.js","test":"node test/multiplayer.mjs"},"dependencies":{"express":"^4.21.2","ws":"^8.18.0"},"engines":{"node":">=18"}}
+{
+  "name": "collage-shuffle",
+  "version": "1.4.47",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/multiplayer.mjs",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "latest"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
