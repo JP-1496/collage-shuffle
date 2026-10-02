@@ -1,3 +1,9 @@
+## V1.4.45 — Reduced live collage sync traffic
+- Debounced live collage synchronisation so edits do not continually send large piece payloads.
+- Removed the server's full STATE response to every `SYNC_COLLAGE` message.
+- Submit now cancels any pending sync and sends the latest collage immediately.
+- Server-authoritative submission and round progression remain unchanged.
+
 ## V1.4.44 — Version bump for live Render testing
 - Updated the application version to V1.4.44 across the runtime, client, package metadata, visible build badge, HTML cache-busting and documentation.
 - This build number is intended to make Render deployment verification immediately visible during live testing.
