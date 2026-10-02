@@ -28,7 +28,7 @@ const MAX_IMAGE_HEIGHT=2160;
 const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
 const MAX_SEARCH_RESULTS=100;
 const SEARCH_CANDIDATES_PER_PAGE=500;
-const MAX_SEARCH_PAGES=4;
+const MAX_SEARCH_PAGES=3;
 const SEARCH_USER_AGENT='CollageShuffle/1.4.70 (image search feature)';
 function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim()}
 function searchScore(page,q){
@@ -95,12 +95,14 @@ app.get('/api/image-search', async (req,res)=>{try{
   for(const variant of variants){
     let continuation=null;
     for(let pageNo=0;pageNo<MAX_SEARCH_PAGES;pageNo++){
-      const j=await fetchSearchPage(variant,continuation);
+      let j;
+      try{j=await fetchSearchPage(variant,continuation);}
+      catch(e){console.error('Image search page failed:',e);break;}
       addSearchPages(collected,Object.values(j.query?.pages||{}),q);
       continuation=j.continue||null;
       if(!continuation)break;
     }
-    if(collected.size>=MAX_SEARCH_RESULTS*3)break;
+    if(collected.size>=MAX_SEARCH_RESULTS)break;
   }
   const results=[...collected.values()]
     .sort((a,b)=>b.score-a.score||a.title.localeCompare(b.title))
