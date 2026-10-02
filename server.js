@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.68';
+const VERSION = '1.4.69';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -26,7 +26,7 @@ app.get('/health', (_, res) => res.json({ ok:true, version:VERSION }));
 const MAX_IMAGE_WIDTH=3840;
 const MAX_IMAGE_HEIGHT=2160;
 const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
-const MAX_SEARCH_RESULTS=36;
+const MAX_SEARCH_RESULTS=100;
 const SEARCH_CANDIDATES=500;
 function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim()}
 function searchScore(page,q){
@@ -63,7 +63,7 @@ app.get('/api/image-search', async (req,res)=>{try{
   u.searchParams.set('iiurlheight',String(MAX_IMAGE_HEIGHT));
   u.searchParams.set('cllimit','max');
   u.searchParams.set('format','json');
-  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.68 (image search feature)'}});
+  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.69 (image search feature)'}});
   if(!r.ok)throw new Error('search');
   const j=await r.json();
   const results=Object.values(j.query?.pages||{})
@@ -74,13 +74,13 @@ app.get('/api/image-search', async (req,res)=>{try{
       return {title:x.title,snippet:x.snippet||'',categories:x.categories||[],thumb,url:thumb,sourceUrl:info.url,mime:info.mime,width:Number(info.thumbwidth||info.width||0),height:Number(info.thumbheight||info.height||0),score:searchScore(x,q)};
     })
     .filter(x=>x.width>0&&x.height>0&&x.width<=MAX_IMAGE_WIDTH&&x.height<=MAX_IMAGE_HEIGHT&&x.width*x.height<=MAX_IMAGE_PIXELS)
-    .filter(x=>x.score>0)
+    .filter(x=>x.score>=-5)
     .sort((a,b)=>b.score-a.score||a.title.localeCompare(b.title))
     .slice(0,MAX_SEARCH_RESULTS)
     .map(({title,snippet,thumb,url,sourceUrl,mime,width,height})=>({title,snippet,thumb,url,sourceUrl,mime,width,height}));
   res.json({results,maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS});
 }catch(e){res.status(502).json({error:'Image search unavailable'});}});
-app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.47 (image search feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
+app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.69 (image fetch feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
 app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
 function send(pid, msg){ const ws=sockets.get(pid); if(ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(msg)); }
