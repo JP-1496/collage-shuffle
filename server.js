@@ -87,7 +87,7 @@ app.get('/api/image-search',async(req,res)=>{try{
     for(const item of parseBingImageResults(html)){
       if(!/^https:\/\//i.test(item.url)||!/^https:\/\//i.test(item.thumb))continue;
       if(!/^image\//i.test(item.mime)&&item.mime&& !/^(?:jpg|jpeg|png|webp)$/i.test(item.mime))continue;
-      if(item.width<=0||item.height<=0||item.width>MAX_IMAGE_WIDTH||item.height>MAX_IMAGE_HEIGHT||item.width*item.height>MAX_IMAGE_PIXELS)continue;
+      if((item.width&&item.width>MAX_IMAGE_WIDTH)||(item.height&&item.height>MAX_IMAGE_HEIGHT)||(item.width&&item.height&&item.width*item.height>MAX_IMAGE_PIXELS))continue;
       const key=item.url.split('#')[0];
       if(collected.has(key))continue;
       const fetchId=rememberImageUrl(item.url),thumbFetchId=rememberImageUrl(item.thumb);
