@@ -115,9 +115,8 @@ async function main(){
     assert.ok(avatarSearch.results.length>0, 'Avatar search returned no results');
     assert.equal(avatarSearch.provider,'Wikimedia title search');
     assert.ok(avatarSearch.results.length>=10, `Expected at least 10 avatar results, got ${avatarSearch.results.length}`);
-    const avatarTop=avatarSearch.results.slice(0,20).map(x=>String(x.title||''));
-    const avatarRelevant=avatarTop.filter(title=>/(avatar|profile|pfp|userpic|identicon|gravatar|dummy|man|woman|girl|boy|chibi)/i.test(title));
-    assert.ok(avatarRelevant.length>=8, `Avatar search should surface avatar/profile-oriented results near the top; got ${avatarRelevant.length}/${avatarTop.length}`);
+    assert.ok(avatarSearch.results.slice(0,20).every(x=>x.searchIntent==='avatar-category'),
+      'Avatar results should come from dedicated avatar/profile categories');
     for(const image of imageSearch.results){
       assert.ok(image.width>0&&image.height>0);
       assert.ok(image.width<=3840&&image.height<=2160);
