@@ -51,11 +51,11 @@ function decodeBingMetadata(raw=''){
 }
 function parseBingImageResults(html=''){
   const results=[];
-  const anchorRe=/<a\\b[^>]*class=["'][^"']*\\biusc\\b[^"']*["'][^>]*>/gi;
+  const anchorRe=/<a\b[^>]*class=["'][^"']*\biusc\b[^"']*["'][^>]*>/gi;
   let match;
   while((match=anchorRe.exec(html))){
     const tag=match[0];
-    const metadataMatch=tag.match(/\\bm=["']([^"']+)["']/i);
+    const metadataMatch=tag.match(/\bm=["']([^"']+)["']/i);
     if(!metadataMatch)continue;
     const meta=decodeBingMetadata(metadataMatch[1]);
     if(!meta?.murl||!meta?.turl)continue;
