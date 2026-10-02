@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.48';
+const VERSION = '1.4.49';
 const MIN_PLAYERS = 2;
 const app = express();
 const http = createServer(app);
@@ -90,6 +90,7 @@ function assignRound1Sources(g){
 }
 function scatter(pieces){ return pieces.map((p,i)=>({...clone(p),id:id(),x:15+((i*37)%70),y:15+((i*53)%70),z:i})); }
 function beginRound(g){
+  if(TEST_MODE) console.log(`[TEST] beginRound round=${g.round}`);
   g.roundFinishing=false;
   if(!g.promptOrder.length) g.promptOrder=shuffle(g.prompts.map(p=>p.id));
   if(g.round>=g.players.length){transition(g,'FINAL');return;}
@@ -118,6 +119,7 @@ function beginRound(g){
   schedule(g,g.settings.creationSeconds*1000,()=>finishRound(g));
 }
 function finishRound(g){
+  if(TEST_MODE) console.log(`[TEST] finishRound entered phase=${g.phase} round=${g.round} finishing=${g.roundFinishing}`);
   if(g.phase!=='ROUND' || g.roundFinishing)return;
   // Lock completion before doing any work so a submission and timer cannot
   // both advance the same round.
@@ -191,6 +193,7 @@ function handle(g,pid,a){
       g.finalResults[g.round].collages[pid]=clone(c);
       const connected=g.players.filter(x=>x.connected);
       const submitted=connected.filter(x=>g.collages[x.id]?.submitted).length;
+      if(TEST_MODE) console.log(`[TEST] submit pid=${pid} round=${g.round} connected=${connected.length} submitted=${submitted} players=${g.players.length}`);
       // Broadcast the accepted count first. WebSocket delivery preserves message
       // order, so clients receive 2/2 before the Round 2 state.
       broadcast(g);
