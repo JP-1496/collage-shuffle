@@ -25,7 +25,7 @@ async function createPlayer(browser, nickname, label) {
   await page.getByRole('button', { name: `Character ${avatar}` }).click();
   await expect(page.locator('.avatars button')).toHaveCount(24);
   for(const id of ['21','22','23','24']){
-    await expect(page.locator(`.avatars .avatarIcon[data-avatar="${id}"]`)).toHaveCSS('transform', 'matrix(1.08, 0, 0, 1.08, 0, 0)');
+    await expect(page.locator(`.avatars .avatarIcon[data-avatar="${id}"]`)).toHaveCSS('background-color', 'rgb(0, 0, 0)');
   }
   await expect(page.locator('.avatars')).toHaveCSS('grid-template-columns', '82px 82px 82px 82px 82px 82px');
   await expect(page.locator('.profileNameRow .profileAvatar')).toHaveAttribute('data-avatar', avatar);
