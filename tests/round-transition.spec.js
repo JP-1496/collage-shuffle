@@ -79,6 +79,9 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     await expect(p1.locator('.playerAvatar[data-avatar="5"]')).toHaveCSS('width', '52px');
     await expect(p1.locator('.playerAvatar[data-avatar="5"]')).toHaveCSS('height', '52px');
     await expect(p1.locator('.playerAvatar[data-avatar="5"]')).toHaveCSS('border-radius', '50%');
+    await expect(p1.locator('.playerHud .hudAvatar[data-avatar="5"]')).toHaveCSS('width', '52px');
+    await expect(p1.locator('.playerHud .hudAvatar[data-avatar="5"]')).toHaveCSS('height', '52px');
+    await expect(p1.locator('.playerHud .hudAvatar[data-avatar="5"]')).toHaveCSS('border-radius', '50%');
     await expect(p1.locator('.playerHud .hudAvatar[data-avatar="5"]')).toHaveCount(1);
 
     await p2.getByRole('button', { name: /Ready up/ }).click();

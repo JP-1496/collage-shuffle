@@ -1,7 +1,8 @@
-## V1.4.60
-- Made lobby player avatars larger.
-- Cropped lobby avatars into clean circular portraits.
-- Added automated coverage for lobby avatar size and round shape.
+## V1.4.61
+- Standardized player character displays across the game.
+- Lobby, player HUD and final-results avatars are now large circular portraits using the same crop rules.
+- Increased mobile identity avatars to remain clearly visible.
+- Added automated coverage for the lobby avatar sizing rules.
 
 ## V1.4.57
 - Replaced the temporary SVG avatar artwork with the 20 cleaned custom avatar images.
