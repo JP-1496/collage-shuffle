@@ -6,9 +6,19 @@ const ONE_PIXEL_PNG = Buffer.from(
   'base64'
 );
 
-async function createPlayer(browser, nickname) {
+async function createPlayer(browser, nickname, label) {
   const context = await browser.newContext();
   const page = await context.newPage();
+  page.on('websocket', ws => {
+    ws.on('framereceived', data => {
+      try {
+        const msg = JSON.parse(String(data));
+        if (msg.type === 'STATE') {
+          fs.appendFileSync('browser.log', `[WS ${label}] phase=${msg.state?.phase} round=${msg.state?.round} submitted=${JSON.stringify(msg.state?.submissionStatus)}\\n`);
+        }
+      } catch {}
+    });
+  });
   await page.goto('/');
   await page.locator('input[placeholder="Nickname"]').fill(nickname);
   return { context, page };
@@ -24,8 +34,8 @@ async function addTwoImages(page) {
 }
 
 test('two players can submit Round 1 and both reach Round 2', async ({ browser }) => {
-  const player1 = await createPlayer(browser, 'Player 1');
-  const player2 = await createPlayer(browser, 'Player 2');
+  const player1 = await createPlayer(browser, 'Player 1', 'P1');
+  const player2 = await createPlayer(browser, 'Player 2', 'P2');
 
   try {
     const p1 = player1.page;
