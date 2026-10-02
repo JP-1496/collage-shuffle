@@ -51,7 +51,7 @@ function decodeBingMetadata(raw=''){
 }
 function parseBingImageResults(html=''){
   const results=[];
-  const cardRe=/<li[^>]*class=["'][^"']*iusc[^"']*["'][^>]*>[\s\S]*?<a[^>]*class=["'][^"']*iusc[^"']*["'][^>]*m=["']([^"']+)["'][^>]*>[\s\S]*?<\/li>/gi;
+  const cardRe=/<li[^>]*>[\s\S]*?<a[^>]*class=["'][^"']*iusc[^"']*["'][^>]*m=["']([^"']+)["'][^>]*>[\s\S]*?<\/li>/gi;
   let match;
   while((match=cardRe.exec(html))){
     const meta=decodeBingMetadata(match[1]);
@@ -100,7 +100,7 @@ app.get('/api/image-fetch', async (req,res)=>{try{
   if(!cached)return res.status(400).json({error:'Invalid or expired image reference'});
   const u=new URL(cached.url);
   if(u.protocol!=='https:')return res.status(400).json({error:'Unsupported image source'});
-  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.80 (image fetch feature)','Accept':'image/*'}});
+  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.81 (image fetch feature)','Accept':'image/*'}});
   if(!r.ok)throw new Error('fetch '+r.status);
   const type=r.headers.get('content-type')||'image/jpeg';
   if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});
