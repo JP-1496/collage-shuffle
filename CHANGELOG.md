@@ -1,6 +1,7 @@
-## V1.4.59
-- Changed the profile heading from “Your profile” to “Who are you?”.
-- Removed the profile silhouette emoji from the heading.
+## V1.4.60
+- Made lobby player avatars larger.
+- Cropped lobby avatars into clean circular portraits.
+- Added automated coverage for lobby avatar size and round shape.
 
 ## V1.4.57
 - Replaced the temporary SVG avatar artwork with the 20 cleaned custom avatar images.
