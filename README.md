@@ -1,4 +1,4 @@
-# Collage — Shuffle V1.4.52
+# Collage — Shuffle V1.4.53
 
 ### V1.4.52
 - Fixed the final collage submission hand-off so the server explicitly queues round completion after broadcasting the final submission count.
