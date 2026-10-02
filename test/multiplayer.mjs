@@ -105,15 +105,14 @@ async function main(){
     assert.ok(Array.isArray(imageSearch.results), JSON.stringify(imageSearch));
     assert.ok(imageSearch.results.length>=50, `Expected at least 50 ocean images, got ${imageSearch.results.length}`);
     assert.ok(imageSearch.results.length<=100);
-    assert.equal(new Set(imageSearch.results.map(x=>x.sourceUrl||x.url)).size,imageSearch.results.length);
+    assert.equal(imageSearch.provider,'Openverse');
+    assert.equal(new Set(imageSearch.results.map(x=>x.url)).size,imageSearch.results.length);
+    assert.ok(imageSearch.results.every(x=>x.thumb&&x.fetchId&&x.thumbFetchId),'Every result must provide a thumbnail and lazy fetch references');
     const avatarSearch=await (await fetch(BASE+'/api/image-search?q=avatar')).json();
     assert.ok(Array.isArray(avatarSearch.results), JSON.stringify(avatarSearch));
     assert.ok(avatarSearch.results.length>0, 'Avatar search returned no results');
-    assert.equal(avatarSearch.provider,'Wikimedia title search');
-    for(const image of avatarSearch.results){
-      const title=String(image.title||'').toLowerCase().replace(/^file:/,'').replace(/[^a-z0-9]+/g,' ').trim();
-      assert.ok(title.includes('avatar'), `Irrelevant avatar result: ${image.title}`);
-    }
+    assert.equal(avatarSearch.provider,'Openverse');
+    assert.ok(avatarSearch.results.slice(0,20).some(x=>/avatar/i.test(String(x.title||''))),'Avatar results should contain title matches near the top');
     for(const image of imageSearch.results){
       assert.ok(image.width>0&&image.height>0);
       assert.ok(image.width<=3840&&image.height<=2160);
@@ -197,7 +196,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version     ,'1.4.75');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version     ,'1.4.76');
     host.ws.close();guest.ws.close();
 
     // Repeat the final-submission transition repeatedly and in both orders.
