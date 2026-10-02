@@ -115,6 +115,9 @@ async function main(){
     assert.ok(avatarSearch.results.length>0, 'Avatar search returned no results');
     assert.equal(avatarSearch.provider,'Wikimedia title search');
     assert.ok(avatarSearch.results.every(x=>/avatar/i.test(String(x.title||''))),'Every avatar result title should contain avatar');
+    assert.ok(avatarSearch.results.length>=10, `Expected at least 10 avatar results, got ${avatarSearch.results.length}`);
+    assert.ok(avatarSearch.results.slice(0,20).some(x=>/(portrait|person|headshot|selfie|face|woman|man)/i.test(String(x.title||''))),
+      'Avatar search should surface person-oriented titles near the top');
     for(const image of imageSearch.results){
       assert.ok(image.width>0&&image.height>0);
       assert.ok(image.width<=3840&&image.height<=2160);
@@ -198,7 +201,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version     ,'1.4.76');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version     ,'1.4.77');
     host.ws.close();guest.ws.close();
 
     // Repeat the final-submission transition repeatedly and in both orders.
