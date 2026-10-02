@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.70';
+const VERSION = '1.4.71';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -29,23 +29,23 @@ const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
 const MAX_SEARCH_RESULTS=100;
 const SEARCH_CANDIDATES_PER_PAGE=500;
 const MAX_SEARCH_PAGES=3;
-const SEARCH_USER_AGENT='CollageShuffle/1.4.70 (image search feature)';
+const SEARCH_USER_AGENT='CollageShuffle/1.4.71 (image search feature)';
 function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim()}
 function searchScore(page,q){
   const query=normaliseSearchText(q), terms=query.split(' ').filter(Boolean);
   const title=normaliseSearchText(String(page.title||'').replace(/^File:/i,''));
   const snippet=normaliseSearchText(page.snippet||'');
-  const phrase=query&&title.includes(query);
+  const phrase=Boolean(query&&title.includes(query));
   const titleWords=new Set(title.split(' ').filter(Boolean));
   const titleHits=terms.filter(t=>titleWords.has(t)).length;
   const snippetHits=terms.filter(t=>snippet.includes(t)).length;
+  const titleRelevant=Boolean(terms.length&&(phrase||titleHits===terms.length));
+  if(!titleRelevant)return null;
   let score=0;
   if(phrase)score+=120;
   if(titleHits===terms.length)score+=80;
-  else score+=titleHits*30;
   if(snippetHits===terms.length)score+=20;
   else score+=snippetHits*5;
-  if(!titleHits&&!snippetHits)score-=15;
   return score;
 }
 function searchVariants(q){
