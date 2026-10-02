@@ -67,7 +67,7 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     await expect(p1.locator('.players')).toContainText('Player 2');
     await expect(p2.locator('.players')).toContainText('Player 1');
     await expect(p1.locator('.playerAvatar[data-avatar="5"]')).toHaveCount(1);
-    await expect(p1.locator('.playerHud[data-avatar="5"]')).toHaveCount(1);
+    await expect(p1.locator('.playerHud .hudAvatar[data-avatar="5"]')).toHaveCount(1);
 
     await p2.getByRole('button', { name: /Ready up/ }).click();
     await expect(p1.getByRole('button', { name: /Start Game/ })).toBeEnabled();
