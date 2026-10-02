@@ -1,3 +1,10 @@
+## V1.4.79 — avatar search targets actual profile/avatar graphics
+- Reworked the special `avatar` search to pull from Wikimedia Commons' person-avatar and blank-profile categories instead of generic full-text avatar matches.
+- Added ranking for profile/avatar/placeholder-style titles and square-ish profile images.
+- De-prioritised obvious photo/Second Life-style results so the first results are much closer to generic human profile avatars.
+- Kept normal searches unchanged.
+- Bumped runtime, client, package and cache-busting versions to V1.4.79.
+
 ## V1.4.78 — avatar search uses actual avatar categories
 - Reworked the `avatar` search to prioritize Wikimedia Commons avatar/profile-avatar categories instead of generic images merely containing the word “avatar”.
 - Prioritizes male/female avatars, Chromium profile avatars, Gravatars and identicons before the broader avatar category.
