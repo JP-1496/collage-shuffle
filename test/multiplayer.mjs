@@ -8,7 +8,8 @@ const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCA
 const fs=await import('node:fs/promises');
 const serverSource=await fs.readFile(new URL('../server.js',import.meta.url),'utf8');
 const appSource=await fs.readFile(new URL('../public/app.js',import.meta.url),'utf8');
-assert.match(serverSource,/MAX_SEARCH_RESULTS=100/);\nassert.match(serverSource,/dgControl_list/);
+assert.match(serverSource,/MAX_SEARCH_RESULTS=100/);
+assert.match(serverSource,/dgControl_list/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH=3840/);
 assert.match(serverSource,/MAX_IMAGE_HEIGHT=2160/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH\*MAX_IMAGE_HEIGHT/);
