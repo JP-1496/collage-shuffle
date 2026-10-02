@@ -1,11 +1,11 @@
-# Collage — Shuffle V1.4.49
+# Collage — Shuffle V1.4.50
 
-### V1.4.49
+### V1.4.50
 - Fixed the final collage submission hand-off so the server explicitly queues round completion after broadcasting the final submission count.
 
 Browser-first multiplayer party game prototype.
 
-### V1.4.49
+### V1.4.50
 - Reduced live collage editor WebSocket traffic by debouncing collage syncs and removing the server's full-state response to each sync.
 - Submit now cancels any pending sync and sends the latest collage directly.
 
