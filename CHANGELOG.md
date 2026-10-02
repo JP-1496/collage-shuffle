@@ -1,3 +1,12 @@
+# Changelog
+
+## V1.4.47
+- Added automated Playwright two-player end-to-end coverage for the Round 1 submission → Round 2 transition.
+- Added GitHub Actions CI to run Chromium tests on pushes and pull requests.
+- Added failure screenshots, video, traces, and HTML reports for investigation.
+- Added `npm run test:e2e` for local Playwright runs.
+- Gameplay logic unchanged from V1.4.46.
+
 ## V1.4.46 — Final submission round transition fix
 - Fixed the final collage submission hand-off by explicitly queuing round completion after the accepted submission count is broadcast.
 - Added a short transition delay so both clients can receive the final 2/2 state before the server advances to the next round.
