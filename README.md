@@ -1,4 +1,8 @@
-# Collage — Shuffle V1.4.55
+# Collage — Shuffle V1.4.56
+
+### V1.4.56
+- Added 24 custom character avatars selectable from the player profile.
+- Player characters now appear beside names and in the top-right in-game identity display.
 
 ### V1.4.55
 - Added a persistent Leave Game button during active games.
