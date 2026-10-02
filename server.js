@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.79';
+const VERSION = '1.4.80';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -30,7 +30,7 @@ const MAX_SEARCH_RESULTS=100;
 const SEARCH_CANDIDATES_PER_PAGE=500;
 const SEARCH_THUMB_WIDTH=600;
 const MAX_SEARCH_PAGES=3;
-const SEARCH_USER_AGENT='CollageShuffle/1.4.79 (image search feature)';
+const SEARCH_USER_AGENT='CollageShuffle/1.4.80 (image search feature)';
 const imageFetchCache=new Map();
 function rememberImageUrl(url){
   const raw=String(url||'');
@@ -54,29 +54,24 @@ function searchTitleRelevant(title,q){
 function searchQueries(q){
   const clean=normaliseSearchText(q);
   if(!clean)return [];
-  if(clean==='avatar')return [];
+  if(clean==='avatar')return ["Na'vi"];
   return [clean.split(' ').filter(Boolean).map(term=>`intitle:${term}`).join(' ')];
 }
 function avatarCategories(){
-  return [
-    'Category:Blank persons placeholders (men)',
-    'Category:Blank persons placeholders (women)',
-    'Category:Male avatars',
-    'Category:Female avatars'
-  ];
+  return ["Category:Na'vi"];
 }
 function avatarScore(item){
   const title=normaliseSearchText(String(item.title||'').replace(/^File:/i,''));
   let score=0;
-  if(/\bavatar\b/.test(title))score+=10;
-  if(/\bprofile\b|\bpfp\b|\buserpic\b/.test(title))score+=8;
-  if(/\bplaceholder\b|\bdefault\b|\bdummy\b/.test(title))score+=6;
-  if(/\buser\b|\bperson\b|\bportrait\b|\bhead\b|\bface\b|\bicon\b|\bsilhouette\b/.test(title))score+=4;
-  if(/\bphoto\b|\bhandsome\b|\bsecond life\b/.test(title))score-=5;
+  if(/\bna'?vi\b/.test(title))score+=16;
+  if(/\bjake sully\b/.test(title))score+=18;
+  if(/\bneytiri\b/.test(title))score+=18;
+  if(/\bavatar\b/.test(title))score+=8;
+  if(/\b(blue|navi|character|portrait|head|face|cosplay)\b/.test(title))score+=4;
+  if(/\b(logo|poster|park|river|mural|language|pdf|flight of passage)\b/.test(title))score-=12;
+  if(/\b(way of water|fire and ash)\b/.test(title))score+=3;
   const ratio=Number(item.width||0)/Number(item.height||1);
-  if(ratio>=0.65&&ratio<=1.7)score+=5;
-  else score-=6;
-  if(Number(item.width||0)<=2000&&Number(item.height||0)<=2000)score+=2;
+  if(ratio>=0.5&&ratio<=2.0)score+=3;
   return score;
 }
 async function fetchCategoryPage(category,continuation){
@@ -137,13 +132,12 @@ app.get('/api/image-search',async(req,res)=>{try{
   const collected=new Map();
   if(cleanQuery==='avatar'){
     for(const category of avatarCategories()){
-      let continuation=null;
-      for(let page=0;page<MAX_SEARCH_PAGES;page++){
-        const data=await fetchCategoryPage(category,continuation);
-        addSearchResults(collected,Object.values(data.query?.pages||{}),q);
-        continuation=data.continue||null;
-        if(!continuation)break;
-      }
+      const data=await fetchCategoryPage(category,null);
+      addSearchResults(collected,Object.values(data.query?.pages||{}),q);
+    }
+    for(const query of searchQueries(q)){
+      const data=await fetchSearchPage(query,null);
+      addSearchResults(collected,Object.values(data.query?.pages||{}),q);
     }
   }else{
     for(const query of searchQueries(q)){
@@ -159,7 +153,7 @@ app.get('/api/image-search',async(req,res)=>{try{
   }
   let results=[...collected.values()];
   if(cleanQuery==='avatar')results.sort((a,b)=>avatarScore(b)-avatarScore(a)||String(a.title).localeCompare(String(b.title)));
-  results=results.slice(0,MAX_SEARCH_RESULTS).map(x=>({...x,searchIntent:cleanQuery==='avatar'?'avatar-category':'text-title'}));
+  results=results.slice(0,MAX_SEARCH_RESULTS).map(x=>({...x,searchIntent:cleanQuery==='avatar'?'avatar-franchise':'text-title'}));
   res.json({results,maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Wikimedia title search',thumbnailWidth:SEARCH_THUMB_WIDTH});
 }catch(e){
   console.error('Image search failed:',e);
@@ -172,7 +166,7 @@ app.get('/api/image-fetch', async (req,res)=>{try{
   if(!cached)return res.status(400).json({error:'Invalid or expired image reference'});
   const u=new URL(cached.url);
   if(u.protocol!=='https:')return res.status(400).json({error:'Unsupported image source'});
-  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.79 (image fetch feature)','Accept':'image/*'}});
+  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.80 (image fetch feature)','Accept':'image/*'}});
   if(!r.ok)throw new Error('fetch '+r.status);
   const type=r.headers.get('content-type')||'image/jpeg';
   if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});
