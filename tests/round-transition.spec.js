@@ -24,6 +24,12 @@ async function createPlayer(browser, nickname, label) {
   const avatar = label === 'P1' ? '5' : '12';
   await page.getByRole('button', { name: `Character ${avatar}` }).click();
   await expect(page.locator('.avatars button')).toHaveCount(20);
+  await expect(page.locator('.profileNameRow .profileAvatar')).toHaveAttribute('data-avatar', avatar);
+  const selectedAvatar = page.locator('.avatars button.selected');
+  await expect(selectedAvatar).toHaveAttribute('data-avatar', avatar);
+  await expect(selectedAvatar).toHaveCSS('background-color', 'rgb(97, 223, 154)');
+  await expect(selectedAvatar).toHaveCSS('padding', '0px');
+  await expect(selectedAvatar.locator('.avatarIcon')).toHaveCSS('object-fit', 'cover');
   return { context, page };
 }
 
