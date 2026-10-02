@@ -1,15 +1,20 @@
-## V1.4.67
+## V1.4.68
+- Fixed image search returning only a handful of results for broad searches such as "ocean".
+- Search now considers up to 500 Wikimedia candidates before selecting the best 36.
+- Large source images are represented by Wikimedia thumbnails constrained to the game's 3840×2160 / 8.3MP maximum, so oversized originals no longer remove otherwise useful search results.
+
+## V1.4.68
 - Improved Wikimedia image search relevance by scoring title, category and description matches instead of relying only on broad search ordering.
 - Search results are limited to images no larger than 3840px on either dimension and no more than 8.3 megapixels (4K-class maximum).
 - Search now returns the most relevant 36 usable images.
 
-## V1.4.67
+## V1.4.68
 - Fixed character selection for avatars 21–24.
 
-## V1.4.67
+## V1.4.68
 - Replaced the avatar artwork with the 24 newly supplied character images.
 - Upscaled the 24-avatar roster and added it to the game as a shared sprite asset with black backgrounds.
-- Fixed the build version/cache label to V1.4.67.
+- Fixed the build version/cache label to V1.4.68.
 
 ## V1.4.64
 - Added a black circular buffer behind all 24 avatar images.
