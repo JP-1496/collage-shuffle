@@ -163,7 +163,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version   ,'1.4.53');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version   ,'1.4.54');
     host.ws.close();guest.ws.close();
 
     // Repeat the final-submission transition repeatedly and in both orders.
@@ -233,6 +233,33 @@ async function main(){
     const disconnectedRound=await nextState(dhost,s=>s.phase==='ROUND'&&s.round===0);
     assert.ok(disconnectedRound.prompts.some(p=>p.ownerId===dgj.playerId&&p.placeholder===true));
     dhost.ws.close();
+
+    // Connection recovery: a player can reconnect with the same identity and continue submitting.
+    const resumeHost=await connect();
+    resumeHost.ws.send(JSON.stringify({type:'HOST_CREATE',name:'ResumeHost',lobbyName:'Resume Test',settings:{capacity:2,imagesPerPlayer:1,round1Images:1,hostApproval:false}}));
+    const rhj=await waitFor(()=>resumeHost.messages.find(m=>m.type==='JOINED'));
+    const resumeGuest=await connect();
+    resumeGuest.ws.send(JSON.stringify({type:'JOIN',name:'ResumeGuest',code:rhj.code}));
+    const rgj=await waitFor(()=>resumeGuest.messages.find(m=>m.type==='JOINED'));
+    action(resumeGuest,rgj.playerId,{type:'SET_READY',ready:true});
+    action(resumeHost,rhj.playerId,{type:'START'});
+    await nextState(resumeHost,s=>s.phase==='IMAGE_SUBMISSION');
+    action(resumeHost,rhj.playerId,{type:'ADD_SOURCE',data:PNG}); action(resumeGuest,rgj.playerId,{type:'ADD_SOURCE',data:PNG});
+    action(resumeHost,rhj.playerId,{type:'IMAGE_READY'}); action(resumeGuest,rgj.playerId,{type:'IMAGE_READY'});
+    await nextState(resumeHost,s=>s.phase==='PROMPT_SUBMISSION');
+    action(resumeHost,rhj.playerId,{type:'ADD_PROMPT',text:'Resume host'}); action(resumeGuest,rgj.playerId,{type:'ADD_PROMPT',text:'Resume guest'});
+    await nextState(resumeHost,s=>s.phase==='ROUND'&&s.round===0);
+    resumeGuest.ws.close();
+    await nextState(resumeHost,s=>s.phase==='ROUND'&&s.players.some(p=>p.id===rgj.playerId&&!p.connected));
+    const resumedGuest=await connect();
+    resumedGuest.ws.send(JSON.stringify({type:'RESUME',playerId:rgj.playerId,code:rhj.code}));
+    await waitFor(()=>resumedGuest.messages.find(m=>m.type==='JOINED'&&m.resumed===true));
+    const resumedState=await nextState(resumeHost,s=>s.phase==='ROUND'&&s.players.every(p=>p.connected));
+    assert.equal(resumedState.round,0);
+    action(resumeHost,rhj.playerId,{type:'SUBMIT_COLLAGE',pieces:p1});
+    action(resumedGuest,rgj.playerId,{type:'SUBMIT_COLLAGE',pieces:p2});
+    await Promise.all([nextState(resumeHost,s=>s.phase==='ROUND'&&s.round===1),nextState(resumedGuest,s=>s.phase==='ROUND'&&s.round===1)]);
+    resumeHost.ws.close(); resumedGuest.ws.close();
 
     console.log('PASS: multiplayer flow, privacy filtering, rotation, vote locking, disconnect handling and version endpoint');
   }finally{
