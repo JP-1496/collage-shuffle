@@ -1,4 +1,4 @@
-## V1.4.62
+## V1.4.63
 - Standardized player character displays across the game.
 - Lobby, player HUD and final-results avatars are now large circular portraits using the same crop rules.
 - Increased mobile identity avatars to remain clearly visible.
