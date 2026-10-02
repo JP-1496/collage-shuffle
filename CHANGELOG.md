@@ -1,3 +1,13 @@
+# Collage Changelog
+
+## V1.4.70 — Expanded image search retrieval
+- Reworked Wikimedia image search to paginate through multiple result pages instead of relying on one 500-result batch.
+- Added query expansion for broad searches, including plural and photo/photograph variants.
+- Increased the search candidate pool substantially while keeping the final result set capped at 100.
+- Deduplicates results across all search passes and keeps the strongest relevance score for each image.
+- Preserved the existing 3840×2160 / 8,294,400-pixel image limit.
+- Added server-side search failure logging for easier deployment diagnostics.
+
 ## V1.4.69
 - Expanded image search results from 36 to 100 results.
 - Relaxed the custom relevance gate so useful snippet-only Wikimedia matches are retained for broad searches.
