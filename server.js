@@ -29,7 +29,7 @@ const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
 const MAX_SEARCH_RESULTS=100;
 const SEARCH_CANDIDATES_PER_PAGE=500;
 const SEARCH_THUMB_WIDTH=600;
-const MAX_SEARCH_PAGES=2;
+const MAX_SEARCH_PAGES=3;
 const SEARCH_USER_AGENT='CollageShuffle/1.4.76 (image search feature)';
 const imageFetchCache=new Map();
 function rememberImageUrl(url){
