@@ -27,10 +27,10 @@ const MAX_IMAGE_WIDTH=3840;
 const MAX_IMAGE_HEIGHT=2160;
 const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
 const MAX_SEARCH_RESULTS=100;
-const SEARCH_CANDIDATES_PER_PAGE=500;
 const SEARCH_THUMB_WIDTH=600;
-const MAX_SEARCH_PAGES=3;
-const SEARCH_USER_AGENT='CollageShuffle/1.4.80 (image search feature)';
+const SEARCH_PAGE_SIZE=35;
+const SEARCH_PAGES=3;
+const SEARCH_USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154.0.0.0 Safari/537.36';
 const imageFetchCache=new Map();
 function rememberImageUrl(url){
   const raw=String(url||'');
@@ -43,118 +43,52 @@ function pruneImageFetchCache(){
   const now=Date.now();
   for(const [token,item] of imageFetchCache)if(item.expiresAt<=now)imageFetchCache.delete(token);
 }
-function normaliseSearchText(value=''){
-  return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim();
+function decodeHtmlEntities(value=''){
+  return String(value).replace(/&quot;/gi,'"').replace(/&#34;/gi,'"').replace(/&apos;/gi,"'").replace(/&#39;/gi,"'").replace(/&amp;/gi,'&').replace(/&lt;/gi,'<').replace(/&gt;/gi,'>');
 }
-function searchTitleRelevant(title,q){
-  const terms=normaliseSearchText(q).split(' ').filter(Boolean);
-  const words=normaliseSearchText(String(title||'').replace(/^File:/i,'')).split(' ').filter(Boolean);
-  return terms.length>0&&terms.every(term=>words.some(word=>word===term||word.startsWith(term)));
+function decodeBingMetadata(raw=''){
+  try{return JSON.parse(decodeHtmlEntities(raw));}catch{return null;}
 }
-function searchQueries(q){
-  const clean=normaliseSearchText(q);
-  if(!clean)return [];
-  if(clean==='avatar')return ["Na'vi"];
-  return [clean.split(' ').filter(Boolean).map(term=>`intitle:${term}`).join(' ')];
-}
-function avatarCategories(){
-  return ["Category:Na'vi"];
-}
-function avatarScore(item){
-  const title=normaliseSearchText(String(item.title||'').replace(/^File:/i,''));
-  let score=0;
-  if(/\bna'?vi\b/.test(title))score+=16;
-  if(/\bjake sully\b/.test(title))score+=18;
-  if(/\bneytiri\b/.test(title))score+=18;
-  if(/\bavatar\b/.test(title))score+=8;
-  if(/\b(blue|navi|character|portrait|head|face|cosplay)\b/.test(title))score+=4;
-  if(/\b(logo|poster|park|river|mural|language|pdf|flight of passage)\b/.test(title))score-=12;
-  if(/\b(way of water|fire and ash)\b/.test(title))score+=3;
-  const ratio=Number(item.width||0)/Number(item.height||1);
-  if(ratio>=0.5&&ratio<=2.0)score+=3;
-  return score;
-}
-async function fetchCategoryPage(category,continuation){
-  const u=new URL('https://commons.wikimedia.org/w/api.php');
-  u.searchParams.set('action','query');
-  u.searchParams.set('generator','categorymembers');
-  u.searchParams.set('gcmtitle',category);
-  u.searchParams.set('gcmnamespace','6');
-  u.searchParams.set('gcmlimit',String(SEARCH_CANDIDATES_PER_PAGE));
-  u.searchParams.set('prop','imageinfo');
-  u.searchParams.set('iiprop','url|mime|size');
-  u.searchParams.set('iiurlwidth',String(SEARCH_THUMB_WIDTH));
-  u.searchParams.set('iiurlheight',String(Math.round(SEARCH_THUMB_WIDTH*0.75)));
-  u.searchParams.set('format','json');
-  if(continuation)for(const [key,value] of Object.entries(continuation))u.searchParams.set(key,String(value));
-  const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'application/json'}});
-  if(!r.ok)throw new Error('avatar category search '+r.status);
-  return r.json();
-}
-async function fetchSearchPage(q,continuation){
-  const u=new URL('https://commons.wikimedia.org/w/api.php');
-  u.searchParams.set('action','query');
-  u.searchParams.set('generator','search');
-  u.searchParams.set('gsrsearch',q);
-  u.searchParams.set('gsrnamespace','6');
-  u.searchParams.set('gsrlimit',String(SEARCH_CANDIDATES_PER_PAGE));
-  u.searchParams.set('prop','imageinfo');
-  u.searchParams.set('iiprop','url|mime|size');
-  u.searchParams.set('iiurlwidth',String(SEARCH_THUMB_WIDTH));
-  u.searchParams.set('iiurlheight',String(Math.round(SEARCH_THUMB_WIDTH*0.75)));
-  u.searchParams.set('format','json');
-  if(continuation)for(const [key,value] of Object.entries(continuation))u.searchParams.set(key,String(value));
-  const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'application/json'}});
-  if(!r.ok)throw new Error('image search '+r.status);
-  return r.json();
-}
-function addSearchResults(target,pages,q){
-  for(const page of pages||[]){
-    const info=page.imageinfo?.[0];
-    if(!info?.url||!info.mime?.startsWith('image/'))continue;
-    if(normaliseSearchText(q)!=='avatar'&&!searchTitleRelevant(page.title,q))continue;
-    const thumb=info.thumburl||info.url;
-    const width=Number(info.width||0),height=Number(info.height||0);
-    if(width<=0||height<=0||width>MAX_IMAGE_WIDTH||height>MAX_IMAGE_HEIGHT||width*height>MAX_IMAGE_PIXELS)continue;
-    const key=String(info.sha1||info.url);
-    if(target.has(key))continue;
-    const fetchId=rememberImageUrl(info.url);
-    const thumbFetchId=rememberImageUrl(thumb);
-    if(!fetchId||!thumbFetchId)continue;
-    target.set(key,{title:page.title,snippet:page.snippet||'',thumb,url:info.url,sourceUrl:info.url,mime:info.mime,width,height,fetchId,thumbFetchId});
+function parseBingImageResults(html=''){
+  const results=[];
+  const cardRe=/<li[^>]*class=["'][^"']*iusc[^"']*["'][^>]*>[\s\S]*?<a[^>]*class=["'][^"']*iusc[^"']*["'][^>]*m=["']([^"']+)["'][^>]*>[\s\S]*?<\/li>/gi;
+  let match;
+  while((match=cardRe.exec(html))){
+    const meta=decodeBingMetadata(match[1]);
+    if(!meta?.murl||!meta?.turl)continue;
+    const title=String(meta.t||meta.title||'').replace(/<[^>]+>/g,'').trim();
+    results.push({title,snippet:String(meta.desc||''),thumb:meta.turl,url:meta.murl,sourceUrl:meta.purl||meta.murl,mime:meta.m||'',width:Number(meta.w||0),height:Number(meta.h||0)});
   }
+  return results;
+}
+async function fetchBingPage(q,page){
+  const u=new URL('https://www.bing.com/images/async');
+  u.searchParams.set('q',q);u.searchParams.set('mmasync','1');
+  u.searchParams.set('first',String((page-1)*SEARCH_PAGE_SIZE+1));u.searchParams.set('count',String(SEARCH_PAGE_SIZE));
+  u.searchParams.set('setlang','en');u.searchParams.set('cc','GB');
+  const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'text/html,application/xhtml+xml','Accept-Language':'en-GB,en;q=0.9'}});
+  if(!r.ok)throw new Error('Bing image search '+r.status);
+  return r.text();
 }
 app.get('/api/image-search',async(req,res)=>{try{
   const q=String(req.query.q||'').trim().slice(0,120);
   if(!q)return res.json({results:[]});
   pruneImageFetchCache();
-  const cleanQuery=normaliseSearchText(q);
   const collected=new Map();
-  if(cleanQuery==='avatar'){
-    for(const category of avatarCategories()){
-      const data=await fetchCategoryPage(category,null);
-      addSearchResults(collected,Object.values(data.query?.pages||{}),q);
-    }
-    for(const query of searchQueries(q)){
-      const data=await fetchSearchPage(query,null);
-      addSearchResults(collected,Object.values(data.query?.pages||{}),q);
-    }
-  }else{
-    for(const query of searchQueries(q)){
-      let continuation=null;
-      for(let page=0;page<MAX_SEARCH_PAGES&&collected.size<MAX_SEARCH_RESULTS;page++){
-        const data=await fetchSearchPage(query,continuation);
-        addSearchResults(collected,Object.values(data.query?.pages||{}),q);
-        continuation=data.continue||null;
-        if(!continuation)break;
-      }
-      if(collected.size>=MAX_SEARCH_RESULTS)break;
+  for(let page=1;page<=SEARCH_PAGES&&collected.size<MAX_SEARCH_RESULTS;page++){
+    const html=await fetchBingPage(q,page);
+    for(const item of parseBingImageResults(html)){
+      if(!/^https:\/\//i.test(item.url)||!/^https:\/\//i.test(item.thumb))continue;
+      if(!/^image\//i.test(item.mime)&&item.mime&& !/^(?:jpg|jpeg|png|webp)$/i.test(item.mime))continue;
+      if(item.width<=0||item.height<=0||item.width>MAX_IMAGE_WIDTH||item.height>MAX_IMAGE_HEIGHT||item.width*item.height>MAX_IMAGE_PIXELS)continue;
+      const key=item.url.split('#')[0];
+      if(collected.has(key))continue;
+      const fetchId=rememberImageUrl(item.url),thumbFetchId=rememberImageUrl(item.thumb);
+      if(!fetchId||!thumbFetchId)continue;
+      collected.set(key,{...item,fetchId,thumbFetchId});
     }
   }
-  let results=[...collected.values()];
-  if(cleanQuery==='avatar')results.sort((a,b)=>avatarScore(b)-avatarScore(a)||String(a.title).localeCompare(String(b.title)));
-  results=results.slice(0,MAX_SEARCH_RESULTS).map(x=>({...x,searchIntent:cleanQuery==='avatar'?'avatar-franchise':'text-title'}));
-  res.json({results,maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Wikimedia title search',thumbnailWidth:SEARCH_THUMB_WIDTH});
+  res.json({results:[...collected.values()].slice(0,MAX_SEARCH_RESULTS),maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Bing Images',thumbnailWidth:SEARCH_THUMB_WIDTH});
 }catch(e){
   console.error('Image search failed:',e);
   res.status(502).json({error:'Image search unavailable',...(TEST_MODE?{detail:String(e?.message||e)}:{})});
