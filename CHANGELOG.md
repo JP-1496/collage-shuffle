@@ -1,3 +1,8 @@
+## V1.4.52
+- Fixed Final Showcase rendering: the client was calling an undefined `canvasHTML()` helper after Round 2 completed.
+- Extended Playwright coverage through Round 2, Final Showcase, both voting prompts and Final Results.
+- Updated runtime and visible build/cache versions to V1.4.52.
+
 ## V1.4.51
 - Added an explicit server submission acknowledgement so the submitting client immediately receives accepted state before the normal state broadcast.
 - Updated the visible build/cache version to V1.4.51.
