@@ -1,5 +1,10 @@
 # Changelog
 
+## V1.4.48
+- Made the server advance to the next round immediately after broadcasting the final submission count.
+- Removes the 50ms delayed round transition that was leaving automated two-player games stuck on Round 1.
+
+
 ## V1.4.47
 - Added automated Playwright two-player end-to-end coverage for the Round 1 submission → Round 2 transition.
 - Added GitHub Actions CI to run Chromium tests on pushes and pull requests.
