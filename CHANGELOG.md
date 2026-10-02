@@ -1,3 +1,8 @@
+## V1.4.65
+- Replaced the avatar artwork with the 24 newly supplied character images.
+- Upscaled the 24-avatar roster and added it to the game as a shared sprite asset with black backgrounds.
+- Fixed the build version/cache label to V1.4.65.
+
 ## V1.4.64
 - Added a black circular buffer behind all 24 avatar images.
 - Clipped avatar images to the circular badge so the white outer padding on avatars 21–24 is hidden.
