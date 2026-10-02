@@ -30,6 +30,17 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     const p1 = player1.page;
     const p2 = player2.page;
 
+    for (const [label, page] of [['P1', p1], ['P2', p2]]) {
+      page.on('websocket', ws => {
+        ws.on('framereceived', data => {
+          try {
+            const msg = JSON.parse(String(data));
+            if (msg.type === 'STATE') console.log(`[WS ${label}] phase=${msg.state?.phase} round=${msg.state?.round} submitted=${JSON.stringify(msg.state?.submissionStatus)}`);
+          } catch {}
+        });
+      });
+    }
+
     await p1.getByRole('button', { name: /Host Game/ }).click();
     await p1.getByRole('button', { name: /Create Lobby/ }).click();
 
