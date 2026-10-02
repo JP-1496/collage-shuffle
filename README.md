@@ -1,4 +1,8 @@
-# Collage — Shuffle V1.4.53
+# Collage — Shuffle V1.4.54
+
+### V1.4.54
+- Added WebSocket heartbeat/ping monitoring and automatic reconnect/resume for interrupted browser connections.
+- Existing player sessions can resume after a refresh or transient connection loss without creating a duplicate player.
 
 ### V1.4.52
 - Fixed the final collage submission hand-off so the server explicitly queues round completion after broadcasting the final submission count.
