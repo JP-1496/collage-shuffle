@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.73';
+const VERSION = '1.4.74';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -27,80 +27,57 @@ const MAX_IMAGE_WIDTH=3840;
 const MAX_IMAGE_HEIGHT=2160;
 const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
 const MAX_SEARCH_RESULTS=100;
-const SEARCH_RESULTS_PER_PAGE=100;
-const MAX_SEARCH_PAGES=1;
-const SEARCH_USER_AGENT='CollageShuffle/1.4.73 (image search feature)';
+const SEARCH_CANDIDATES_PER_PAGE=500;
+const MAX_SEARCH_PAGES=3;
+const SEARCH_USER_AGENT='CollageShuffle/1.4.74 (image search feature)';
 function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\\p{L}\\p{N}]+/gu,' ').replace(/\\s+/g,' ').trim()}
-async function fetchMediaSearchPage(q,offset){
-  const u=new URL('https://commons.wikimedia.org/w/api.php');
-  u.searchParams.set('action','query');
-  u.searchParams.set('list','search');
-  u.searchParams.set('srsearch',q);
-  u.searchParams.set('srwhat','title');
-  u.searchParams.set('srnamespace','6');
-  u.searchParams.set('srlimit',String(SEARCH_RESULTS_PER_PAGE));
-  u.searchParams.set('sroffset',String(offset));
-  u.searchParams.set('srprop','snippet|titlesnippet|categorysnippet|isfilematch');
-  u.searchParams.set('srsort','relevance');
-  u.searchParams.set('format','json');
-  const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'application/json'}});
-  if(!r.ok)throw new Error('media search');
-  return r.json();
+function queryTitleRelevant(title,q){
+  const terms=normaliseSearchText(q).split(' ').filter(Boolean);
+  const words=new Set(normaliseSearchText(String(title||'').replace(/^File:/i,'')).split(' ').filter(Boolean));
+  return terms.length>0&&terms.every(term=>[...words].some(word=>word===term||word.startsWith(term)));
 }
-async function fetchImageInfo(titles){
-  if(!titles.length)return {query:{pages:{}}};
+async function fetchSearchPage(q,continuation){
   const u=new URL('https://commons.wikimedia.org/w/api.php');
   u.searchParams.set('action','query');
-  u.searchParams.set('titles',titles.join('|'));
+  u.searchParams.set('generator','search');
+  u.searchParams.set('gsrsearch',`intitle:${q}`);
+  u.searchParams.set('gsrnamespace','6');
+  u.searchParams.set('gsrlimit',String(SEARCH_CANDIDATES_PER_PAGE));
   u.searchParams.set('prop','imageinfo');
   u.searchParams.set('iiprop','url|mime|size');
   u.searchParams.set('iiurlwidth',String(MAX_IMAGE_WIDTH));
   u.searchParams.set('iiurlheight',String(MAX_IMAGE_HEIGHT));
   u.searchParams.set('format','json');
+  if(continuation)for(const [key,value] of Object.entries(continuation))u.searchParams.set(key,String(value));
   const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'application/json'}});
-  if(!r.ok)throw new Error('image info');
+  if(!r.ok)throw new Error('image search');
   return r.json();
 }
-function addMediaResults(target,searchResults,infoPages){
-  const infoByTitle=new Map(Object.values(infoPages||{}).map(p=>[p.title,p]));
-  for(const result of searchResults||[]){
-    const page=infoByTitle.get(result.title);
-    const info=page?.imageinfo?.[0];
+function addSearchResults(target,pages,q){
+  for(const page of pages||[]){
+    const info=page.imageinfo?.[0];
     if(!info?.url||!info.mime?.startsWith('image/'))continue;
+    if(!queryTitleRelevant(page.title,q))continue;
     const thumb=info.thumburl||info.url;
-    const width=Number(info.thumbwidth||info.width||0);
-    const height=Number(info.thumbheight||info.height||0);
+    const width=Number(info.thumbwidth||info.width||0),height=Number(info.thumbheight||info.height||0);
     if(width<=0||height<=0||width>MAX_IMAGE_WIDTH||height>MAX_IMAGE_HEIGHT||width*height>MAX_IMAGE_PIXELS)continue;
     const key=String(info.sha1||info.url);
     if(target.has(key))continue;
-    target.set(key,{
-      title:page.title,
-      snippet:result.snippet||'',
-      categorySnippet:result.categorysnippet||'',
-      titleSnippet:result.titlesnippet||'',
-      thumb,url:thumb,sourceUrl:info.url,mime:info.mime,width,height
-    });
+    target.set(key,{title:page.title,snippet:page.snippet||'',thumb,url:thumb,sourceUrl:info.url,mime:info.mime,width,height});
   }
 }
-app.get('/api/image-search', async (req,res)=>{try{
+app.get('/api/image-search',async(req,res)=>{try{
   const q=String(req.query.q||'').trim().slice(0,120);
   if(!q)return res.json({results:[]});
   const collected=new Map();
-  for(let pageNo=0;pageNo<MAX_SEARCH_PAGES&&collected.size<MAX_SEARCH_RESULTS;pageNo++){
-    const offset=pageNo*SEARCH_RESULTS_PER_PAGE;
-    const search=await fetchMediaSearchPage(q,offset);
-    const searchResults=search.query?.search||[];
-    if(!searchResults.length)break;
-    for(let i=0;i<searchResults.length;i+=50){
-      const chunk=searchResults.slice(i,i+50);
-      const info=await fetchImageInfo(chunk.map(x=>x.title));
-      addMediaResults(collected,chunk,Object.values(info.query?.pages||{}));
-      if(collected.size>=MAX_SEARCH_RESULTS)break;
-    }
-    if(searchResults.length<SEARCH_RESULTS_PER_PAGE)break;
+  let continuation=null;
+  for(let page=0;page<MAX_SEARCH_PAGES&&collected.size<MAX_SEARCH_RESULTS;page++){
+    const j=await fetchSearchPage(q,continuation);
+    addSearchResults(collected,Object.values(j.query?.pages||{}),q);
+    continuation=j.continue||null;
+    if(!continuation)break;
   }
-  const results=[...collected.values()].slice(0,MAX_SEARCH_RESULTS);
-  res.json({results,maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Wikimedia title search'});
+  res.json({results:[...collected.values()].slice(0,MAX_SEARCH_RESULTS),maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Wikimedia title search'});
 }catch(e){console.error('Image search failed:',e);res.status(502).json({error:'Image search unavailable',...(TEST_MODE?{detail:String(e?.message||e)}:{})});}});
 app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.72 (image fetch feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
 app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
