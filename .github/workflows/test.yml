@@ -45,4 +45,5 @@ jobs:
             playwright-report/
             test-results/
             server.log
+            browser.log
           retention-days: 14
