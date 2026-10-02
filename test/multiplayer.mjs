@@ -6,10 +6,10 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const WS = `ws://127.0.0.1:${PORT}/ws`;
 const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 const serverSource=await (await import('node:fs/promises')).readFile(new URL('../server.js',import.meta.url),'utf8');
-assert.match(serverSource,/MAX_SEARCH_RESULTS=36/);
+assert.match(serverSource,/MAX_SEARCH_RESULTS=100/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH=3840/);
 assert.match(serverSource,/MAX_IMAGE_HEIGHT=2160/);
-assert.match(serverSource,/SEARCH_CANDIDATES=500/);
+assert.match(serverSource,/SEARCH_CANDIDATES_PER_PAGE=500/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH\*MAX_IMAGE_HEIGHT/);
 assert.match(serverSource,/searchScore/);
 
@@ -93,6 +93,19 @@ async function main(){
   server.stderr.on('data',d=>output+=d);
   try{
     await waitFor(async()=>{try{return (await fetch(BASE+'/health')).ok}catch{return false}},5000);
+
+    // Integration check: broad image searches should return a genuinely large,
+    // deduplicated result set rather than the old ~27-image ceiling.
+    const imageSearch=await (await fetch(BASE+'/api/image-search?q=ocean')).json();
+    assert.ok(Array.isArray(imageSearch.results));
+    assert.ok(imageSearch.results.length>=50, `Expected at least 50 ocean images, got ${imageSearch.results.length}`);
+    assert.ok(imageSearch.results.length<=100);
+    assert.equal(new Set(imageSearch.results.map(x=>x.sourceUrl||x.url)).size,imageSearch.results.length);
+    for(const image of imageSearch.results){
+      assert.ok(image.width>0&&image.height>0);
+      assert.ok(image.width<=3840&&image.height<=2160);
+      assert.ok(image.width*image.height<=8294400);
+    }
     const host=await connect();
     host.ws.send(JSON.stringify({type:'HOST_CREATE',name:'Host',lobbyName:'Test',settings:{capacity:2,imagesPerPlayer:1,round1Images:1,hostApproval:false}}));
     const hj=await waitFor(()=>host.messages.find(m=>m.type==='JOINED'));
