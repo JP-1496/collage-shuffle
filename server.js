@@ -24,9 +24,9 @@ const avatar = a => /^(?:[1-9]|1[0-9]|2[0-4])$/.test(String(a||'')) ? String(a) 
 app.use(express.static('public', { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 app.get('/health', (_, res) => res.json({ ok:true, version:VERSION }));
 const MAX_IMAGE_DIMENSION=3840;
-const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
+const MAX_IMAGE_PIXELS=3840*2160;
 const MAX_SEARCH_RESULTS=36;
-function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\\p{L}\\p{N}]+/gu,' ').replace(/\\s+/g,' ').trim()}
+function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim()}
 function searchScore(page,q){
   const query=normaliseSearchText(q), terms=query.split(' ').filter(Boolean);
   const title=normaliseSearchText(String(page.title||'').replace(/^File:/i,''));
