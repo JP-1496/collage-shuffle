@@ -59,9 +59,10 @@ async function runSubmissionCountScenario(playerCount, reverseOrder=false){
     const submitOrder=reverseOrder?[...players].reverse():players;
     for(let i=0;i<submitOrder.length;i++){
       action(submitOrder[i].client,submitOrder[i].playerId,{type:'SUBMIT_COLLAGE',pieces});
-      if(i<players.length-1){
-        const state=await nextState(host,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===i+1);
-        assert.equal(Object.values(state.submissionStatus).filter(Boolean).length,i+1);
+      const expected=i+1;
+      const receivedStates=await Promise.all(players.map(p=>nextState(p.client,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===expected)));
+      for(const state of receivedStates){
+        assert.equal(Object.values(state.submissionStatus).filter(Boolean).length,expected);
         assert.equal(state.players.length,playerCount);
       }
     }
@@ -129,6 +130,11 @@ async function main(){
     assert.equal(submittedHost.submissionStatus[hj.playerId],true);
     assert.equal(submittedHost.submissionStatus[gj.playerId],false);
     action(guest,gj.playerId,{type:'SUBMIT_COLLAGE',pieces:p2});
+    const submittedBoth=await Promise.all([
+      nextState(host,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===2),
+      nextState(guest,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===2)
+    ]);
+    for(const s of submittedBoth)assert.equal(Object.values(s.submissionStatus).filter(Boolean).length,2);
 
     const r2h=await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
     const r2g=await nextState(guest,s=>s.phase==='ROUND'&&s.round===1);
@@ -157,7 +163,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version  ,'1.4.41');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version  ,'1.4.42');
     host.ws.close();guest.ws.close();
 
     // Repeat the final-submission transition repeatedly and in both orders.
