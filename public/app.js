@@ -1,4 +1,4 @@
-const VERSION='1.4.41';
+const VERSION='1.4.42';
 const MIN_PLAYERS=2;
 const avatars=['😀','😎','🤠','🤖','👽','🐸','🦊','🐼','🐵','🐙','🦄','👻','🐯','🧠','👾'];
 const state={screen:'home',name:localStorage.getItem('collageName')||'',avatar:localStorage.getItem('collageAvatar')||'😀',ws:null,pid:null,code:'',game:null,error:'',settings:{capacity:2,imagesPerPlayer:2,round1Images:4,imageSeconds:120,hostApproval:false,creationSeconds:120,votingSeconds:45},lobby:'My Collage',prompt:'',promptSubmitted:false,sourceSelected:null,sourceWorking:{},pieces:[],selected:null,drag:null,timerHandle:null,cutCanvas:null,cutPoints:[],cutZoom:1,cutImg:null,lastPhase:null,_lastImageCount:-1,_lastReadyCount:-1,_lastSubmittedCount:-1,serverClockOffset:0,lastTimerEnd:null,_lastPromptCount:-1};
@@ -56,14 +56,15 @@ function pieceDown(e,id){e.preventDefault();e.stopPropagation();const p=state.pi
 function rotate(d){const p=state.pieces.find(x=>x.id===state.selected);if(p){p.rotation=(p.rotation||0)+d;syncCollage();render(true)}}function flip(axis){const p=state.pieces.find(x=>x.id===state.selected);if(p){const k=axis==='x'?'flipX':'flipY';p[k]=!p[k];syncCollage();render(true)}}function layer(d){const p=state.pieces.find(x=>x.id===state.selected);if(!p)return;const ordered=[...state.pieces].sort((a,b)=>(a.z||0)-(b.z||0));const idx=ordered.findIndex(x=>x.id===p.id);const target=Math.max(0,Math.min(ordered.length-1,idx+d));if(target===idx)return;const other=ordered[target];const z=p.z||0;p.z=other.z||0;other.z=z;syncCollage();render(true)}
 function resizePiece(d){const p=state.pieces.find(x=>x.id===state.selected);if(p){p.w=Math.max(1,Math.min(100,(p.w||24)+d));syncCollage();render(true)}}function syncCollage(){if(state.game?.phase==='ROUND'&&!state.game?.submissionStatus?.[state.pid])send({type:'SYNC_COLLAGE',pieces:state.pieces})}function submitCollage(){
   if(state.game?.phase!=='ROUND'||state.game?.submissionStatus?.[state.pid])return;
-  state.game.submissionStatus={...(state.game.submissionStatus||{}),[state.pid]:true};
-  render(true);
-  const sent=send({type:'SUBMIT_COLLAGE',pieces:state.pieces.map(p=>({...p}))});
+  const pieces=state.pieces.map(p=>({...p}));
+  const sent=send({type:'SUBMIT_COLLAGE',pieces});
   if(!sent){
-    state.game.submissionStatus[state.pid]=false;
     state.error='Could not submit — connection to the game server was lost.';
     render(true);
+    return;
   }
+  state.game.submissionStatus={...(state.game.submissionStatus||{}),[state.pid]:true};
+  render(true);
 }
 window.go=go;window.setName=setName;window.queueImageSearch=queueImageSearch;window.setAvatar=setAvatar;window.startHost=startHost;window.startJoin=startJoin;window.files=files;window.handleDrop=handleDrop;window.submitSources=submitSources;window.removeSource=removeSource;window.imageReady=imageReady;window.imageUnready=imageUnready;window.pasteHint=pasteHint;window.openImageSearch=openImageSearch;window.searchImages=searchImages;window.toggleSearchImage=toggleSearchImage;window.addSearchSelection=addSearchSelection;window.surpriseMe=surpriseMe;window.submitPrompt=submitPrompt;window.selectSource=selectSource;window.openCutTool=openCutTool;window.closeCut=closeCut;window.finishCut=finishCut;window.pieceDown=pieceDown;window.rotate=rotate;window.flip=flip;window.layer=layer;window.resizePiece=resizePiece;window.cutZoomBy=cutZoomBy;window.cutZoomFit=cutZoomFit;window.submitCollage=submitCollage;
 render(true);
