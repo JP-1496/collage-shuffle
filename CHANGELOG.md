@@ -1,4 +1,4 @@
-## V1.4.58
+## V1.4.59
 - Avatar picker artwork now fills each circular button edge-to-edge.
 - Selected avatar now gets a clear green highlight.
 - Added a larger selected-character preview beside the nickname field.
