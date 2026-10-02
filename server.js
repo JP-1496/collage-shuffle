@@ -28,7 +28,7 @@ const MAX_IMAGE_HEIGHT=2160;
 const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
 const MAX_SEARCH_RESULTS=100;
 const OPENVERSE_PAGE_SIZE=100;
-const OPENVERSE_API='https://api.openverse.org/v1/images/';
+const OPENVERSE_API='https://api.openverse.engineering/v1/images/';
 const SEARCH_USER_AGENT='CollageShuffle/1.4.76 (image search feature)';
 const imageFetchCache=new Map();
 function rememberImageUrl(url){
