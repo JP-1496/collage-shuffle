@@ -1,6 +1,9 @@
-# Collage — Shuffle V1.4.42
+# Collage — Shuffle V1.4.44
 
 Browser-first multiplayer party game prototype.
+
+### V1.4.44
+- Version bump for the current Render test build.
 
 ### V1.4.43
 - Simplified canvas submission to use the same server-authoritative flow as prompt submission: record the submission, broadcast state, and advance when all connected players have submitted.
