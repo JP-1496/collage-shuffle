@@ -1,3 +1,7 @@
+## V1.4.53
+- Fixed Final Showcase clients getting stuck on an earlier voting prompt when `finalIndex` changed without a phase change.
+- Clients now rerender when either the showcase index or their vote state changes.
+
 ## V1.4.52
 - Fixed Final Showcase rendering: the client was calling an undefined `canvasHTML()` helper after Round 2 completed.
 - Extended Playwright coverage through Round 2, Final Showcase, both voting prompts and Final Results.
