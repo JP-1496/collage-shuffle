@@ -115,7 +115,8 @@ app.get('/api/image-search',async(req,res)=>{try{
     }
     if(collected.size>=MAX_SEARCH_RESULTS)break;
   }
-  res.json({results:[...collected.values()].slice(0,MAX_SEARCH_RESULTS),maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Wikimedia title search',thumbnailWidth:SEARCH_THUMB_WIDTH});
+  const results=[...collected.values()].slice(0,MAX_SEARCH_RESULTS).map(x=>({...x,searchIntent:normaliseSearchText(q)==='avatar'?'avatar-category':'text-title'}));
+  res.json({results,maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Wikimedia title search',thumbnailWidth:SEARCH_THUMB_WIDTH});
 }catch(e){
   console.error('Image search failed:',e);
   res.status(502).json({error:'Image search unavailable',...(TEST_MODE?{detail:String(e?.message||e)}:{})});
