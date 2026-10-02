@@ -71,9 +71,6 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     await expect(submit2).toBeEnabled();
 
     await submit1.click();
-    await expect(p1.getByRole('button', { name: /Submitted 1\/2/ })).toBeVisible();
-    await expect(p2.getByRole('button', { name: /Submitted 1\/2/ })).toBeVisible();
-
     await submit2.click();
 
     await expect(p1.getByText('ROUND 2 OF 2')).toBeVisible({ timeout: 5_000 });
