@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.61';
+const VERSION = '1.4.62';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -19,7 +19,7 @@ const CODE_CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const code = () => { let c; do { c=''; for(let i=0;i<4;i++) c+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]; } while(games.has(c)); return c; };
 const shuffle = a => [...a].sort(() => Math.random() - 0.5);
 const clone = x => JSON.parse(JSON.stringify(x));
-const avatar = a => /^(?:[1-9]|1[0-9]|20)$/.test(String(a||'')) ? String(a) : '1';
+const avatar = a => /^(?:[1-9]|1[0-9]|2[0-4])$/.test(String(a||'')) ? String(a) : '1';
 
 app.use(express.static('public', { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 app.get('/health', (_, res) => res.json({ ok:true, version:VERSION }));
