@@ -2,7 +2,12 @@
 
 Browser-first multiplayer party game prototype.
 
-### V1.4.42
+### V1.4.43
+- Simplified canvas submission to use the same server-authoritative flow as prompt submission: record the submission, broadcast state, and advance when all connected players have submitted.
+- Removed the separate `SUBMISSION_ACCEPTED` dependency and client-side submission state mutation.
+- Kept duplicate submissions harmless and preserved timer-expiry handling.
+
+## V1.4.42
 - Hardened live collage submission delivery: the client sends the submission before rebuilding the UI, then immediately shows the agreed submitted state.
 - The server now explicitly broadcasts the updated submission count after each accepted submission before advancing when all connected players are complete.
 - Expanded the multiplayer test to verify that both players receive 1/2 after the first submission and 2/2 after the second, followed by a player-facing Round 2 state.
