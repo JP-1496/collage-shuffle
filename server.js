@@ -30,7 +30,7 @@ const MAX_SEARCH_RESULTS=100;
 const SEARCH_CANDIDATES_PER_PAGE=500;
 const MAX_SEARCH_PAGES=3;
 const SEARCH_USER_AGENT='CollageShuffle/1.4.74 (image search feature)';
-function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\\p{L}\\p{N}]+/gu,' ').replace(/\\s+/g,' ').trim()}
+function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\\s+/g,' ').trim()}
 function queryTitleRelevant(title,q){
   const terms=normaliseSearchText(q).split(' ').filter(Boolean);
   const words=new Set(normaliseSearchText(String(title||'').replace(/^File:/i,'')).split(' ').filter(Boolean));
