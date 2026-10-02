@@ -51,19 +51,22 @@ function searchTitleRelevant(title,q){
   const words=normaliseSearchText(String(title||'').replace(/^File:/i,'')).split(' ').filter(Boolean);
   return terms.length>0&&terms.every(term=>words.some(word=>word===term||word.startsWith(term)));
 }
-function searchQuery(q){
+function searchQueries(q){
   const clean=normaliseSearchText(q);
-  if(!clean)return '';
+  if(!clean)return [];
   if(clean==='avatar'){
-    return 'intitle:avatar (haswbstatement:P180=Q5 OR portrait OR person OR headshot OR selfie OR face OR woman OR man)';
+    return [
+      'intitle:avatar haswbstatement:P180=Q5',
+      'intitle:avatar (portrait OR person OR headshot OR selfie OR face OR woman OR man)'
+    ];
   }
-  return clean.split(' ').filter(Boolean).map(term=>`intitle:${term}`).join(' ');
+  return [clean.split(' ').filter(Boolean).map(term=>`intitle:${term}`).join(' ')];
 }
 async function fetchSearchPage(q,continuation){
   const u=new URL('https://commons.wikimedia.org/w/api.php');
   u.searchParams.set('action','query');
   u.searchParams.set('generator','search');
-  u.searchParams.set('gsrsearch',searchQuery(q));
+  u.searchParams.set('gsrsearch',q);
   u.searchParams.set('gsrnamespace','6');
   u.searchParams.set('gsrlimit',String(SEARCH_CANDIDATES_PER_PAGE));
   u.searchParams.set('prop','imageinfo');
@@ -97,12 +100,15 @@ app.get('/api/image-search',async(req,res)=>{try{
   if(!q)return res.json({results:[]});
   pruneImageFetchCache();
   const collected=new Map();
-  let continuation=null;
-  for(let page=0;page<MAX_SEARCH_PAGES&&collected.size<MAX_SEARCH_RESULTS;page++){
-    const data=await fetchSearchPage(q,continuation);
-    addSearchResults(collected,Object.values(data.query?.pages||{}),q);
-    continuation=data.continue||null;
-    if(!continuation)break;
+  for(const query of searchQueries(q)){
+    let continuation=null;
+    for(let page=0;page<MAX_SEARCH_PAGES&&collected.size<MAX_SEARCH_RESULTS;page++){
+      const data=await fetchSearchPage(query,continuation);
+      addSearchResults(collected,Object.values(data.query?.pages||{}),q);
+      continuation=data.continue||null;
+      if(!continuation)break;
+    }
+    if(collected.size>=MAX_SEARCH_RESULTS)break;
   }
   res.json({results:[...collected.values()].slice(0,MAX_SEARCH_RESULTS),maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Wikimedia title search',thumbnailWidth:SEARCH_THUMB_WIDTH});
 }catch(e){
