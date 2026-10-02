@@ -1,9 +1,9 @@
 ## V1.4.76
-- Replaced Wikimedia Commons image search with Openverse, using its relevance-ranked openly licensed image catalogue.
-- Search results now use Openverse thumbnails only; the full image is fetched only when a player selects an image.
-- Added lazy/deferred thumbnail loading and cancelled stale in-flight searches so typing does not cause overlapping searches or repeated gallery refreshes.
-- Added server-side image reference tokens so full-resolution image fetching remains controlled instead of accepting arbitrary remote URLs.
-- Updated automated image-search coverage for Openverse, thumbnail references, result limits and build version.
+- Reworked image search around Wikimedia Commons title-targeted search instead of generic content search, preventing unrelated page-content matches.
+- Search previews now use 600px thumbnails; full-resolution images are fetched only when selected.
+- Added lazy thumbnail loading and cancellation of stale in-flight searches so typing does not cause overlapping searches or repeated gallery refreshes.
+- Added server-side image reference tokens so full-resolution fetching does not accept arbitrary remote URLs.
+- Updated automated image-search coverage for relevance, thumbnails, result limits and build version.
 
 ## V1.4.75 — Broader title-filtered search
 - Keeps Wikimedia's relevance ranking but searches a few closely related query variants so broad terms such as "ocean" can fill the 100-result pool.
