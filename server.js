@@ -27,58 +27,79 @@ const MAX_IMAGE_WIDTH=3840;
 const MAX_IMAGE_HEIGHT=2160;
 const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
 const MAX_SEARCH_RESULTS=100;
-const OPENVERSE_PAGES=3;
+const SEARCH_RESULTS_PER_PAGE=100;
+const MAX_SEARCH_PAGES=3;
 const SEARCH_USER_AGENT='CollageShuffle/1.4.72 (image search feature)';
 function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\\p{L}\\p{N}]+/gu,' ').replace(/\\s+/g,' ').trim()}
-function queryTerms(q){return normaliseSearchText(q).split(' ').filter(Boolean)}
-function openverseRelevant(item,q){
-  const terms=queryTerms(q);
-  const title=normaliseSearchText(item.title||'');
-  const tags=(item.tags||[]).map(t=>normaliseSearchText(t?.name||'')).filter(Boolean);
-  const searchable=[title,...tags];
-  return terms.length>0&&terms.every(term=>searchable.some(value=>value===term||value.includes(term)));
-}
-async function fetchOpenversePage(q,page){
-  const u=new URL('https://api.openverse.org/v1/images/');
-  u.searchParams.set('q',q);
-  u.searchParams.set('page',String(page));
-  u.searchParams.set('page_size',String(MAX_SEARCH_RESULTS));
-  u.searchParams.set('mature','false');
+async function fetchMediaSearchPage(q,offset){
+  const u=new URL('https://commons.wikimedia.org/w/api.php');
+  u.searchParams.set('action','query');
+  u.searchParams.set('list','search');
+  u.searchParams.set('srsearch',q);
+  u.searchParams.set('srnamespace','6');
+  u.searchParams.set('srlimit',String(SEARCH_RESULTS_PER_PAGE));
+  u.searchParams.set('sroffset',String(offset));
+  u.searchParams.set('srprop','snippet|titlesnippet|categorysnippet|isfilematch');
+  u.searchParams.set('srsort','relevance');
+  u.searchParams.set('format','json');
   const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'application/json'}});
-  if(!r.ok)throw new Error('openverse search');
+  if(!r.ok)throw new Error('media search');
   return r.json();
 }
-function addOpenverseResults(target,items,q){
-  for(const item of items||[]){
-    if(!item?.id||!item?.thumbnail)continue;
-    if(!openverseRelevant(item,q))continue;
-    const width=Number(item.width||0),height=Number(item.height||0);
+async function fetchImageInfo(titles){
+  if(!titles.length)return {query:{pages:{}}};
+  const u=new URL('https://commons.wikimedia.org/w/api.php');
+  u.searchParams.set('action','query');
+  u.searchParams.set('titles',titles.join('|'));
+  u.searchParams.set('prop','imageinfo');
+  u.searchParams.set('iiprop','url|mime|size');
+  u.searchParams.set('iiurlwidth',String(MAX_IMAGE_WIDTH));
+  u.searchParams.set('iiurlheight',String(MAX_IMAGE_HEIGHT));
+  u.searchParams.set('format','json');
+  const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'application/json'}});
+  if(!r.ok)throw new Error('image info');
+  return r.json();
+}
+function addMediaResults(target,searchResults,infoPages){
+  const infoByTitle=new Map(Object.values(infoPages||{}).map(p=>[p.title,p]));
+  for(const result of searchResults||[]){
+    const page=infoByTitle.get(result.title);
+    const info=page?.imageinfo?.[0];
+    if(!info?.url||!info.mime?.startsWith('image/'))continue;
+    const thumb=info.thumburl||info.url;
+    const width=Number(info.thumbwidth||info.width||0);
+    const height=Number(info.thumbheight||info.height||0);
     if(width<=0||height<=0||width>MAX_IMAGE_WIDTH||height>MAX_IMAGE_HEIGHT||width*height>MAX_IMAGE_PIXELS)continue;
-    const thumb=`https://api.openverse.org/v1/images/${encodeURIComponent(item.id)}/thumb/`;
-    const url=`https://api.openverse.org/v1/images/${encodeURIComponent(item.id)}/thumb/?full_size=true`;
-    const key=String(item.id);
-    const candidate={
-      title:String(item.title||'Untitled image'),
-      snippet:Array.isArray(item.tags)?item.tags.slice(0,8).map(t=>t?.name).filter(Boolean).join(', '):'',
-      thumb,url,
-      sourceUrl:item.foreign_landing_url||item.url||'',
-      mime:item.filetype?String(item.filetype):'image/jpeg',
-      width,height,
-      tags:Array.isArray(item.tags)?item.tags.map(t=>String(t?.name||'')).filter(Boolean):[]
-    };
-    if(!target.has(key))target.set(key,candidate);
+    const key=String(info.sha1||info.url);
+    if(target.has(key))continue;
+    target.set(key,{
+      title:page.title,
+      snippet:result.snippet||'',
+      categorySnippet:result.categorysnippet||'',
+      titleSnippet:result.titlesnippet||'',
+      thumb,url:thumb,sourceUrl:info.url,mime:info.mime,width,height
+    });
   }
 }
 app.get('/api/image-search', async (req,res)=>{try{
   const q=String(req.query.q||'').trim().slice(0,120);
   if(!q)return res.json({results:[]});
   const collected=new Map();
-  for(let page=1;page<=OPENVERSE_PAGES&&collected.size<MAX_SEARCH_RESULTS;page++){
-    const j=await fetchOpenversePage(q,page);
-    addOpenverseResults(collected,j.results,q);
+  for(let pageNo=0;pageNo<MAX_SEARCH_PAGES&&collected.size<MAX_SEARCH_RESULTS;pageNo++){
+    const offset=pageNo*SEARCH_RESULTS_PER_PAGE;
+    const search=await fetchMediaSearchPage(q,offset);
+    const searchResults=search.query?.search||[];
+    if(!searchResults.length)break;
+    for(let i=0;i<searchResults.length;i+=50){
+      const chunk=searchResults.slice(i,i+50);
+      const info=await fetchImageInfo(chunk.map(x=>x.title));
+      addMediaResults(collected,chunk,Object.values(info.query?.pages||{}));
+      if(collected.size>=MAX_SEARCH_RESULTS)break;
+    }
+    if(searchResults.length<SEARCH_RESULTS_PER_PAGE)break;
   }
   const results=[...collected.values()].slice(0,MAX_SEARCH_RESULTS);
-  res.json({results,maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Openverse'});
+  res.json({results,maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Wikimedia MediaSearch'});
 }catch(e){console.error('Image search failed:',e);res.status(502).json({error:'Image search unavailable',...(TEST_MODE?{detail:String(e?.message||e)}:{})});}});
 app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org','api.openverse.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.72 (image fetch feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
 app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
