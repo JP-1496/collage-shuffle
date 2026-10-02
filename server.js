@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.74';
+const VERSION = '1.4.75';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -28,13 +28,22 @@ const MAX_IMAGE_HEIGHT=2160;
 const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
 const MAX_SEARCH_RESULTS=100;
 const SEARCH_CANDIDATES_PER_PAGE=500;
-const MAX_SEARCH_PAGES=3;
-const SEARCH_USER_AGENT='CollageShuffle/1.4.74 (image search feature)';
+const MAX_SEARCH_PAGES=1;
+const MAX_SEARCH_VARIANTS=3;
+const SEARCH_USER_AGENT='CollageShuffle/1.4.75 (image search feature)';
 function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim()}
 function queryTitleRelevant(title,q){
   const terms=normaliseSearchText(q).split(' ').filter(Boolean);
   const words=new Set(normaliseSearchText(String(title||'').replace(/^File:/i,'')).split(' ').filter(Boolean));
   return terms.length>0&&terms.every(term=>[...words].some(word=>word===term||word.startsWith(term)));
+}
+function searchVariants(q){
+  const clean=normaliseSearchText(q);
+  if(!clean)return [];
+  const variants=[clean];
+  if(!/s$/.test(clean))variants.push(clean+'s');
+  variants.push(clean+' photo');
+  return [...new Set(variants)].slice(0,MAX_SEARCH_VARIANTS);
 }
 async function fetchSearchPage(q,continuation){
   const u=new URL('https://commons.wikimedia.org/w/api.php');
@@ -70,12 +79,15 @@ app.get('/api/image-search',async(req,res)=>{try{
   const q=String(req.query.q||'').trim().slice(0,120);
   if(!q)return res.json({results:[]});
   const collected=new Map();
-  let continuation=null;
-  for(let page=0;page<MAX_SEARCH_PAGES&&collected.size<MAX_SEARCH_RESULTS;page++){
-    const j=await fetchSearchPage(q,continuation);
-    addSearchResults(collected,Object.values(j.query?.pages||{}),q);
-    continuation=j.continue||null;
-    if(!continuation)break;
+  for(const variant of searchVariants(q)){
+    let continuation=null;
+    for(let page=0;page<MAX_SEARCH_PAGES&&collected.size<MAX_SEARCH_RESULTS;page++){
+      const j=await fetchSearchPage(variant,continuation);
+      addSearchResults(collected,Object.values(j.query?.pages||{}),q);
+      continuation=j.continue||null;
+      if(!continuation)break;
+    }
+    if(collected.size>=MAX_SEARCH_RESULTS)break;
   }
   res.json({results:[...collected.values()].slice(0,MAX_SEARCH_RESULTS),maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Wikimedia title search'});
 }catch(e){console.error('Image search failed:',e);res.status(502).json({error:'Image search unavailable',...(TEST_MODE?{detail:String(e?.message||e)}:{})});}});
