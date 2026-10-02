@@ -1,3 +1,10 @@
+## V1.4.76
+- Reworked image search around Wikimedia Commons title-targeted search instead of generic content search, preventing unrelated page-content matches.
+- Search previews now use 600px thumbnails; full-resolution images are fetched only when selected.
+- Added lazy thumbnail loading and cancellation of stale in-flight searches so typing does not cause overlapping searches or repeated gallery refreshes.
+- Added server-side image reference tokens so full-resolution fetching does not accept arbitrary remote URLs.
+- Updated automated image-search coverage for relevance, thumbnails, result limits and build version.
+
 ## V1.4.75 — Broader title-filtered search
 - Keeps Wikimedia's relevance ranking but searches a few closely related query variants so broad terms such as "ocean" can fill the 100-result pool.
 - Every candidate is still checked against the original search term in the image title, preventing the unrelated avatar results seen earlier.
