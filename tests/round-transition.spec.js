@@ -24,8 +24,11 @@ async function createPlayer(browser, nickname, label) {
   const avatar = label === 'P1' ? '5' : '12';
   await page.getByRole('button', { name: `Character ${avatar}` }).click();
   await expect(page.locator('.avatars button')).toHaveCount(24);
+  await expect(page.locator('.avatars .avatarIcon')).toHaveCount(24);
   for(const id of ['21','22','23','24']){
-    await expect(page.locator(`.avatars .avatarIcon[data-avatar="${id}"]`)).toHaveCSS('background-color', 'rgb(0, 0, 0)');
+    const icon=page.locator(`.avatars .avatarIcon[data-avatar="${id}"]`);
+    await expect(icon).toHaveCSS('background-image', /data:image\/webp/);
+    await expect(icon).toHaveCSS('background-size', '600% 400%');
   }
   await expect(page.locator('.avatars')).toHaveCSS('grid-template-columns', '82px 82px 82px 82px 82px 82px');
   await expect(page.locator('.profileNameRow .profileAvatar')).toHaveAttribute('data-avatar', avatar);
@@ -33,7 +36,7 @@ async function createPlayer(browser, nickname, label) {
   await expect(selectedAvatar).toHaveAttribute('data-avatar', avatar);
   await expect(selectedAvatar).toHaveCSS('background-color', 'rgb(97, 223, 154)');
   await expect(selectedAvatar).toHaveCSS('padding', '0px');
-  await expect(selectedAvatar.locator('.avatarIcon')).toHaveCSS('object-fit', 'cover');
+  await expect(selectedAvatar.locator('.avatarIcon')).toHaveCSS('background-image', /data:image\/webp/);
   return { context, page };
 }
 
