@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.66';
+const VERSION = '1.4.67';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -23,8 +23,61 @@ const avatar = a => /^(?:[1-9]|1[0-9]|2[0-4])$/.test(String(a||'')) ? String(a) 
 
 app.use(express.static('public', { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 app.get('/health', (_, res) => res.json({ ok:true, version:VERSION }));
-app.get('/api/image-search', async (req,res)=>{try{const q=String(req.query.q||'').trim().slice(0,120);if(!q)return res.json({results:[]});const u=new URL('https://commons.wikimedia.org/w/api.php');u.searchParams.set('action','query');u.searchParams.set('generator','search');u.searchParams.set('gsrsearch',q);u.searchParams.set('gsrnamespace','6');u.searchParams.set('gsrlimit','100');u.searchParams.set('prop','imageinfo');u.searchParams.set('iiprop','url|mime');u.searchParams.set('iiurlwidth','320');u.searchParams.set('format','json');const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.47 (image search feature)'}});if(!r.ok)throw new Error('search');const j=await r.json();const results=Object.values(j.query?.pages||{}).map(x=>x.imageinfo?.[0]).filter(x=>x?.url&&x?.mime?.startsWith('image/')).map(x=>({thumb:x.thumburl||x.url,url:x.url}));res.json({results});}catch(e){res.status(502).json({error:'Image search unavailable'});}});
-app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.47 (image search feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
+const MAX_IMAGE_WIDTH=3840;
+const MAX_IMAGE_HEIGHT=2160;
+const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
+const MAX_SEARCH_RESULTS=36;
+function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\\p{L}\\p{N}]+/gu,' ').replace(/\\s+/g,' ').trim()}
+function searchScore(page,q){
+  const query=normaliseSearchText(q), terms=query.split(' ').filter(Boolean);
+  const title=normaliseSearchText(String(page.title||'').replace(/^File:/i,''));
+  const snippet=normaliseSearchText(page.snippet||'');
+  const categories=(page.categories||[]).map(c=>normaliseSearchText(String(c.title||'').replace(/^Category:/i,''))).join(' ');
+  const phrase=query&&title.includes(query);
+  const titleHits=terms.filter(t=>title.split(' ').includes(t)).length;
+  const categoryHits=terms.filter(t=>categories.includes(t)).length;
+  const snippetHits=terms.filter(t=>snippet.includes(t)).length;
+  let score=0;
+  if(phrase)score+=120;
+  if(titleHits===terms.length)score+=80;
+  else score+=titleHits*30;
+  score+=Math.min(categoryHits,terms.length)*18;
+  if(snippetHits===terms.length)score+=20;
+  else score+=snippetHits*5;
+  if(!titleHits&&!categoryHits)score-=25;
+  return score;
+}
+app.get('/api/image-search', async (req,res)=>{try{
+  const q=String(req.query.q||'').trim().slice(0,120);
+  if(!q)return res.json({results:[]});
+  const u=new URL('https://commons.wikimedia.org/w/api.php');
+  u.searchParams.set('action','query');
+  u.searchParams.set('generator','search');
+  u.searchParams.set('gsrsearch',q);
+  u.searchParams.set('gsrnamespace','6');
+  u.searchParams.set('gsrlimit','100');
+  u.searchParams.set('prop','imageinfo|categories');
+  u.searchParams.set('iiprop','url|mime|size');
+  u.searchParams.set('iiurlwidth','320');
+  u.searchParams.set('cllimit','max');
+  u.searchParams.set('format','json');
+  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.67 (image search feature)'}});
+  if(!r.ok)throw new Error('search');
+  const j=await r.json();
+  const results=Object.values(j.query?.pages||{})
+    .filter(x=>x.imageinfo?.[0]?.url&&x.imageinfo[0].mime?.startsWith('image/'))
+    .map(x=>{
+      const info=x.imageinfo[0];
+      return {title:x.title,snippet:x.snippet||'',categories:x.categories||[],thumb:info.thumburl||info.url,url:info.url,mime:info.mime,width:Number(info.width||0),height:Number(info.height||0),score:searchScore(x,q)};
+    })
+    .filter(x=>x.width>0&&x.height>0&&x.width<=MAX_IMAGE_WIDTH&&x.height<=MAX_IMAGE_HEIGHT&&x.width*x.height<=MAX_IMAGE_PIXELS)
+    .filter(x=>x.score>0)
+    .sort((a,b)=>b.score-a.score||a.title.localeCompare(b.title))
+    .slice(0,MAX_SEARCH_RESULTS)
+    .map(({title,snippet,categories,thumb,url,mime,width,height})=>({title,snippet,thumb,url,mime,width,height}));
+  res.json({results,maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS});
+}catch(e){res.status(502).json({error:'Image search unavailable'});}});
+, async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.47 (image search feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
 app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
 function send(pid, msg){ const ws=sockets.get(pid); if(ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(msg)); }
