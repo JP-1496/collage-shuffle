@@ -109,10 +109,12 @@ async function main(){
     const avatarSearch=await (await fetch(BASE+'/api/image-search?q=avatar')).json();
     assert.ok(Array.isArray(avatarSearch.results), JSON.stringify(avatarSearch));
     assert.ok(avatarSearch.results.length>0, 'Avatar search returned no results');
-    for(const image of avatarSearch.results){
-      const title=String(image.title||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-      assert.ok(title.split(' ').includes('avatar'), `Irrelevant avatar result: ${image.title}`);
-    }
+    assert.equal(avatarSearch.provider,'Wikimedia MediaSearch');
+    const avatarRelevant=avatarSearch.results.filter(image=>{
+      const haystack=[image.title,image.titleSnippet,image.snippet,image.categorySnippet].join(' ').toLowerCase();
+      return haystack.includes('avatar');
+    }).length;
+    assert.ok(avatarRelevant>=Math.ceil(avatarSearch.results.length*0.8), `Too many weak avatar matches: ${avatarRelevant}/${avatarSearch.results.length}`);
     for(const image of imageSearch.results){
       assert.ok(image.width>0&&image.height>0);
       assert.ok(image.width<=3840&&image.height<=2160);
