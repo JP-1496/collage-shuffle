@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.76';
+const VERSION = '1.4.77';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -54,6 +54,9 @@ function searchTitleRelevant(title,q){
 function searchQuery(q){
   const clean=normaliseSearchText(q);
   if(!clean)return '';
+  if(clean==='avatar'){
+    return 'intitle:avatar (haswbstatement:P180=Q5 OR portrait OR person OR headshot OR selfie OR face OR woman OR man)';
+  }
   return clean.split(' ').filter(Boolean).map(term=>`intitle:${term}`).join(' ');
 }
 async function fetchSearchPage(q,continuation){
