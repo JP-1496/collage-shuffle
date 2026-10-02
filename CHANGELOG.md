@@ -1,3 +1,9 @@
+## V1.4.56
+- Replaced emoji profile choices with 24 custom cartoon character avatars.
+- Added character selection to the profile screen and persistent character identity during games.
+- Added player character display beside names and in the in-game top-right HUD.
+- Added validation so only character IDs 1–24 are accepted by the server.
+
 ## V1.4.55
 - Added a persistent Leave Game button during active games.
 - Leave Game intentionally closes the connection, clears the saved session and returns to the home screen.
