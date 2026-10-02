@@ -68,11 +68,11 @@ function avatarCategories(){
 function avatarScore(item){
   const title=normaliseSearchText(String(item.title||'').replace(/^File:/i,''));
   let score=0;
-  if(/\\bavatar\\b/.test(title))score+=10;
-  if(/\\bprofile\\b|\\bpfp\\b|\\buserpic\\b/.test(title))score+=8;
-  if(/\\bplaceholder\\b|\\bdefault\\b|\\bdummy\\b/.test(title))score+=6;
-  if(/\\buser\\b|\\bperson\\b|\\bportrait\\b|\\bhead\\b|\\bface\\b|\\bicon\\b|\\bsilhouette\\b/.test(title))score+=4;
-  if(/\\bphoto\\b|\\bhandsome\\b|\\bsecond life\\b/.test(title))score-=5;
+  if(/\bavatar\b/.test(title))score+=10;
+  if(/\bprofile\b|\bpfp\b|\buserpic\b/.test(title))score+=8;
+  if(/\bplaceholder\b|\bdefault\b|\bdummy\b/.test(title))score+=6;
+  if(/\buser\b|\bperson\b|\bportrait\b|\bhead\b|\bface\b|\bicon\b|\bsilhouette\b/.test(title))score+=4;
+  if(/\bphoto\b|\bhandsome\b|\bsecond life\b/.test(title))score-=5;
   const ratio=Number(item.width||0)/Number(item.height||1);
   if(ratio>=0.65&&ratio<=1.7)score+=5;
   else score-=6;
