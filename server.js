@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.47';
+const VERSION = '1.4.48';
 const MIN_PLAYERS = 2;
 const app = express();
 const http = createServer(app);
@@ -191,11 +191,10 @@ function handle(g,pid,a){
       g.finalResults[g.round].collages[pid]=clone(c);
       const connected=g.players.filter(x=>x.connected);
       const submitted=connected.filter(x=>g.collages[x.id]?.submitted).length;
-      // Broadcast the accepted count first, then explicitly queue round
-      // completion. A short delay gives both clients time to receive the 2/2
-      // state before the server changes the round.
+      // Broadcast the accepted count first. WebSocket delivery preserves message
+      // order, so clients receive 2/2 before the Round 2 state.
       broadcast(g);
-      if(connected.length>0 && submitted===connected.length) setTimeout(()=>finishRound(g),50);
+      if(connected.length>0 && submitted===connected.length) finishRound(g);
       break;
     }
     case 'FINAL_VOTE': {const result=g.finalResults[g.finalIndex];const target=String(a.targetId||'');if(g.phase==='FINAL_SHOWCASE'&&result?.collages?.[target]&&target!==pid&&!g.finalVotes[g.finalIndex]?.[pid]){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=target;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected)finishFinalPrompt(g);}}break;
