@@ -146,3 +146,9 @@ body{height:auto;min-height:100vh;overflow:auto}.shell{height:auto;min-height:10
 .hostShell{height:100dvh;min-height:0;overflow:hidden}
 .hostFooter{flex:0 0 auto}
 @media(max-height:760px) and (min-width:651px){.hostTitle{margin:3px 0 6px}.hostTitle h2{font-size:27px}.hostNameCard{min-height:58px;padding:6px 10px;margin-bottom:6px}.hostSettingsGrid{gap:6px}.settingCard{min-height:64px;padding:6px 8px}.settingCard small{margin:2px 0 3px}.hostFooter{margin-top:6px}.hostActions button{padding:8px 12px}}
+
+
+/* V1.4.55 — persistent in-game Leave Game control */
+.leaveGameBtn{position:fixed;right:18px;bottom:18px;z-index:90;background:white;padding:9px 13px;font-size:13px;border-radius:12px;box-shadow:3px 3px 0 var(--ink)}
+.leaveGameBtn:hover{background:var(--pink)}
+@media(max-width:600px){.leaveGameBtn{right:10px;bottom:10px;padding:8px 10px;font-size:12px}}
