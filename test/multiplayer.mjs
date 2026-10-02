@@ -108,7 +108,7 @@ async function main(){
     if(imageSearch.results.length===0){
       const dbg=await fetch('https://www.bing.com/images/async?q=ocean&mmasync=1&first=1&count=35',{headers:{'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154.0.0.0 Safari/537.36','Accept':'text/html,application/xhtml+xml','Accept-Language':'en-GB,en;q=0.9'}});
       const html=await dbg.text();
-      console.error('BING_DIAGNOSTIC',JSON.stringify({status:dbg.status,length:html.length,iusc:(html.match(/iusc/g)||[]).length,head:html.slice(0,1200)}));
+      const p=html.indexOf('iusc'); console.error('BING_DIAGNOSTIC',JSON.stringify({status:dbg.status,length:html.length,iusc:(html.match(/iusc/g)||[]).length,anchor:p>=0?html.slice(Math.max(0,p-250),p+1800):''}));
     }
     assert.ok(imageSearch.results.length>=50, `Expected at least 50 ocean images, got ${imageSearch.results.length}`);
     assert.ok(imageSearch.results.length<=100);
