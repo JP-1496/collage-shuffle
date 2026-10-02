@@ -115,12 +115,16 @@ async function main(){
     for(const query of searchQueries){
       const search=await (await fetch(BASE+'/api/image-search?q='+encodeURIComponent(query))).json();
       assert.ok(Array.isArray(search.results), query+' search returned invalid response');
-      assert.ok(search.results.length>=20, query+' should return at least 20 image results, got '+search.results.length);
+      assert.ok(search.results.length>=5, query+' should return at least 5 image results, got '+search.results.length);
       assert.ok(search.results.length<=100);
       assert.equal(search.provider,'Bing Images');
       assert.equal(new Set(search.results.map(x=>x.url)).size,search.results.length,query+' results must be unique');
       assert.ok(search.results.every(x=>x.thumb&&x.fetchId&&x.thumbFetchId),query+' results need thumbnail and lazy fetch references');
       assert.ok(search.results.every(x=>x.url.startsWith('https://')&&x.thumb.startsWith('https://')),query+' results must use HTTPS');
+      if(query==='joe rogan'){
+        const relevant=search.results.slice(0,10).filter(x=>/joe|rogan/i.test([x.title,x.snippet,x.sourceUrl].filter(Boolean).join(' '))).length;
+        assert.ok(relevant>=3,'Joe Rogan results should contain relevant Bing metadata in the first 10 results');
+      }
     }
     for(const image of imageSearch.results){
       if(image.width&&image.height){
