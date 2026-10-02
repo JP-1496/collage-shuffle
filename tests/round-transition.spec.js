@@ -23,7 +23,7 @@ async function createPlayer(browser, nickname, label) {
   await page.locator('input[placeholder="Nickname"]').fill(nickname);
   const avatar = label === 'P1' ? '5' : '12';
   await page.getByRole('button', { name: `Character ${avatar}` }).click();
-  await expect(page.locator('.avatars button')).toHaveCount(20);
+  await expect(page.locator('.avatars button')).toHaveCount(24);
   await expect(page.locator('.profileNameRow .profileAvatar')).toHaveAttribute('data-avatar', avatar);
   const selectedAvatar = page.locator('.avatars button.selected');
   await expect(selectedAvatar).toHaveAttribute('data-avatar', avatar);
