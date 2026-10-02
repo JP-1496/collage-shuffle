@@ -5,6 +5,12 @@ const PORT = 18742;
 const BASE = `http://127.0.0.1:${PORT}`;
 const WS = `ws://127.0.0.1:${PORT}/ws`;
 const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+const serverSource=await (await import('node:fs/promises')).readFile(new URL('../server.js',import.meta.url),'utf8');
+assert.match(serverSource,/MAX_SEARCH_RESULTS=36/);
+assert.match(serverSource,/MAX_IMAGE_DIMENSION=3840/);
+assert.match(serverSource,/MAX_IMAGE_PIXELS=MAX_IMAGE_DIMENSION\*2160/);
+assert.match(serverSource,/searchScore/);
+
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function waitFor(fn, timeout=5000){
