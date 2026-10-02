@@ -35,8 +35,8 @@ function searchScore(page,q){
   const query=normaliseSearchText(q), terms=query.split(' ').filter(Boolean);
   const title=normaliseSearchText(String(page.title||'').replace(/^File:/i,''));
   const snippet=normaliseSearchText(page.snippet||'');
-  const phrase=Boolean(query&&title.includes(query));
   const titleWords=new Set(title.split(' ').filter(Boolean));
+  const phrase=Boolean(terms.length>1&&query&&title.includes(query));
   const titleHits=terms.filter(t=>titleWords.has(t)).length;
   const snippetHits=terms.filter(t=>snippet.includes(t)).length;
   const titleRelevant=Boolean(terms.length&&(phrase||titleHits===terms.length));
