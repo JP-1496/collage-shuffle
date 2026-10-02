@@ -40,7 +40,7 @@ async function fetchSearchPage(q,continuation){
   const u=new URL('https://commons.wikimedia.org/w/api.php');
   u.searchParams.set('action','query');
   u.searchParams.set('generator','search');
-  u.searchParams.set('gsrsearch',`intitle:${q}`);
+  u.searchParams.set('gsrsearch',q);
   u.searchParams.set('gsrnamespace','6');
   u.searchParams.set('gsrlimit',String(SEARCH_CANDIDATES_PER_PAGE));
   u.searchParams.set('prop','imageinfo');
