@@ -23,6 +23,7 @@ async function createPlayer(browser, nickname, label) {
   await page.locator('input[placeholder="Nickname"]').fill(nickname);
   const avatar = label === 'P1' ? '5' : '12';
   await page.getByRole('button', { name: `Character ${avatar}` }).click();
+  await expect(page.locator('.avatars button')).toHaveCount(20);
   return { context, page };
 }
 
@@ -70,7 +71,6 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     await expect(p1.locator('.playerAvatar[data-avatar="5"]')).toHaveCount(1);
     await expect(p1.locator('.playerAvatar[data-avatar="12"]')).toHaveCount(1);
     await expect(p1.locator('.playerHud .hudAvatar[data-avatar="5"]')).toHaveCount(1);
-    await expect(p1.locator('.avatars button')).toHaveCount(20);
 
     await p2.getByRole('button', { name: /Ready up/ }).click();
     await expect(p1.getByRole('button', { name: /Start Game/ })).toBeEnabled();
