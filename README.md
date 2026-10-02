@@ -1,6 +1,10 @@
-# Collage — Shuffle V1.4.44
+# Collage — Shuffle V1.4.45
 
 Browser-first multiplayer party game prototype.
+
+### V1.4.45
+- Reduced live collage editor WebSocket traffic by debouncing collage syncs and removing the server's full-state response to each sync.
+- Submit now cancels any pending sync and sends the latest collage directly.
 
 ### V1.4.44
 - Version bump for the current Render test build.
