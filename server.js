@@ -27,8 +27,9 @@ const MAX_IMAGE_WIDTH=3840;
 const MAX_IMAGE_HEIGHT=2160;
 const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
 const MAX_SEARCH_RESULTS=100;
-const OPENVERSE_PAGE_SIZE=100;
-const OPENVERSE_API='https://api.openverse.engineering/v1/images/';
+const SEARCH_CANDIDATES_PER_PAGE=500;
+const SEARCH_THUMB_WIDTH=600;
+const MAX_SEARCH_PAGES=2;
 const SEARCH_USER_AGENT='CollageShuffle/1.4.76 (image search feature)';
 const imageFetchCache=new Map();
 function rememberImageUrl(url){
@@ -42,57 +43,65 @@ function pruneImageFetchCache(){
   const now=Date.now();
   for(const [token,item] of imageFetchCache)if(item.expiresAt<=now)imageFetchCache.delete(token);
 }
-async function fetchOpenverse(q){
-  const u=new URL(OPENVERSE_API);
-  u.searchParams.set('q',q);
-  u.searchParams.set('page_size',String(OPENVERSE_PAGE_SIZE));
-  u.searchParams.set('mature','false');
+function normaliseSearchText(value=''){
+  return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim();
+}
+function searchTitleRelevant(title,q){
+  const terms=normaliseSearchText(q).split(' ').filter(Boolean);
+  const words=normaliseSearchText(String(title||'').replace(/^File:/i,'')).split(' ').filter(Boolean);
+  return terms.length>0&&terms.every(term=>words.some(word=>word===term||word.startsWith(term)));
+}
+function searchQuery(q){
+  const clean=normaliseSearchText(q);
+  if(!clean)return '';
+  return clean.split(' ').filter(Boolean).map(term=>`intitle:${term}`).join(' ');
+}
+async function fetchSearchPage(q,continuation){
+  const u=new URL('https://commons.wikimedia.org/w/api.php');
+  u.searchParams.set('action','query');
+  u.searchParams.set('generator','search');
+  u.searchParams.set('gsrsearch',searchQuery(q));
+  u.searchParams.set('gsrnamespace','6');
+  u.searchParams.set('gsrlimit',String(SEARCH_CANDIDATES_PER_PAGE));
+  u.searchParams.set('prop','imageinfo');
+  u.searchParams.set('iiprop','url|mime|size');
+  u.searchParams.set('iiurlwidth',String(SEARCH_THUMB_WIDTH));
+  u.searchParams.set('iiurlheight',String(Math.round(SEARCH_THUMB_WIDTH*0.75)));
+  u.searchParams.set('format','json');
+  if(continuation)for(const [key,value] of Object.entries(continuation))u.searchParams.set(key,String(value));
   const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'application/json'}});
-  if(!r.ok)throw new Error('openverse search '+r.status);
+  if(!r.ok)throw new Error('image search '+r.status);
   return r.json();
 }
-function addOpenverseResults(target,items){
-  for(const item of items||[]){
-    const url=String(item?.url||'');
-    const thumb=String(item?.thumbnail||'');
-    const width=Number(item?.width||0),height=Number(item?.height||0);
-    if(!url||!thumb||width<=0||height<=0)continue;
-    if(width>MAX_IMAGE_WIDTH||height>MAX_IMAGE_HEIGHT||width*height>MAX_IMAGE_PIXELS)continue;
-    const key=String(item.identifier||url);
+function addSearchResults(target,pages,q){
+  for(const page of pages||[]){
+    const info=page.imageinfo?.[0];
+    if(!info?.url||!info.mime?.startsWith('image/'))continue;
+    if(!searchTitleRelevant(page.title,q))continue;
+    const thumb=info.thumburl||info.url;
+    const width=Number(info.width||0),height=Number(info.height||0);
+    if(width<=0||height<=0||width>MAX_IMAGE_WIDTH||height>MAX_IMAGE_HEIGHT||width*height>MAX_IMAGE_PIXELS)continue;
+    const key=String(info.sha1||info.url);
     if(target.has(key))continue;
-    const fetchId=rememberImageUrl(url);
+    const fetchId=rememberImageUrl(info.url);
     const thumbFetchId=rememberImageUrl(thumb);
     if(!fetchId||!thumbFetchId)continue;
-    target.set(key,{
-      title:String(item.title||'Untitled image'),
-      snippet:'',
-      thumb,
-      url,
-      sourceUrl:String(item.foreign_landing_url||url),
-      mime:String(item.filetype||'').startsWith('image/')?String(item.filetype):'',
-      width,height,
-      fetchId,thumbFetchId,
-      creator:String(item.creator||''),
-      license:String(item.license||''),
-      licenseVersion:String(item.license_version||''),
-      provider:String(item.provider||item.source||'')
-    });
+    target.set(key,{title:page.title,snippet:page.snippet||'',thumb,url:info.url,sourceUrl:info.url,mime:info.mime,width,height,fetchId,thumbFetchId});
   }
 }
 app.get('/api/image-search',async(req,res)=>{try{
   const q=String(req.query.q||'').trim().slice(0,120);
   if(!q)return res.json({results:[]});
   pruneImageFetchCache();
-  const data=await fetchOpenverse(q);
   const collected=new Map();
-  addOpenverseResults(collected,data.results);
-  res.json({
-    results:[...collected.values()].slice(0,MAX_SEARCH_RESULTS),
-    maxWidth:MAX_IMAGE_WIDTH,
-    maxHeight:MAX_IMAGE_HEIGHT,
-    maxPixels:MAX_IMAGE_PIXELS,
-    provider:'Openverse'
-  });
+  let continuation=null;
+  for(let page=0;page<MAX_SEARCH_PAGES&&collected.size<MAX_SEARCH_RESULTS;page++){
+    const data=await fetchSearchPage(q,continuation);
+    addSearchResults(collected,Object.values(data.query?.pages||{}),q);
+    continuation=data.continue||null;
+    if(!continuation)break;
+  }
+  res.json({results:[...collected.values()].slice(0,MAX_SEARCH_RESULTS),maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Wikimedia title search',thumbnailWidth:SEARCH_THUMB_WIDTH});
 }catch(e){
   console.error('Image search failed:',e);
   res.status(502).json({error:'Image search unavailable',...(TEST_MODE?{detail:String(e?.message||e)}:{})});
