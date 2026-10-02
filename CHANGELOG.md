@@ -1,3 +1,8 @@
+## V1.4.55
+- Added a persistent Leave Game button during active games.
+- Leave Game intentionally closes the connection, clears the saved session and returns to the home screen.
+- Added Playwright coverage confirming Leave Game returns to the landing screen.
+
 ## V1.4.54
 - Added WebSocket heartbeat monitoring so stale connections are detected instead of remaining apparently connected.
 - Added automatic reconnect/resume using the existing player and lobby session.
