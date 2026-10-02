@@ -1,3 +1,8 @@
+## V1.4.43 — Round transition deployment hotfix
+- Confirmed the server correctly advances from Round 1 to Round 2 after all connected players submit.
+- Confirmed the frontend must rerender when the `round` changes even though the WebSocket phase remains `ROUND`.
+- Cache-busted the deployed frontend entry point so the corrected Round 1 → Round 2 client logic is definitely loaded after deployment.
+
 ## V1.4.35
 - Simplified collage submission to mirror the working prompt-submission model.
 - Removed the visible `Submitting…` state and separate submission acknowledgement flow.
