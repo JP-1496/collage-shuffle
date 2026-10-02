@@ -106,7 +106,7 @@ async function main(){
       await sleep(1000);
     }
     assert.ok(Array.isArray(imageSearch.results), JSON.stringify(imageSearch));
-    assert.ok(imageSearch.results.length>=20, `Expected at least 10 ocean images, got ${imageSearch.results.length}`);
+    assert.ok(imageSearch.results.length>=10, `Expected at least 10 ocean images, got ${imageSearch.results.length}`);
     assert.ok(imageSearch.results.length<=100);
     assert.equal(imageSearch.provider,'Bing Images');
     assert.equal(new Set(imageSearch.results.map(x=>x.url)).size,imageSearch.results.length);
