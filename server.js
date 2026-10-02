@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.81';
+const VERSION = '1.4.82';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -51,16 +51,26 @@ function decodeBingMetadata(raw=''){
 }
 function parseBingImageResults(html=''){
   const results=[];
-  const anchorRe=/<a\b[^>]*class=["'][^"']*\biusc\b[^"']*["'][^>]*>/gi;
-  let match;
-  while((match=anchorRe.exec(html))){
-    const tag=match[0];
-    const metadataMatch=tag.match(/\bm=["']([^"']+)["']/i);
-    if(!metadataMatch)continue;
-    const meta=decodeBingMetadata(metadataMatch[1]);
-    if(!meta?.murl||!meta?.turl)continue;
-    const title=String(meta.t||meta.title||'').replace(/<[^>]+>/g,'').trim();
-    results.push({title,snippet:String(meta.desc||''),thumb:meta.turl,url:meta.murl,sourceUrl:meta.purl||meta.murl,mime:meta.m||'',width:Number(meta.w||0),height:Number(meta.h||0)});
+  // Bing can place other image metadata on the page outside the actual result grid.
+  // Restrict parsing to the same dgControl_list container used by SearXNG's Bing engine,
+  // so unrelated/recommended image tiles cannot leak into a user's search results.
+  const listRe=/<ul\\b[^>]*class=["'][^"']*\\bdgControl_list\\b[^"']*["'][^>]*>([\\s\\S]*?)<\\/ul>/gi;
+  const blocks=[];
+  let listMatch;
+  while((listMatch=listRe.exec(html)))blocks.push(listMatch[1]);
+  if(!blocks.length)return results;
+  const anchorRe=/<a\\b[^>]*class=["'][^"']*\\biusc\\b[^"']*["'][^>]*>/gi;
+  for(const block of blocks){
+    let match;
+    while((match=anchorRe.exec(block))){
+      const tag=match[0];
+      const metadataMatch=tag.match(/\\bm=["']([^"']+)["']/i);
+      if(!metadataMatch)continue;
+      const meta=decodeBingMetadata(metadataMatch[1]);
+      if(!meta?.murl||!meta?.turl)continue;
+      const title=String(meta.t||meta.title||'').replace(/<[^>]+>/g,'').trim();
+      results.push({title,snippet:String(meta.desc||''),thumb:meta.turl,url:meta.murl,sourceUrl:meta.purl||meta.murl,mime:meta.m||'',width:Number(meta.w||0),height:Number(meta.h||0)});
+    }
   }
   return results;
 }
@@ -106,7 +116,7 @@ app.get('/api/image-fetch', async (req,res)=>{try{
   if(!cached)return res.status(400).json({error:'Invalid or expired image reference'});
   const u=new URL(cached.url);
   if(u.protocol!=='https:')return res.status(400).json({error:'Unsupported image source'});
-  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.81 (image fetch feature)','Accept':'image/*'}});
+  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.82 (image fetch feature)','Accept':'image/*'}});
   if(!r.ok)throw new Error('fetch '+r.status);
   const type=r.headers.get('content-type')||'image/jpeg';
   if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});
