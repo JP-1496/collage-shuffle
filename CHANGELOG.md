@@ -1,4 +1,10 @@
-## V1.4.56
+## V1.4.57
+- Replaced the temporary SVG avatar artwork with the 20 cleaned custom avatar images.
+- Changed the profile picker to a 5×4 desktop layout with larger character artwork.
+- Kept character identity visible in the lobby, in-game HUD and final results.
+- Server validation now accepts avatar IDs 1–20.
+
+## V1.4.57
 - Replaced emoji profile choices with 24 custom cartoon character avatars.
 - Added character selection to the profile screen and persistent character identity during games.
 - Added player character display beside names and in the in-game top-right HUD.
