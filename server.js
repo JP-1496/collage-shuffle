@@ -51,24 +51,31 @@ function decodeBingMetadata(raw=''){
 }
 function parseBingImageResults(html=''){
   const results=[];
-  const cardRe=/<li[^>]*>[\s\S]*?<a[^>]*class=["'][^"']*iusc[^"']*["'][^>]*m=["']([^"']+)["'][^>]*>[\s\S]*?<\/li>/gi;
+  const anchorRe=/<a\\b[^>]*class=["'][^"']*\\biusc\\b[^"']*["'][^>]*>/gi;
   let match;
-  while((match=cardRe.exec(html))){
-    const meta=decodeBingMetadata(match[1]);
+  while((match=anchorRe.exec(html))){
+    const tag=match[0];
+    const metadataMatch=tag.match(/\\bm=["']([^"']+)["']/i);
+    if(!metadataMatch)continue;
+    const meta=decodeBingMetadata(metadataMatch[1]);
     if(!meta?.murl||!meta?.turl)continue;
     const title=String(meta.t||meta.title||'').replace(/<[^>]+>/g,'').trim();
     results.push({title,snippet:String(meta.desc||''),thumb:meta.turl,url:meta.murl,sourceUrl:meta.purl||meta.murl,mime:meta.m||'',width:Number(meta.w||0),height:Number(meta.h||0)});
   }
   return results;
 }
-async function fetchBingPage(q,page){
-  const u=new URL('https://www.bing.com/images/async');
-  u.searchParams.set('q',q);u.searchParams.set('mmasync','1');
-  u.searchParams.set('first',String((page-1)*SEARCH_PAGE_SIZE+1));u.searchParams.set('count',String(SEARCH_PAGE_SIZE));
-  u.searchParams.set('setlang','en');u.searchParams.set('cc','GB');
-  const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'text/html,application/xhtml+xml','Accept-Language':'en-GB,en;q=0.9'}});
+async function fetchBingUrl(path){
+  const r=await fetch(new URL(path,'https://www.bing.com'),{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'text/html,application/xhtml+xml','Accept-Language':'en-GB,en;q=0.9'}});
   if(!r.ok)throw new Error('Bing image search '+r.status);
   return r.text();
+}
+async function fetchBingPage(q,page){
+  const first=(page-1)*SEARCH_PAGE_SIZE+1;
+  const asyncPath='/images/async?q='+encodeURIComponent(q)+'&mmasync=1&first='+first+'&count='+SEARCH_PAGE_SIZE+'&setlang=en&cc=GB';
+  const html=await fetchBingUrl(asyncPath);
+  if(parseBingImageResults(html).length)return html;
+  const fallback='/images/search?q='+encodeURIComponent(q)+'&first='+first+'&count='+SEARCH_PAGE_SIZE+'&setlang=en-GB';
+  return fetchBingUrl(fallback);
 }
 app.get('/api/image-search',async(req,res)=>{try{
   const q=String(req.query.q||'').trim().slice(0,120);
