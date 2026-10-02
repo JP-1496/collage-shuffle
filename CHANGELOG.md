@@ -1,4 +1,4 @@
-## V1.4.59
+## V1.4.60
 - Changed the profile heading from “Your profile” to “Who are you?”.
 - Removed the profile silhouette emoji from the heading.
 
