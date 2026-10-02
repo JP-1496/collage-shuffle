@@ -67,7 +67,6 @@ async function fetchSearchPage(query,continuation){
   u.searchParams.set('iiprop','url|mime|size');
   u.searchParams.set('iiurlwidth',String(MAX_IMAGE_WIDTH));
   u.searchParams.set('iiurlheight',String(MAX_IMAGE_HEIGHT));
-  u.searchParams.set('cllimit','max');
   u.searchParams.set('format','json');
   if(continuation)for(const [key,value] of Object.entries(continuation))u.searchParams.set(key,String(value));
   const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT}});
