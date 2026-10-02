@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import fs from 'node:fs';
 
 const ONE_PIXEL_PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
@@ -30,6 +31,7 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     const p1 = player1.page;
     const p2 = player2.page;
 
+    fs.writeFileSync('browser.log', '');
     for (const [label, page] of [['P1', p1], ['P2', p2]]) {
       page.on('websocket', ws => {
         ws.on('framereceived', data => {
