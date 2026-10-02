@@ -1,3 +1,8 @@
+## V1.4.77
+- Made the ambiguous `avatar` search person-focused by prioritising Wikimedia structured-data results that depict humans, with portrait/headshot/face fallbacks.
+- Kept the strict title relevance guard so unrelated file-title matches are excluded.
+- Added an automated regression test requiring person-oriented avatar results near the top of the returned set.
+
 ## V1.4.76
 - Reworked image search around Wikimedia Commons title-targeted search instead of generic content search, preventing unrelated page-content matches.
 - Search previews now use 600px thumbnails; full-resolution images are fetched only when selected.
