@@ -1,3 +1,9 @@
+## V1.4.74 — Single-call title-constrained image search
+- Reworked image search again to avoid the multi-request failure from V1.4.72/1.4.73.
+- Uses Wikimedia's search generator with an explicit `intitle:` constraint, so arbitrary page-content matches cannot become results.
+- Keeps the 100-result cap and existing image size limits.
+- Avatar regression test now checks that every returned title contains the requested term.
+
 ## V1.4.73 — Reliable title-focused image search
 - Reworked image search to use Wikimedia's title-only search mode instead of the heavier MediaSearch result retrieval.
 - This avoids the intermittent "cannot search right now" failure caused by multiple search/info API requests while keeping avatar searches genuinely relevant.
