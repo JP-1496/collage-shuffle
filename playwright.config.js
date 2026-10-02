@@ -21,7 +21,7 @@ export default defineConfig({
     : 'list',
 
   webServer: {
-    command: 'npm start',
+    command: 'npm start > server.log 2>&1',
     url: 'http://127.0.0.1:10000/health',
     reuseExistingServer: false,
     timeout: 120_000,
