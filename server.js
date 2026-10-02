@@ -28,27 +28,24 @@ const MAX_IMAGE_HEIGHT=2160;
 const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
 const MAX_SEARCH_RESULTS=100;
 const SEARCH_CANDIDATES_PER_PAGE=500;
-const MAX_SEARCH_PAGES=6;
+const MAX_SEARCH_PAGES=4;
 const SEARCH_USER_AGENT='CollageShuffle/1.4.70 (image search feature)';
 function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim()}
 function searchScore(page,q){
   const query=normaliseSearchText(q), terms=query.split(' ').filter(Boolean);
   const title=normaliseSearchText(String(page.title||'').replace(/^File:/i,''));
   const snippet=normaliseSearchText(page.snippet||'');
-  const categories=(page.categories||[]).map(c=>normaliseSearchText(String(c.title||'').replace(/^Category:/i,''))).join(' ');
   const phrase=query&&title.includes(query);
   const titleWords=new Set(title.split(' ').filter(Boolean));
   const titleHits=terms.filter(t=>titleWords.has(t)).length;
-  const categoryHits=terms.filter(t=>categories.includes(t)).length;
   const snippetHits=terms.filter(t=>snippet.includes(t)).length;
   let score=0;
   if(phrase)score+=120;
   if(titleHits===terms.length)score+=80;
   else score+=titleHits*30;
-  score+=Math.min(categoryHits,terms.length)*18;
   if(snippetHits===terms.length)score+=20;
   else score+=snippetHits*5;
-  if(!titleHits&&!categoryHits)score-=25;
+  if(!titleHits&&!snippetHits)score-=15;
   return score;
 }
 function searchVariants(q){
@@ -66,7 +63,7 @@ async function fetchSearchPage(query,continuation){
   u.searchParams.set('gsrsearch',query);
   u.searchParams.set('gsrnamespace','6');
   u.searchParams.set('gsrlimit',String(SEARCH_CANDIDATES_PER_PAGE));
-  u.searchParams.set('prop','imageinfo|categories');
+  u.searchParams.set('prop','imageinfo');
   u.searchParams.set('iiprop','url|mime|size');
   u.searchParams.set('iiurlwidth',String(MAX_IMAGE_WIDTH));
   u.searchParams.set('iiurlheight',String(MAX_IMAGE_HEIGHT));
@@ -86,7 +83,7 @@ function addSearchPages(target,pages,q){
     const height=Number(info.thumbheight||info.height||0);
     if(width<=0||height<=0||width>MAX_IMAGE_WIDTH||height>MAX_IMAGE_HEIGHT||width*height>MAX_IMAGE_PIXELS)continue;
     const key=String(info.sha1||info.url);
-    const candidate={title:page.title,snippet:page.snippet||'',categories:page.categories||[],thumb,url:thumb,sourceUrl:info.url,mime:info.mime,width,height,score:searchScore(page,q)};
+    const candidate={title:page.title,snippet:page.snippet||'',thumb,url:thumb,sourceUrl:info.url,mime:info.mime,width,height,score:searchScore(page,q)};
     const previous=target.get(key);
     if(!previous||candidate.score>previous.score)target.set(key,candidate);
   }
