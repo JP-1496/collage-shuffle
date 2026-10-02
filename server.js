@@ -54,17 +54,17 @@ function parseBingImageResults(html=''){
   // Bing can place other image metadata on the page outside the actual result grid.
   // Restrict parsing to the same dgControl_list container used by SearXNG's Bing engine,
   // so unrelated/recommended image tiles cannot leak into a user's search results.
-  const listRe=/<ul\\b[^>]*class=["'][^"']*\\bdgControl_list\\b[^"']*["'][^>]*>([\\s\\S]*?)<\\/ul>/gi;
+  const listRe=/<ul\b[^>]*class=["'][^"']*\bdgControl_list\b[^"']*["'][^>]*>([\s\S]*?)<\/ul>/gi;
   const blocks=[];
   let listMatch;
   while((listMatch=listRe.exec(html)))blocks.push(listMatch[1]);
   if(!blocks.length)return results;
-  const anchorRe=/<a\\b[^>]*class=["'][^"']*\\biusc\\b[^"']*["'][^>]*>/gi;
+  const anchorRe=/<a\b[^>]*class=["'][^"']*\biusc\b[^"']*["'][^>]*>/gi;
   for(const block of blocks){
     let match;
     while((match=anchorRe.exec(block))){
       const tag=match[0];
-      const metadataMatch=tag.match(/\\bm=["']([^"']+)["']/i);
+      const metadataMatch=tag.match(/\bm=["']([^"']+)["']/i);
       if(!metadataMatch)continue;
       const meta=decodeBingMetadata(metadataMatch[1]);
       if(!meta?.murl||!meta?.turl)continue;
