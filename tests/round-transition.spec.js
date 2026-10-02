@@ -1,0 +1,88 @@
+import { test, expect } from '@playwright/test';
+
+const ONE_PIXEL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+  'base64'
+);
+
+async function createPlayer(browser, nickname) {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto('/');
+  await page.locator('input[placeholder="Nickname"]').fill(nickname);
+  return { context, page };
+}
+
+async function addTwoImages(page) {
+  await page.locator('#file').setInputFiles([
+    { name: 'image-1.png', mimeType: 'image/png', buffer: ONE_PIXEL_PNG },
+    { name: 'image-2.png', mimeType: 'image/png', buffer: ONE_PIXEL_PNG },
+  ]);
+  await expect(page.locator('.poolGrid .poolCard')).toHaveCount(2);
+  await page.getByRole('button', { name: /^Ready!/ }).click();
+}
+
+test('two players can submit Round 1 and both reach Round 2', async ({ browser }) => {
+  const player1 = await createPlayer(browser, 'Player 1');
+  const player2 = await createPlayer(browser, 'Player 2');
+
+  try {
+    const p1 = player1.page;
+    const p2 = player2.page;
+
+    await p1.getByRole('button', { name: /Host Game/ }).click();
+    await p1.getByRole('button', { name: /Create Lobby/ }).click();
+
+    await expect(p1.locator('.code')).toBeVisible();
+    const lobbyCode = await p1.locator('.code').innerText();
+
+    await p2.getByRole('button', { name: /Join Game/ }).click();
+    await p2.locator('#joinCode').fill(lobbyCode);
+    await p2.getByRole('button', { name: /Join Lobby/ }).click();
+
+    await expect(p1.locator('.players')).toContainText('Player 2');
+    await expect(p2.locator('.players')).toContainText('Player 1');
+
+    await p2.getByRole('button', { name: /Ready up/ }).click();
+    await expect(p1.getByRole('button', { name: /Start Game/ })).toBeEnabled();
+    await p1.getByRole('button', { name: /Start Game/ }).click();
+
+    await expect(p1.getByText('Build your image pool')).toBeVisible();
+    await expect(p2.getByText('Build your image pool')).toBeVisible();
+
+    await addTwoImages(p1);
+    await addTwoImages(p2);
+
+    await expect(p1.getByText(/Ready — waiting for everyone/)).toBeVisible();
+    await expect(p2.getByText(/Ready — waiting for everyone/)).toBeVisible();
+
+    await expect(p1.getByText(/Give everyone something ridiculous to make/)).toBeVisible();
+    await expect(p2.getByText(/Give everyone something ridiculous to make/)).toBeVisible();
+
+    await p1.locator('#prompt').fill('A tiny dinosaur running a karting track');
+    await p2.locator('#prompt').fill('A penguin who thinks it is a racing driver');
+    await p1.getByRole('button', { name: /Submit Prompt/ }).click();
+    await p2.getByRole('button', { name: /Submit Prompt/ }).click();
+
+    await expect(p1.getByText('ROUND 1 OF 2')).toBeVisible();
+    await expect(p2.getByText('ROUND 1 OF 2')).toBeVisible();
+
+    const submit1 = p1.getByRole('button', { name: /Submit collage/ });
+    const submit2 = p2.getByRole('button', { name: /Submit collage/ });
+
+    await expect(submit1).toBeEnabled();
+    await expect(submit2).toBeEnabled();
+
+    await submit1.click();
+    await expect(p1.getByRole('button', { name: /Submitted 1\/2/ })).toBeVisible();
+    await expect(p2.getByRole('button', { name: /Submitted 1\/2/ })).toBeVisible();
+
+    await submit2.click();
+
+    await expect(p1.getByText('ROUND 2 OF 2')).toBeVisible({ timeout: 5_000 });
+    await expect(p2.getByText('ROUND 2 OF 2')).toBeVisible({ timeout: 5_000 });
+  } finally {
+    await player1.context.close();
+    await player2.context.close();
+  }
+});
