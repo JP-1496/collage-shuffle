@@ -1,4 +1,4 @@
-## V1.4.60
+## V1.4.61
 - Made lobby player avatars larger.
 - Cropped lobby avatars into clean circular portraits.
 - Added automated coverage for lobby avatar size and round shape.
