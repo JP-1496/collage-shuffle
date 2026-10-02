@@ -36,6 +36,8 @@ async function createPlayer(browser, nickname, label) {
   await expect(selectedAvatar).toHaveAttribute('data-avatar', avatar);
   await page.getByRole('button',{name:'Character 24'}).click();
   await expect(page.locator('.avatars button.selected')).toHaveAttribute('data-avatar','24');
+  await page.getByRole('button',{name:`Character ${avatar}`}).click();
+  await expect(page.locator('.avatars button.selected')).toHaveAttribute('data-avatar',avatar);
   await expect(selectedAvatar).toHaveCSS('background-color', 'rgb(97, 223, 154)');
   await expect(selectedAvatar).toHaveCSS('padding', '0px');
   await expect(selectedAvatar.locator('.avatarIcon')).toHaveCSS('background-image', /data:image\/webp/);
