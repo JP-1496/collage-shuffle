@@ -82,7 +82,9 @@ function addSearchPages(target,pages,q){
     const height=Number(info.thumbheight||info.height||0);
     if(width<=0||height<=0||width>MAX_IMAGE_WIDTH||height>MAX_IMAGE_HEIGHT||width*height>MAX_IMAGE_PIXELS)continue;
     const key=String(info.sha1||info.url);
-    const candidate={title:page.title,snippet:page.snippet||'',thumb,url:thumb,sourceUrl:info.url,mime:info.mime,width,height,score:searchScore(page,q)};
+    const score=searchScore(page,q);
+    if(score===null)continue;
+    const candidate={title:page.title,snippet:page.snippet||'',thumb,url:thumb,sourceUrl:info.url,mime:info.mime,width,height,score};
     const previous=target.get(key);
     if(!previous||candidate.score>previous.score)target.set(key,candidate);
   }
