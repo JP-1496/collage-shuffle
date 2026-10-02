@@ -1,8 +1,6 @@
-## V1.4.58
-- Avatar picker artwork now fills each circular button edge-to-edge.
-- Selected avatar now gets a clear green highlight.
-- Added a larger selected-character preview beside the nickname field.
-- Preserved the 5×4 desktop picker and 4-column mobile layout.
+## V1.4.59
+- Changed the profile heading from “Your profile” to “Who are you?”.
+- Removed the profile silhouette emoji from the heading.
 
 ## V1.4.57
 - Replaced the temporary SVG avatar artwork with the 20 cleaned custom avatar images.
