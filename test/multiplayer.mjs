@@ -97,7 +97,7 @@ async function main(){
     // Integration check: broad image searches should return a genuinely large,
     // deduplicated result set rather than the old ~27-image ceiling.
     const imageSearch=await (await fetch(BASE+'/api/image-search?q=ocean')).json();
-    assert.ok(Array.isArray(imageSearch.results));
+    assert.ok(Array.isArray(imageSearch.results), JSON.stringify(imageSearch));
     assert.ok(imageSearch.results.length>=50, `Expected at least 50 ocean images, got ${imageSearch.results.length}`);
     assert.ok(imageSearch.results.length<=100);
     assert.equal(new Set(imageSearch.results.map(x=>x.sourceUrl||x.url)).size,imageSearch.results.length);
