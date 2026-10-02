@@ -1,4 +1,9 @@
-## V1.4.63
+## V1.4.64
+- Added a black circular buffer behind all 24 avatar images.
+- Clipped avatar images to the circular badge so the white outer padding on avatars 21–24 is hidden.
+- Removed the previous special scaling workaround for avatars 21–24.
+
+## V1.4.64
 - Standardized player character displays across the game.
 - Lobby, player HUD and final-results avatars are now large circular portraits using the same crop rules.
 - Increased mobile identity avatars to remain clearly visible.
