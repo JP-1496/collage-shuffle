@@ -1,3 +1,9 @@
+## V1.4.78 — avatar search uses actual avatar categories
+- Reworked the `avatar` search to prioritize Wikimedia Commons avatar/profile-avatar categories instead of generic images merely containing the word “avatar”.
+- Prioritizes male/female avatars, Chromium profile avatars, Gravatars and identicons before the broader avatar category.
+- Avatar category results are allowed through without the old title-only filter.
+- Bumped client/server version and cache bust to 1.4.78.
+
 ## V1.4.77
 - Made the ambiguous `avatar` search person-focused by prioritising Wikimedia structured-data results that depict humans, with portrait/headshot/face fallbacks.
 - Kept the strict title relevance guard so unrelated file-title matches are excluded.
