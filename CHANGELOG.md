@@ -1,3 +1,9 @@
+## V1.4.69
+- Expanded image search results from 36 to 100 results.
+- Relaxed the custom relevance gate so useful snippet-only Wikimedia matches are retained for broad searches.
+- Kept the 3840×2160 and 8.29MP maximum image dimensions.
+- Updated Wikimedia search/fetch User-Agent version strings.
+
 ## V1.4.68
 - Fixed image search returning only a handful of results for broad searches such as "ocean".
 - Search now considers up to 500 Wikimedia candidates before selecting the best 36.
