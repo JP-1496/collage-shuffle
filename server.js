@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.77';
+const VERSION = '1.4.78';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -30,7 +30,7 @@ const MAX_SEARCH_RESULTS=100;
 const SEARCH_CANDIDATES_PER_PAGE=500;
 const SEARCH_THUMB_WIDTH=600;
 const MAX_SEARCH_PAGES=3;
-const SEARCH_USER_AGENT='CollageShuffle/1.4.76 (image search feature)';
+const SEARCH_USER_AGENT='CollageShuffle/1.4.78 (image search feature)';
 const imageFetchCache=new Map();
 function rememberImageUrl(url){
   const raw=String(url||'');
@@ -56,8 +56,13 @@ function searchQueries(q){
   if(!clean)return [];
   if(clean==='avatar'){
     return [
-      'intitle:avatar haswbstatement:P180=Q5',
-      'intitle:avatar (portrait OR person OR headshot OR selfie OR face OR woman OR man)'
+      'incategory:Male_avatars',
+      'incategory:Female_avatars',
+      'incategory:Chromium_profile_avatars',
+      'incategory:Gravatar',
+      'incategory:Identicons',
+      'incategory:Avatars',
+      'intitle:avatar (profile OR picture OR pfp OR userpic)'
     ];
   }
   return [clean.split(' ').filter(Boolean).map(term=>`intitle:${term}`).join(' ')];
@@ -83,7 +88,7 @@ function addSearchResults(target,pages,q){
   for(const page of pages||[]){
     const info=page.imageinfo?.[0];
     if(!info?.url||!info.mime?.startsWith('image/'))continue;
-    if(!searchTitleRelevant(page.title,q))continue;
+    if(normaliseSearchText(q)!=='avatar'&&!searchTitleRelevant(page.title,q))continue;
     const thumb=info.thumburl||info.url;
     const width=Number(info.width||0),height=Number(info.height||0);
     if(width<=0||height<=0||width>MAX_IMAGE_WIDTH||height>MAX_IMAGE_HEIGHT||width*height>MAX_IMAGE_PIXELS)continue;
