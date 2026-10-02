@@ -1,5 +1,4 @@
-name: Collage multiplayer tests
-# CI trigger verification
+name: Collage automated tests
 
 on:
   push:
@@ -9,14 +8,40 @@ on:
   workflow_dispatch:
 
 jobs:
-  multiplayer-test:
+  automated-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
-      - run: node --check public/app.js
-      - run: node --check server.js
-      - run: npm test
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Validate JavaScript
+        run: |
+          node --check public/app.js
+          node --check server.js
+
+      - name: Run existing multiplayer tests
+        run: npm test
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright failure artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
