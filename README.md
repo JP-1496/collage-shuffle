@@ -1,4 +1,8 @@
-# Collage — Shuffle V1.4.54
+# Collage — Shuffle V1.4.55
+
+### V1.4.55
+- Added a persistent Leave Game button during active games.
+- Leaving clears the saved session and returns the player to the home screen.
 
 ### V1.4.54
 - Added WebSocket heartbeat/ping monitoring and automatic reconnect/resume for interrupted browser connections.
