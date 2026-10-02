@@ -189,6 +189,7 @@ function handle(g,pid,a){
       c.submitted=true;
       g.travelingSets[pid]=clone(c.pieces);
       g.finalResults[g.round].collages[pid]=clone(c);
+      sockets.get(pid)?.send(JSON.stringify({type:'SUBMISSION_ACCEPTED',round:g.round}));
       const connected=g.players.filter(x=>x.connected);
       const submitted=connected.filter(x=>g.collages[x.id]?.submitted).length;
       // Broadcast the accepted count first. WebSocket delivery preserves message
