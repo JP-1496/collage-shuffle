@@ -8,7 +8,7 @@ const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCA
 const fs=await import('node:fs/promises');
 const serverSource=await fs.readFile(new URL('../server.js',import.meta.url),'utf8');
 const appSource=await fs.readFile(new URL('../public/app.js',import.meta.url),'utf8');
-assert.match(serverSource,/MAX_SEARCH_RESULTS=100/);
+assert.match(serverSource,/MAX_SEARCH_RESULTS=100/);\nassert.match(serverSource,/dgControl_list/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH=3840/);
 assert.match(serverSource,/MAX_IMAGE_HEIGHT=2160/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH\*MAX_IMAGE_HEIGHT/);
@@ -110,7 +110,7 @@ async function main(){
     assert.equal(imageSearch.provider,'Bing Images');
     assert.equal(new Set(imageSearch.results.map(x=>x.url)).size,imageSearch.results.length);
     assert.ok(imageSearch.results.every(x=>x.thumb&&x.fetchId&&x.thumbFetchId),'Every result must provide a thumbnail and lazy fetch references');
-    const searchQueries=['avatar','jaguar','apple','bat','dog','Minecraft','red Ferrari','ocean'];
+    const searchQueries=['avatar','jaguar','apple','bat','dog','Minecraft','red Ferrari','ocean','joe rogan'];
     for(const query of searchQueries){
       const search=await (await fetch(BASE+'/api/image-search?q='+encodeURIComponent(query))).json();
       assert.ok(Array.isArray(search.results), query+' search returned invalid response');
