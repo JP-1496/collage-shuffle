@@ -1,3 +1,8 @@
+## V1.4.75 — Broader title-filtered search
+- Keeps Wikimedia's relevance ranking but searches a few closely related query variants so broad terms such as "ocean" can fill the 100-result pool.
+- Every candidate is still checked against the original search term in the image title, preventing the unrelated avatar results seen earlier.
+- Search remains capped at 100 images and the existing image limits.
+
 ## V1.4.74 — Single-call title-constrained image search
 - Reworked image search again to avoid the multi-request failure from V1.4.72/1.4.73.
 - Uses Wikimedia's search generator with an explicit `intitle:` constraint, so arbitrary page-content matches cannot become results.
