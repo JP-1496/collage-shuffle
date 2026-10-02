@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.78';
+const VERSION = '1.4.79';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -30,7 +30,7 @@ const MAX_SEARCH_RESULTS=100;
 const SEARCH_CANDIDATES_PER_PAGE=500;
 const SEARCH_THUMB_WIDTH=600;
 const MAX_SEARCH_PAGES=3;
-const SEARCH_USER_AGENT='CollageShuffle/1.4.78 (image search feature)';
+const SEARCH_USER_AGENT='CollageShuffle/1.4.79 (image search feature)';
 const imageFetchCache=new Map();
 function rememberImageUrl(url){
   const raw=String(url||'');
@@ -54,18 +54,47 @@ function searchTitleRelevant(title,q){
 function searchQueries(q){
   const clean=normaliseSearchText(q);
   if(!clean)return [];
-  if(clean==='avatar'){
-    return [
-      'incategory:Male_avatars',
-      'incategory:Female_avatars',
-      'incategory:Chromium_profile_avatars',
-      'incategory:Gravatar',
-      'incategory:Identicons',
-      'incategory:Avatars',
-      'intitle:avatar (profile OR picture OR pfp OR userpic)'
-    ];
-  }
+  if(clean==='avatar')return [];
   return [clean.split(' ').filter(Boolean).map(term=>`intitle:${term}`).join(' ')];
+}
+function avatarCategories(){
+  return [
+    'Category:Blank persons placeholders (men)',
+    'Category:Blank persons placeholders (women)',
+    'Category:Male avatars',
+    'Category:Female avatars'
+  ];
+}
+function avatarScore(item){
+  const title=normaliseSearchText(String(item.title||'').replace(/^File:/i,''));
+  let score=0;
+  if(/\\bavatar\\b/.test(title))score+=10;
+  if(/\\bprofile\\b|\\bpfp\\b|\\buserpic\\b/.test(title))score+=8;
+  if(/\\bplaceholder\\b|\\bdefault\\b|\\bdummy\\b/.test(title))score+=6;
+  if(/\\buser\\b|\\bperson\\b|\\bportrait\\b|\\bhead\\b|\\bface\\b|\\bicon\\b|\\bsilhouette\\b/.test(title))score+=4;
+  if(/\\bphoto\\b|\\bhandsome\\b|\\bsecond life\\b/.test(title))score-=5;
+  const ratio=Number(item.width||0)/Number(item.height||1);
+  if(ratio>=0.65&&ratio<=1.7)score+=5;
+  else score-=6;
+  if(Number(item.width||0)<=2000&&Number(item.height||0)<=2000)score+=2;
+  return score;
+}
+async function fetchCategoryPage(category,continuation){
+  const u=new URL('https://commons.wikimedia.org/w/api.php');
+  u.searchParams.set('action','query');
+  u.searchParams.set('generator','categorymembers');
+  u.searchParams.set('gcmtitle',category);
+  u.searchParams.set('gcmnamespace','6');
+  u.searchParams.set('gcmlimit',String(SEARCH_CANDIDATES_PER_PAGE));
+  u.searchParams.set('prop','imageinfo');
+  u.searchParams.set('iiprop','url|mime|size');
+  u.searchParams.set('iiurlwidth',String(SEARCH_THUMB_WIDTH));
+  u.searchParams.set('iiurlheight',String(Math.round(SEARCH_THUMB_WIDTH*0.75)));
+  u.searchParams.set('format','json');
+  if(continuation)for(const [key,value] of Object.entries(continuation))u.searchParams.set(key,String(value));
+  const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'application/json'}});
+  if(!r.ok)throw new Error('avatar category search '+r.status);
+  return r.json();
 }
 async function fetchSearchPage(q,continuation){
   const u=new URL('https://commons.wikimedia.org/w/api.php');
@@ -104,18 +133,33 @@ app.get('/api/image-search',async(req,res)=>{try{
   const q=String(req.query.q||'').trim().slice(0,120);
   if(!q)return res.json({results:[]});
   pruneImageFetchCache();
+  const cleanQuery=normaliseSearchText(q);
   const collected=new Map();
-  for(const query of searchQueries(q)){
-    let continuation=null;
-    for(let page=0;page<MAX_SEARCH_PAGES&&collected.size<MAX_SEARCH_RESULTS;page++){
-      const data=await fetchSearchPage(query,continuation);
-      addSearchResults(collected,Object.values(data.query?.pages||{}),q);
-      continuation=data.continue||null;
-      if(!continuation)break;
+  if(cleanQuery==='avatar'){
+    for(const category of avatarCategories()){
+      let continuation=null;
+      for(let page=0;page<MAX_SEARCH_PAGES;page++){
+        const data=await fetchCategoryPage(category,continuation);
+        addSearchResults(collected,Object.values(data.query?.pages||{}),q);
+        continuation=data.continue||null;
+        if(!continuation)break;
+      }
     }
-    if(collected.size>=MAX_SEARCH_RESULTS)break;
+  }else{
+    for(const query of searchQueries(q)){
+      let continuation=null;
+      for(let page=0;page<MAX_SEARCH_PAGES&&collected.size<MAX_SEARCH_RESULTS;page++){
+        const data=await fetchSearchPage(query,continuation);
+        addSearchResults(collected,Object.values(data.query?.pages||{}),q);
+        continuation=data.continue||null;
+        if(!continuation)break;
+      }
+      if(collected.size>=MAX_SEARCH_RESULTS)break;
+    }
   }
-  const results=[...collected.values()].slice(0,MAX_SEARCH_RESULTS).map(x=>({...x,searchIntent:normaliseSearchText(q)==='avatar'?'avatar-category':'text-title'}));
+  let results=[...collected.values()];
+  if(cleanQuery==='avatar')results.sort((a,b)=>avatarScore(b)-avatarScore(a)||String(a.title).localeCompare(String(b.title)));
+  results=results.slice(0,MAX_SEARCH_RESULTS).map(x=>({...x,searchIntent:cleanQuery==='avatar'?'avatar-category':'text-title'}));
   res.json({results,maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Wikimedia title search',thumbnailWidth:SEARCH_THUMB_WIDTH});
 }catch(e){
   console.error('Image search failed:',e);
@@ -128,7 +172,7 @@ app.get('/api/image-fetch', async (req,res)=>{try{
   if(!cached)return res.status(400).json({error:'Invalid or expired image reference'});
   const u=new URL(cached.url);
   if(u.protocol!=='https:')return res.status(400).json({error:'Unsupported image source'});
-  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.76 (image fetch feature)','Accept':'image/*'}});
+  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.79 (image fetch feature)','Accept':'image/*'}});
   if(!r.ok)throw new Error('fetch '+r.status);
   const type=r.headers.get('content-type')||'image/jpeg';
   if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});
