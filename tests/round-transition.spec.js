@@ -9,15 +9,15 @@ const ONE_PIXEL_PNG = Buffer.from(
 async function createPlayer(browser, nickname, label) {
   const context = await browser.newContext();
   const page = await context.newPage();
-  page.on('websocket', ws => {
-    ws.on('framereceived', data => {
-      try {
-        const msg = JSON.parse(String(data));
-        if (msg.type === 'STATE') {
-          fs.appendFileSync('browser.log', `[WS ${label}] phase=${msg.state?.phase} round=${msg.state?.round} submitted=${JSON.stringify(msg.state?.submissionStatus)}\\n`);
-        }
-      } catch {}
-    });
+  const cdp = await context.newCDPSession(page);
+  await cdp.send('Network.enable');
+  cdp.on('Network.webSocketFrameReceived', event => {
+    try {
+      const msg = JSON.parse(event.response.payloadData);
+      if (msg.type === 'STATE') {
+        fs.appendFileSync('browser.log', `[CDP ${label}] phase=${msg.state?.phase} round=${msg.state?.round} submitted=${JSON.stringify(msg.state?.submissionStatus)}\\n`);
+      }
+    } catch {}
   });
   await page.goto('/');
   await page.locator('input[placeholder="Nickname"]').fill(nickname);
