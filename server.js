@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.54';
+const VERSION = '1.4.55';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
