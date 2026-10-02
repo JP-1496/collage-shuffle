@@ -1,10 +1,15 @@
 # Changelog
 
-## V1.4.49
+## V1.4.50
+- Fixed Round 2 rendering: the client was calling an undefined `scatter()` function when receiving server-provided Round 2 pieces.
+- Client now uses the server-provided piece positions directly.
+
+
+## V1.4.50
 - Added temporary test-mode diagnostics to trace the Round 1 → Round 2 transition in CI.
 
 
-## V1.4.49
+## V1.4.50
 - Made the server advance to the next round immediately after broadcasting the final submission count.
 - Removes the 50ms delayed round transition that was leaving automated two-player games stuck on Round 1.
 
