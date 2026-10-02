@@ -7,7 +7,9 @@ const WS = `ws://127.0.0.1:${PORT}/ws`;
 const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 const serverSource=await (await import('node:fs/promises')).readFile(new URL('../server.js',import.meta.url),'utf8');
 assert.match(serverSource,/MAX_SEARCH_RESULTS=36/);
-assert.match(serverSource,/MAX_IMAGE_DIMENSION=3840/);
+assert.match(serverSource,/MAX_IMAGE_WIDTH=3840/);
+assert.match(serverSource,/MAX_IMAGE_HEIGHT=2160/);
+assert.match(serverSource,/SEARCH_CANDIDATES=500/);
 assert.match(serverSource,/MAX_IMAGE_PIXELS=3840\*2160/);
 assert.match(serverSource,/searchScore/);
 
