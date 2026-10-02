@@ -27,7 +27,9 @@ const MAX_IMAGE_WIDTH=3840;
 const MAX_IMAGE_HEIGHT=2160;
 const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
 const MAX_SEARCH_RESULTS=100;
-const SEARCH_CANDIDATES=500;
+const SEARCH_CANDIDATES_PER_PAGE=500;
+const MAX_SEARCH_PAGES=6;
+const SEARCH_USER_AGENT='CollageShuffle/1.4.70 (image search feature)';
 function normaliseSearchText(value=''){return String(value).toLowerCase().replace(/[_-]+/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim()}
 function searchScore(page,q){
   const query=normaliseSearchText(q), terms=query.split(' ').filter(Boolean);
@@ -35,7 +37,8 @@ function searchScore(page,q){
   const snippet=normaliseSearchText(page.snippet||'');
   const categories=(page.categories||[]).map(c=>normaliseSearchText(String(c.title||'').replace(/^Category:/i,''))).join(' ');
   const phrase=query&&title.includes(query);
-  const titleHits=terms.filter(t=>title.split(' ').includes(t)).length;
+  const titleWords=new Set(title.split(' ').filter(Boolean));
+  const titleHits=terms.filter(t=>titleWords.has(t)).length;
   const categoryHits=terms.filter(t=>categories.includes(t)).length;
   const snippetHits=terms.filter(t=>snippet.includes(t)).length;
   let score=0;
@@ -48,39 +51,68 @@ function searchScore(page,q){
   if(!titleHits&&!categoryHits)score-=25;
   return score;
 }
-app.get('/api/image-search', async (req,res)=>{try{
-  const q=String(req.query.q||'').trim().slice(0,120);
-  if(!q)return res.json({results:[]});
+function searchVariants(q){
+  const clean=normaliseSearchText(q);
+  if(!clean)return [];
+  const variants=[clean];
+  if(!/s$/i.test(clean))variants.push(clean+'s');
+  variants.push(clean+' photo',clean+' photograph');
+  return [...new Set(variants)];
+}
+async function fetchSearchPage(query,continuation){
   const u=new URL('https://commons.wikimedia.org/w/api.php');
   u.searchParams.set('action','query');
   u.searchParams.set('generator','search');
-  u.searchParams.set('gsrsearch',q);
+  u.searchParams.set('gsrsearch',query);
   u.searchParams.set('gsrnamespace','6');
-  u.searchParams.set('gsrlimit',String(SEARCH_CANDIDATES));
+  u.searchParams.set('gsrlimit',String(SEARCH_CANDIDATES_PER_PAGE));
   u.searchParams.set('prop','imageinfo|categories');
   u.searchParams.set('iiprop','url|mime|size');
   u.searchParams.set('iiurlwidth',String(MAX_IMAGE_WIDTH));
   u.searchParams.set('iiurlheight',String(MAX_IMAGE_HEIGHT));
   u.searchParams.set('cllimit','max');
   u.searchParams.set('format','json');
-  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.69 (image search feature)'}});
+  if(continuation)for(const [key,value] of Object.entries(continuation))u.searchParams.set(key,String(value));
+  const r=await fetch(u,{headers:{'User-Agent':SEARCH_USER_AGENT}});
   if(!r.ok)throw new Error('search');
-  const j=await r.json();
-  const results=Object.values(j.query?.pages||{})
-    .filter(x=>x.imageinfo?.[0]?.url&&x.imageinfo[0].mime?.startsWith('image/'))
-    .map(x=>{
-      const info=x.imageinfo[0];
-      const thumb=info.thumburl||info.url;
-      return {title:x.title,snippet:x.snippet||'',categories:x.categories||[],thumb,url:thumb,sourceUrl:info.url,mime:info.mime,width:Number(info.thumbwidth||info.width||0),height:Number(info.thumbheight||info.height||0),score:searchScore(x,q)};
-    })
-    .filter(x=>x.width>0&&x.height>0&&x.width<=MAX_IMAGE_WIDTH&&x.height<=MAX_IMAGE_HEIGHT&&x.width*x.height<=MAX_IMAGE_PIXELS)
-    .filter(x=>x.score>=-5)
+  return r.json();
+}
+function addSearchPages(target,pages,q){
+  for(const page of pages){
+    const info=page.imageinfo?.[0];
+    if(!info?.url||!info.mime?.startsWith('image/'))continue;
+    const thumb=info.thumburl||info.url;
+    const width=Number(info.thumbwidth||info.width||0);
+    const height=Number(info.thumbheight||info.height||0);
+    if(width<=0||height<=0||width>MAX_IMAGE_WIDTH||height>MAX_IMAGE_HEIGHT||width*height>MAX_IMAGE_PIXELS)continue;
+    const key=String(info.sha1||info.url);
+    const candidate={title:page.title,snippet:page.snippet||'',categories:page.categories||[],thumb,url:thumb,sourceUrl:info.url,mime:info.mime,width,height,score:searchScore(page,q)};
+    const previous=target.get(key);
+    if(!previous||candidate.score>previous.score)target.set(key,candidate);
+  }
+}
+app.get('/api/image-search', async (req,res)=>{try{
+  const q=String(req.query.q||'').trim().slice(0,120);
+  if(!q)return res.json({results:[]});
+  const variants=searchVariants(q);
+  const collected=new Map();
+  for(const variant of variants){
+    let continuation=null;
+    for(let pageNo=0;pageNo<MAX_SEARCH_PAGES;pageNo++){
+      const j=await fetchSearchPage(variant,continuation);
+      addSearchPages(collected,Object.values(j.query?.pages||{}),q);
+      continuation=j.continue||null;
+      if(!continuation)break;
+    }
+    if(collected.size>=MAX_SEARCH_RESULTS*3)break;
+  }
+  const results=[...collected.values()]
     .sort((a,b)=>b.score-a.score||a.title.localeCompare(b.title))
     .slice(0,MAX_SEARCH_RESULTS)
     .map(({title,snippet,thumb,url,sourceUrl,mime,width,height})=>({title,snippet,thumb,url,sourceUrl,mime,width,height}));
   res.json({results,maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS});
-}catch(e){res.status(502).json({error:'Image search unavailable'});}});
-app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.69 (image fetch feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
+}catch(e){console.error('Image search failed:',e);res.status(502).json({error:'Image search unavailable'});}});
+app.get('/api/image-fetch', async (req,res)=>{try{const raw=String(req.query.url||'');const u=new URL(raw);if(!['upload.wikimedia.org','commons.wikimedia.org'].includes(u.hostname))return res.status(400).json({error:'Unsupported image source'});const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.70 (image fetch feature)'}});if(!r.ok)throw new Error('fetch');const type=r.headers.get('content-type')||'image/jpeg';if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});const buf=Buffer.from(await r.arrayBuffer());if(buf.length>8*1024*1024)return res.status(413).json({error:'Image too large'});res.json({data:`data:${type};base64,${buf.toString('base64')}`});}catch(e){res.status(502).json({error:'Could not load image'});}});
 app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
 function send(pid, msg){ const ws=sockets.get(pid); if(ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(msg)); }
