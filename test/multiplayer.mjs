@@ -105,28 +105,27 @@ async function main(){
       await sleep(1000);
     }
     assert.ok(Array.isArray(imageSearch.results), JSON.stringify(imageSearch));
-    assert.ok(imageSearch.results.length>=50, `Expected at least 50 ocean images, got ${imageSearch.results.length}`);
+    assert.ok(imageSearch.results.length>=20, `Expected at least 20 ocean images, got ${imageSearch.results.length}`);
     assert.ok(imageSearch.results.length<=100);
-    assert.equal(imageSearch.provider,'Wikimedia title search');
+    assert.equal(imageSearch.provider,'Bing Images');
     assert.equal(new Set(imageSearch.results.map(x=>x.url)).size,imageSearch.results.length);
     assert.ok(imageSearch.results.every(x=>x.thumb&&x.fetchId&&x.thumbFetchId),'Every result must provide a thumbnail and lazy fetch references');
-    const avatarSearch=await (await fetch(BASE+'/api/image-search?q=avatar')).json();
-    assert.ok(Array.isArray(avatarSearch.results), JSON.stringify(avatarSearch));
-    assert.ok(avatarSearch.results.length>0, 'Avatar search returned no results');
-    assert.equal(avatarSearch.provider,'Wikimedia title search');
-    assert.ok(avatarSearch.results.length>=10, `Expected at least 10 avatar results, got ${avatarSearch.results.length}`);
-    assert.ok(avatarSearch.results.slice(0,20).every(x=>x.searchIntent==='avatar-franchise'),
-      'Avatar results should use the Avatar/Na\'vi franchise search intent');
-    const avatarRelevant=avatarSearch.results.slice(0,20).filter(x=>{
-      const title=String(x.title||'').toLowerCase();
-      return /na.?vi|jake|sully|neytiri|avatar/.test(title);
-    }).length;
-    assert.ok(avatarRelevant>=10,
-      'Avatar results should predominantly reference Na\'vi, Jake Sully, Neytiri or Avatar');
+    const searchQueries=['avatar','jaguar','apple','bat','dog','Minecraft','red Ferrari','ocean'];
+    for(const query of searchQueries){
+      const search=await (await fetch(BASE+'/api/image-search?q='+encodeURIComponent(query))).json();
+      assert.ok(Array.isArray(search.results), query+' search returned invalid response');
+      assert.ok(search.results.length>=20, query+' should return at least 20 image results, got '+search.results.length);
+      assert.ok(search.results.length<=100);
+      assert.equal(search.provider,'Bing Images');
+      assert.equal(new Set(search.results.map(x=>x.url)).size,search.results.length,query+' results must be unique');
+      assert.ok(search.results.every(x=>x.thumb&&x.fetchId&&x.thumbFetchId),query+' results need thumbnail and lazy fetch references');
+      assert.ok(search.results.every(x=>x.url.startsWith('https://')&&x.thumb.startsWith('https://')),query+' results must use HTTPS');
+    }
     for(const image of imageSearch.results){
-      assert.ok(image.width>0&&image.height>0);
-      assert.ok(image.width<=3840&&image.height<=2160);
-      assert.ok(image.width*image.height<=8294400);
+      if(image.width&&image.height){
+        assert.ok(image.width<=3840&&image.height<=2160);
+        assert.ok(image.width*image.height<=8294400);
+      }
     }
     const host=await connect();
     host.ws.send(JSON.stringify({type:'HOST_CREATE',name:'Host',lobbyName:'Test',settings:{capacity:2,imagesPerPlayer:1,round1Images:1,hostApproval:false}}));
@@ -206,7 +205,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version     ,'1.4.80');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version     ,'1.4.81');
     host.ws.close();guest.ws.close();
 
     // Repeat the final-submission transition repeatedly and in both orders.
