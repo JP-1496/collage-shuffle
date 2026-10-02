@@ -153,7 +153,7 @@ app.get('/api/image-search',async(req,res)=>{try{
   }
   let results=[...collected.values()];
   if(cleanQuery==='avatar')results.sort((a,b)=>avatarScore(b)-avatarScore(a)||String(a.title).localeCompare(String(b.title)));
-  results=results.slice(0,MAX_SEARCH_RESULTS).map(x=>({...x,searchIntent:cleanQuery==='avatar'?'avatar-category':'text-title'}));
+  results=results.slice(0,MAX_SEARCH_RESULTS).map(x=>({...x,searchIntent:cleanQuery==='avatar'?'avatar-franchise':'text-title'}));
   res.json({results,maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Wikimedia title search',thumbnailWidth:SEARCH_THUMB_WIDTH});
 }catch(e){
   console.error('Image search failed:',e);
