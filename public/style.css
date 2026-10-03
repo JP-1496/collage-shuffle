@@ -163,3 +163,10 @@ body{height:auto;min-height:100vh;overflow:auto}.shell{height:auto;min-height:10
 
 /* V1.4.83 — cartoon background */
 body{background-color:#ffe45e;background-image:radial-gradient(circle,#ff4f87 0 11px,transparent 12px),radial-gradient(circle,#55c8ff 0 9px,transparent 10px),radial-gradient(circle,#7357ff 0 7px,transparent 8px);background-size:70px 70px,90px 90px,110px 110px;background-position:0 0,35px 25px,15px 55px}
+
+
+/* V1.4.84 — softer animated cartoon background */
+body{background:#fff4c7;position:relative}
+body::before{content:"";position:fixed;inset:-40px;z-index:-1;pointer-events:none;background-color:#ffe45e;background-image:radial-gradient(circle,#ff4f87 0 11px,transparent 12px),radial-gradient(circle,#55c8ff 0 9px,transparent 10px),radial-gradient(circle,#7357ff 0 7px,transparent 8px);background-size:70px 70px,90px 90px,110px 110px;background-position:0 0,35px 25px,15px 55px;filter:blur(12px);opacity:.48;transform:scale(1.06);animation:collageBackgroundDrift 18s ease-in-out infinite alternate}
+@keyframes collageBackgroundDrift{0%{transform:scale(1.06) translate3d(-12px,-8px,0)}100%{transform:scale(1.08) translate3d(12px,8px,0)}}
+@media(prefers-reduced-motion:reduce){body::before{animation:none}}
