@@ -75,7 +75,7 @@ function parseBingImageResults(html=''){
   return results;
 }
 function normaliseSearchText(value=''){
-  return String(value).toLowerCase().replace(/https?:\\/\\/[^\\s]+/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\\s+/g,' ').trim();
+  return String(value).toLowerCase().replace(/https?:\/\/[^\s]+/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
 }
 function scoreImageResult(item,query,position){
   const q=normaliseSearchText(query);
