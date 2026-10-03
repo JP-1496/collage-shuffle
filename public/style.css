@@ -166,8 +166,21 @@ body{background-color:#ffe45e;background-image:radial-gradient(circle,#ff4f87 0 
 
 
 
-/* V1.4.85 — clean outline doodle background */
-body{background:#f6f0df;position:relative}
-body::before{content:"";position:fixed;inset:-20px;z-index:-1;pointer-events:none;background-color:#f6f0df;background-image:radial-gradient(circle at 8% 18%,transparent 0 12px,#d2c9b5 13px 15px,transparent 16px),radial-gradient(circle at 82% 25%,transparent 0 17px,#d2c9b5 18px 20px,transparent 21px),linear-gradient(62deg,transparent 0 47%,#d2c9b5 48% 50%,transparent 51%),linear-gradient(-48deg,transparent 0 48%,#d2c9b5 49% 51%,transparent 52%);background-size:260px 230px,330px 280px,190px 190px,240px 210px;background-position:0 0,90px 50px,30px 20px,120px 100px;opacity:.42;filter:blur(.25px);transform:scale(1.02);animation:collageDoodlesDrift 28s ease-in-out infinite alternate}
-@keyframes collageDoodlesDrift{0%{transform:scale(1.02) translate3d(0,0,0)}100%{transform:scale(1.04) translate3d(10px,-7px,0)}}
-@media(prefers-reduced-motion:reduce){body::before{animation:none}}
+
+/* V1.4.86 — closer to the selected outline-doodle reference */
+body{background:#f5efdf;position:relative}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-color:#f5efdf;background-image:
+radial-gradient(circle at 7% 18%,transparent 0 15px,#bdb6a7 16px 19px,transparent 20px),
+radial-gradient(circle at 79% 15%,transparent 0 24px,#bdb6a7 25px 28px,transparent 29px),
+radial-gradient(circle at 70% 72%,transparent 0 10px,#c8c0b0 11px 14px,transparent 15px),
+linear-gradient(55deg,transparent 0 47%,#bdb6a7 48% 51%,transparent 52%),
+linear-gradient(-55deg,transparent 0 47%,#c5beaf 48% 51%,transparent 52%),
+linear-gradient(90deg,transparent 0 48%,#c9c1b1 49% 51%,transparent 52%),
+radial-gradient(ellipse at 35% 65%,transparent 0 22px,#c2baaa 23px 27px,transparent 28px);
+background-size:310px 270px,390px 330px,280px 250px,210px 190px,260px 230px,340px 300px,430px 370px;
+background-position:0 0,70px 30px,130px 80px,30px 10px,170px 100px,20px 160px,210px 30px;
+opacity:.62;animation:collageDoodles 32s ease-in-out infinite alternate}
+body::after{content:"✦  +  ~  ◇  •  ↗  ✎  ✦  +  ~";position:fixed;inset:0;z-index:-1;pointer-events:none;color:#b9b1a1;opacity:.34;font:700 30px/3.8 system-ui,sans-serif;letter-spacing:46px;word-spacing:24px;transform:rotate(-3deg);animation:collageDoodleText 40s ease-in-out infinite alternate}
+@keyframes collageDoodles{0%{transform:translate3d(0,0,0) rotate(0deg)}100%{transform:translate3d(9px,-6px,0) rotate(.35deg)}}
+@keyframes collageDoodleText{0%{transform:translate3d(-8px,3px,0) rotate(-3deg)}100%{transform:translate3d(8px,-4px,0) rotate(-2deg)}}
+@media(prefers-reduced-motion:reduce){body::before,body::after{animation:none}}
