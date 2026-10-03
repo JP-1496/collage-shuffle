@@ -165,8 +165,9 @@ body{height:auto;min-height:100vh;overflow:auto}.shell{height:auto;min-height:10
 body{background-color:#ffe45e;background-image:radial-gradient(circle,#ff4f87 0 11px,transparent 12px),radial-gradient(circle,#55c8ff 0 9px,transparent 10px),radial-gradient(circle,#7357ff 0 7px,transparent 8px);background-size:70px 70px,90px 90px,110px 110px;background-position:0 0,35px 25px,15px 55px}
 
 
-/* V1.4.84 — softer animated cartoon background */
-body{background:#fff4c7;position:relative}
-body::before{content:"";position:fixed;inset:-40px;z-index:-1;pointer-events:none;background-color:#ffe45e;background-image:radial-gradient(circle,#ff4f87 0 11px,transparent 12px),radial-gradient(circle,#55c8ff 0 9px,transparent 10px),radial-gradient(circle,#7357ff 0 7px,transparent 8px);background-size:70px 70px,90px 90px,110px 110px;background-position:0 0,35px 25px,15px 55px;filter:blur(12px);opacity:.48;transform:scale(1.06);animation:collageBackgroundDrift 18s ease-in-out infinite alternate}
-@keyframes collageBackgroundDrift{0%{transform:scale(1.06) translate3d(-12px,-8px,0)}100%{transform:scale(1.08) translate3d(12px,8px,0)}}
+
+/* V1.4.85 — clean outline doodle background */
+body{background:#f6f0df;position:relative}
+body::before{content:"";position:fixed;inset:-20px;z-index:-1;pointer-events:none;background-color:#f6f0df;background-image:radial-gradient(circle at 8% 18%,transparent 0 12px,#d2c9b5 13px 15px,transparent 16px),radial-gradient(circle at 82% 25%,transparent 0 17px,#d2c9b5 18px 20px,transparent 21px),linear-gradient(62deg,transparent 0 47%,#d2c9b5 48% 50%,transparent 51%),linear-gradient(-48deg,transparent 0 48%,#d2c9b5 49% 51%,transparent 52%);background-size:260px 230px,330px 280px,190px 190px,240px 210px;background-position:0 0,90px 50px,30px 20px,120px 100px;opacity:.42;filter:blur(.25px);transform:scale(1.02);animation:collageDoodlesDrift 28s ease-in-out infinite alternate}
+@keyframes collageDoodlesDrift{0%{transform:scale(1.02) translate3d(0,0,0)}100%{transform:scale(1.04) translate3d(10px,-7px,0)}}
 @media(prefers-reduced-motion:reduce){body::before{animation:none}}
