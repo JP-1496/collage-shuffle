@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 
-const VERSION = '1.4.88';
+const VERSION = '1.4.89';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 2;
 const app = express();
@@ -74,6 +74,38 @@ function parseBingImageResults(html=''){
   }
   return results;
 }
+function normaliseSearchText(value=''){
+  return String(value).toLowerCase().replace(/https?:\\/\\/[^\\s]+/g,' ').replace(/[^a-z0-9]+/g,' ').replace(/\\s+/g,' ').trim();
+}
+function scoreImageResult(item,query,position){
+  const q=normaliseSearchText(query);
+  const title=normaliseSearchText(item.title);
+  const snippet=normaliseSearchText(item.snippet);
+  const source=normaliseSearchText(item.sourceUrl);
+  const tokens=[...new Set(q.split(' ').filter(t=>t.length>1))];
+  if(!tokens.length)return 0;
+  let score=Math.max(0,100-position*0.15);
+  if(title===q)score+=70;
+  if(title.includes(q))score+=45;
+  if(snippet.includes(q))score+=20;
+  if(source.includes(q))score+=10;
+  let matched=0;
+  for(const token of tokens){
+    if(title.split(' ').includes(token)){score+=18;matched++}
+    else if(title.includes(token)){score+=9;matched++}
+    else if(snippet.includes(token)){score+=5;matched++}
+    else if(source.includes(token)){score+=2;matched++}
+  }
+  if(matched===tokens.length)score+=25;
+  else if(matched===0)score-=35;
+  if(tokens.length>1 && !title.includes(q))score-=10;
+  return score;
+}
+function rankImageResults(results,q){
+  return results.map((item,index)=>({...item,_relevance:scoreImageResult(item,q,index),_searchIndex:index}))
+    .sort((a,b)=>b._relevance-a._relevance || a._searchIndex-b._searchIndex)
+    .map(({_relevance,_searchIndex,...item})=>item);
+}
 async function fetchBingUrl(path){
   const r=await fetch(new URL(path,'https://www.bing.com'),{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'text/html,application/xhtml+xml','Accept-Language':'en-GB,en;q=0.9'}});
   if(!r.ok)throw new Error('Bing image search '+r.status);
@@ -104,7 +136,7 @@ app.get('/api/image-search',async(req,res)=>{try{
       collected.set(key,{...item,fetchId,thumbFetchId});
     }
   }
-  res.json({results:[...collected.values()].slice(0,MAX_SEARCH_RESULTS),maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Bing Images',thumbnailWidth:SEARCH_THUMB_WIDTH});
+  res.json({results:rankImageResults([...collected.values()],q).slice(0,MAX_SEARCH_RESULTS),maxWidth:MAX_IMAGE_WIDTH,maxHeight:MAX_IMAGE_HEIGHT,maxPixels:MAX_IMAGE_PIXELS,provider:'Bing Images',thumbnailWidth:SEARCH_THUMB_WIDTH});
 }catch(e){
   console.error('Image search failed:',e);
   res.status(502).json({error:'Image search unavailable',...(TEST_MODE?{detail:String(e?.message||e)}:{})});
