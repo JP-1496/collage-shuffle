@@ -201,3 +201,61 @@ body::after{content:"✦  +  ~  ◇  •  ↗  ✎  ✦  +  ~";position:fixed;in
 .leaveGameBtn{top:18px;left:18px;right:auto;bottom:auto}
 @media(max-width:600px){.leaveGameBtn{top:10px;left:10px;right:auto;bottom:auto}}
 .playerAvatar,.hudAvatar,.resultAvatar{border-radius:50%;background:#000}
+
+
+/* V1.4.92 — compact Host Game layout */
+@media(min-width:900px){
+  .hostSettingsGrid{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:7px;
+  }
+  .settingCard{
+    min-height:66px;
+    padding:7px 8px;
+    gap:8px;
+  }
+  .settingCard .cardIcon{
+    width:32px;
+    height:32px;
+    flex-basis:32px;
+    font-size:16px;
+  }
+  .settingCard b{font-size:13px}
+  .settingCard small{font-size:9px;margin:2px 0 4px}
+  .settingCard select{height:29px;font-size:12px}
+  .hostNameCard{
+    min-height:62px;
+    padding:7px 10px;
+    margin-bottom:7px;
+  }
+  .hostNameCard .cardIcon{
+    width:38px;
+    height:38px;
+    flex-basis:38px;
+  }
+  .hostNameCard input{font-size:19px}
+  .hostTitle{margin:3px 0 7px}
+  .hostTitle h2{font-size:29px}
+  .hostTitle p{font-size:12px}
+  .hostFooter{margin-top:7px}
+}
+
+@media(max-height:680px) and (min-width:651px){
+  .hostShell{padding-top:7px;padding-bottom:7px}
+  .hostHeader{height:20px;flex-basis:20px}
+  .buildMini{font-size:10px;padding:4px 8px}
+  .hostTitle{margin:2px 0 5px}
+  .hostTitle h2{font-size:25px}
+  .hostTitle p{font-size:11px}
+  .hostNameCard{min-height:52px;padding:5px 9px;margin-bottom:5px}
+  .hostNameCard .cardIcon{width:34px;height:34px;flex-basis:34px;font-size:17px}
+  .hostNameCard input{font-size:17px}
+  .hostSettingsGrid{gap:5px}
+  .settingCard{min-height:57px;padding:5px 7px}
+  .settingCard .cardIcon{width:29px;height:29px;flex-basis:29px;font-size:14px}
+  .settingCard b{font-size:12px}
+  .settingCard small{font-size:8px;margin:1px 0 2px}
+  .settingCard select{height:26px;font-size:11px}
+  .hostFooter{margin-top:5px}
+  .hostActions button{padding:7px 10px}
+}
