@@ -5,7 +5,7 @@ import crypto from 'crypto';
 
 const VERSION = '1.4.89';
 const HEARTBEAT_MS = 10000;
-const MIN_PLAYERS = 2;
+const MIN_PLAYERS = 1;
 const app = express();
 const http = createServer(app);
 const wss = new WebSocketServer({ server: http, path: '/ws' });
