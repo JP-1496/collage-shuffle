@@ -259,3 +259,39 @@ body::after{content:"✦  +  ~  ◇  •  ↗  ✎  ✦  +  ~";position:fixed;in
   .hostFooter{margin-top:5px}
   .hostActions button{padding:7px 10px}
 }
+
+
+/* V1.4.93 — compact image search modal */
+.searchBox{
+  width:min(1050px,94vw);
+  max-height:90dvh;
+  padding:14px;
+  overflow:hidden;
+}
+.searchHead{flex:0 0 auto}
+.searchForm{margin:10px 0 8px;flex:0 0 auto}
+.searchResults{
+  min-height:0;
+  max-height:calc(90dvh - 205px);
+  flex:1 1 auto;
+  align-content:start;
+}
+.searchEmpty{
+  min-height:125px;
+  height:125px;
+  padding:20px;
+  font-size:16px;
+  border:2px dashed #aaa;
+  border-radius:16px;
+  background:rgba(255,255,255,.55);
+}
+.searchFooter{
+  flex:0 0 auto;
+  margin-top:8px;
+  padding-top:8px;
+}
+@media(max-width:700px){
+  .searchBox{max-height:94dvh}
+  .searchResults{max-height:calc(94dvh - 230px)}
+  .searchEmpty{height:105px;min-height:105px}
+}
