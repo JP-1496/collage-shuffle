@@ -159,3 +159,7 @@ body{height:auto;min-height:100vh;overflow:auto}.shell{height:auto;min-height:10
 .playerAvatar,.hudAvatar,.resultAvatar{width:52px;height:52px;display:block;object-fit:cover;border-radius:50%background:#000;border-radius:50%}.playerAvatar{flex:0 0 52px}.hudAvatar{flex:0 0 52px}.resultAvatar{flex:0 0 52px;display:inline-block;vertical-align:middle;margin-right:9px}
 .playerHud{position:fixed;right:18px;top:18px;z-index:89;display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.95);border:3px solid var(--ink);border-radius:999px;padding:5px 12px 5px 5px;box-shadow:3px 3px 0 var(--ink);font-weight:1000}
 @media(max-width:600px){.avatars{grid-template-columns:repeat(4,62px);gap:8px}.avatars button{width:62px;height:62px}.playerHud{right:10px;top:10px;padding:4px 9px 4px 4px;font-size:12px}.playerAvatar,.hudAvatar,.resultAvatar{width:44px;height:44px}.playerAvatar{flex-basis:44px}.hudAvatar{flex-basis:44px}.resultAvatar{flex-basis:44px}}
+
+
+/* V1.4.83 — cartoon background */
+body{background-color:#ffe45e;background-image:radial-gradient(circle,#ff4f87 0 11px,transparent 12px),radial-gradient(circle,#55c8ff 0 9px,transparent 10px),radial-gradient(circle,#7357ff 0 7px,transparent 8px);background-size:70px 70px,90px 90px,110px 110px;background-position:0 0,35px 25px,15px 55px}
