@@ -1,4 +1,4 @@
-const VERSION='1.4.91';
+const VERSION='1.4.92';
 const MIN_PLAYERS=1;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
