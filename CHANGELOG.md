@@ -1,3 +1,9 @@
+## V1.5.13
+- Fixed Final Showcase so every prompt reliably begins in slideshow mode before voting.
+- The slideshow is anonymous: it no longer reveals which player created each masterpiece.
+- The host still controls advancing through the masterpieces.
+- Voting only becomes available after the host finishes the slideshow.
+
 ## V1.5.12
 - Reworked Final Showcase into a host-controlled slideshow followed by voting.
 - Each prompt now shows every player's finished masterpiece one at a time to everyone.
