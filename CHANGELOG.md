@@ -1,3 +1,7 @@
+## V1.5.10
+- Fixed lobby player names being truncated by the compact three-column cards.
+- Names now wrap within the identity area instead of being replaced with ellipses.
+
 ## V1.5.9
 - Fixed compact lobby player cards so player and bot names are visible again.
 - Reworked lobby cards to show avatar, name and status in a dedicated identity area.
