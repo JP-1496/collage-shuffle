@@ -1,3 +1,9 @@
+## V1.4.98 — centralised build version
+- Made `package.json` the single source of truth for the Collage build version.
+- Runtime `/health`, browser build display and cache-busting now derive from the same version.
+- Removed the obsolete root-level copies of the live client files so they cannot drift from `public/` again.
+- Current build: V1.4.98.
+
 ## V1.4.82 — fix Bing result scoping
 - Restrict Bing image parsing to the actual image-result grid so unrelated/recommended tiles cannot leak into searches.
 - Added a regression search for “joe rogan” to the automated image-search coverage.
