@@ -1,4 +1,4 @@
-const VERSION=globalThis.COLLAGE_VERSION||'1.4.99';
+const VERSION=globalThis.COLLAGE_VERSION||'1.5.0';
 const MIN_PLAYERS=1;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
