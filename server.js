@@ -265,6 +265,8 @@ function stateFor(g,pid){
     s.finalResults=g.finalResults.map((r,i)=>i===g.finalIndex
       ? {promptId:r.promptId,collages:Object.fromEntries(Object.entries(r.collages||{}).map(([k,c])=>[k,{...c,playerId:k}]))}
       : {promptId:r.promptId});
+    s.finalStage=g.finalStage||'SLIDESHOW';
+    s.finalSlideIndex=g.finalSlideIndex||0;
     s.myFinalVote=g.finalVotes[g.finalIndex]?.[pid]||null;
   }
   return s;
