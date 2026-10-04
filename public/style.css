@@ -298,3 +298,5 @@ body::after{content:"✦  +  ~  ◇  •  ↗  ✎  ✦  +  ~";position:fixed;in
 
 /* V1.4.95 — preserve avatar sprite background image */
 .avatarIcon.playerAvatar,.avatarIcon.hudAvatar,.avatarIcon.resultAvatar{background-image:var(--avatar-sprite);background-repeat:no-repeat;background-size:600% 400%}
+
+.botAddBtn{background:var(--blue)}.botRemove{margin-left:auto;padding:6px 9px;border-radius:10px;box-shadow:2px 2px 0 var(--ink);font-size:12px;background:white}.player .status{white-space:nowrap}.botRemove:hover{transform:none}
