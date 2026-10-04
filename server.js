@@ -152,7 +152,7 @@ app.get('/api/image-fetch', async (req,res)=>{try{
   if(!cached)return res.status(400).json({error:'Invalid or expired image reference'});
   const u=new URL(cached.url);
   if(u.protocol!=='https:')return res.status(400).json({error:'Unsupported image source'});
-  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.4.98 (image fetch feature)','Accept':'image/*'}});
+  const r=await fetch(u,{headers:{'User-Agent':'CollageShuffle/1.5.0 (image fetch feature)','Accept':'image/*'}});
   if(!r.ok)throw new Error('fetch '+r.status);
   const type=r.headers.get('content-type')||'image/jpeg';
   if(!type.startsWith('image/'))return res.status(400).json({error:'Not an image'});
