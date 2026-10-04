@@ -375,3 +375,14 @@ body::after{content:"✦  +  ~  ◇  •  ↗  ✎  ✦  +  ~";position:fixed;in
   line-height:1.05;
   overflow-wrap:anywhere;
 }
+
+/* V1.5.11 — override lobby name truncation */
+.lobbyLayout .playerInfo b{
+  width:100%;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+  line-height:1.05;
+}
