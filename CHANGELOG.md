@@ -1,8 +1,10 @@
-## V1.4.99 — harden browser build-version display
-- Bumped the central build version to V1.4.99.
-- Added a browser fallback so the build badge does not become “Vunknown” if the runtime build variable is unavailable.
-- Made the version regression test validate semantic versioning rather than hard-coding one old release.
-- Current build: V1.4.99.
+## V1.5.0 — automated bot players
+- Added a host-only **+ Bot** control in the lobby.
+- Bots use the normal server-authoritative player pipeline and count towards the configured player capacity.
+- Bots automatically submit image pools, prompts and collages across every creation round, including piece movement/rotation/flip/resize changes.
+- Bots automatically vote in the Final Showcase.
+- Added bot add/remove lobby actions and a full multiplayer regression test covering the two-round bot flow.
+- Updated the build to V1.5.0.
 
 ## V1.4.98 — centralised build version
 - Made `package.json` the single source of truth for the Collage build version.
