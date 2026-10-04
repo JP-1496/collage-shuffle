@@ -2,8 +2,9 @@ import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
+import { readFileSync } from 'node:fs';
 
-const VERSION = '1.4.90';
+const VERSION = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 1;
 const app = express();
@@ -23,6 +24,7 @@ const avatar = a => /^(?:[1-9]|1[0-9]|2[0-4])$/.test(String(a||'')) ? String(a) 
 
 app.use(express.static('public', { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 app.get('/health', (_, res) => res.json({ ok:true, version:VERSION }));
+app.get('/build.js', (_, res) => { res.type('application/javascript').set('Cache-Control','no-store').send('globalThis.COLLAGE_VERSION='+JSON.stringify(VERSION)+';'); });
 const MAX_IMAGE_WIDTH=3840;
 const MAX_IMAGE_HEIGHT=2160;
 const MAX_IMAGE_PIXELS=MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT;
