@@ -1,3 +1,10 @@
+# V1.5.4 — Bot flow diagnostics and confirmation
+- Fixed the lobby bot button to use a single delegated click handler instead of two duplicate handlers.
+- Added an explicit server confirmation when a bot is created.
+- Added server-side bot creation logging so the Node console shows whether `ADD_BOT` was received and which bot was created.
+- Added client-side diagnostics for the button click and WebSocket action send.
+- Kept the normal authoritative lobby state broadcast; this release is designed to identify the exact point where the bot flow fails if the lobby still does not update.
+
 ## V1.5.3 — remove client-side bot disable
 - The host **+ Bot** control is no longer disabled by potentially stale client lobby state.
 - The server remains authoritative for capacity and host checks.
