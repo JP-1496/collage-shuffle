@@ -300,3 +300,18 @@ body::after{content:"✦  +  ~  ◇  •  ↗  ✎  ✦  +  ~";position:fixed;in
 .avatarIcon.playerAvatar,.avatarIcon.hudAvatar,.avatarIcon.resultAvatar{background-image:var(--avatar-sprite);background-repeat:no-repeat;background-size:600% 400%}
 
 .botAddBtn{background:var(--blue)}.botRemove{margin-left:auto;padding:6px 9px;border-radius:10px;box-shadow:2px 2px 0 var(--ink);font-size:12px;background:white}.player .status{white-space:nowrap}.botRemove:hover{transform:none}
+
+
+/* V1.5.7 — stable lobby controls and host kick */
+.lobbyLayout{display:grid;grid-template-columns:180px minmax(0,1fr);gap:14px;align-items:start;margin-top:8px}
+.lobbyControls{position:sticky;top:10px;display:flex;flex-direction:column;gap:10px}
+.lobbyControls button{width:100%;white-space:nowrap}
+.lobbyControls .notice{display:block;text-align:center}
+.lobbyControls .error{margin:0;font-size:12px}
+.lobbyLayout .players{grid-template-columns:repeat(3,minmax(0,1fr));align-content:start}
+.lobbyLayout .player{position:relative;min-width:0;padding:10px 42px 10px 10px;min-height:74px}
+.lobbyLayout .player b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.playerKick{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:30px;height:30px;padding:0!important;border-radius:9px;background:white!important;box-shadow:2px 2px 0 var(--ink)!important;font-size:15px;display:grid;place-items:center}
+.playerKick:hover{background:#ffd5df!important;transform:translateY(-50%)}
+@media(max-width:900px){.lobbyLayout{grid-template-columns:150px minmax(0,1fr)}.lobbyLayout .players{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.lobbyLayout{grid-template-columns:1fr}.lobbyControls{position:static;display:grid;grid-template-columns:1fr 1fr;align-items:start}.lobbyControls .notice,.lobbyControls .error{grid-column:1/-1}.lobbyLayout .players{grid-template-columns:1fr 1fr}}
