@@ -101,6 +101,10 @@ async function main(){
   server.stderr.on('data',d=>output+=d);
   try{
     await waitFor(async()=>{try{return (await fetch(BASE+'/health')).ok}catch{return false}},5000);
+    const health=await (await fetch(BASE+'/health')).json();
+    assert.equal(health.version,packageJson.version);
+    const buildSource=await (await fetch(BASE+'/build.js')).text();
+    assert.ok(buildSource.includes(`COLLAGE_VERSION=${JSON.stringify(packageJson.version)}`));
 
     // Integration check: broad image searches should return a genuinely large,
     // deduplicated result set rather than the old ~27-image ceiling.
