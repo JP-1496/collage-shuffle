@@ -319,7 +319,7 @@ function beginRound(g){
   for(let i=0;i<n;i++)g.roundPlayerSets[ids[i]]=perm[i];
   g.votes={};g.collages={};
   if(g.round===0){assignRound1Sources(g);for(const p of g.players)g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:[],submitted:false};}
-  else {for(const p of g.players){const owner=g.roundPlayerSets[p.id];g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:scatter(g.travelingSets[owner]||[]),submitted:false};}}
+  else {for(const p of g.players){const owner=Object.keys(g.roundPlayerSets).find(sourceId=>g.roundPlayerSets[sourceId]===p.id);g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:scatter(g.travelingSets[owner]||[]),submitted:false};}}
   if(!g.finalResults[g.round])g.finalResults[g.round]={promptId:g.currentPromptId,collages:{}};
   g.phase='ROUND';g.timerEndsAt=Date.now()+g.settings.creationSeconds*1000;broadcast(g);runBotsForRound(g);
   schedule(g,g.settings.creationSeconds*1000,()=>finishRound(g));
