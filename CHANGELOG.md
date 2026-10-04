@@ -1,3 +1,6 @@
+## V1.5.8
+- Fixed the V1.5.7 JavaScript syntax error that caused the entire UI to render as a blank page.
+
 # V1.5.4 — Bot flow diagnostics and confirmation
 - Fixed the lobby bot button to use a single delegated click handler instead of two duplicate handlers.
 - Added an explicit server confirmation when a bot is created.
