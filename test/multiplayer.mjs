@@ -20,6 +20,10 @@ assert.match(serverSource,/MAX_IMAGE_HEIGHT=2160/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH\*MAX_IMAGE_HEIGHT/);
 assert.match(serverSource,/SEARCH_THUMB_WIDTH=600/);
 assert.match(appSource,/loading="lazy"/);
+assert.match(serverSource,/ADD_BOT/);
+assert.match(serverSource,/isBot/);
+assert.match(appSource,/ADD_BOT/);
+await runBotScenario();
 
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -41,6 +45,34 @@ async function nextState(client, predicate){
   return waitFor(()=>[...client.messages].reverse().find(m=>m.type==='STATE'&&predicate(m.state))?.state);
 }
 function action(client,playerId,action){client.ws.send(JSON.stringify({type:'ACTION',playerId,action}));}
+
+async function runBotScenario(){
+  const host=await connect();
+  try{
+    host.ws.send(JSON.stringify({type:'HOST_CREATE',name:'BotHost',lobbyName:'Bot Test',settings:{capacity:2,imagesPerPlayer:1,round1Images:1,hostApproval:false}}));
+    const joined=await waitFor(()=>host.messages.find(m=>m.type==='JOINED'));
+    action(host,joined.playerId,{type:'ADD_BOT'});
+    const lobby=await nextState(host,s=>s.phase==='LOBBY'&&s.players.length===2&&s.players.some(p=>p.isBot));
+    const bot=lobby.players.find(p=>p.isBot);
+    assert.ok(bot?.ready);
+    action(host,joined.playerId,{type:'START'});
+    await nextState(host,s=>s.phase==='IMAGE_SUBMISSION');
+    action(host,joined.playerId,{type:'ADD_SOURCE',data:PNG});
+    action(host,joined.playerId,{type:'IMAGE_READY'});
+    await nextState(host,s=>s.phase==='PROMPT_SUBMISSION'&&s.prompts.length===0);
+    action(host,joined.playerId,{type:'ADD_PROMPT',text:'Bot test prompt'});
+    await nextState(host,s=>s.phase==='ROUND'&&s.round===0);
+    const pieces=[{src:PNG,x:50,y:50,w:30,rotation:0,flipX:false,flipY:false,z:0}];
+    action(host,joined.playerId,{type:'SUBMIT_COLLAGE',pieces});
+    await nextState(host,s=>s.phase==='FINAL_SHOWCASE');
+    const result=await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalResults?.[0]?.collages&&Object.keys(s.finalResults[0].collages).length===2);
+    const botTarget=Object.keys(result.finalResults[0].collages).find(x=>x===bot.id);
+    assert.equal(botTarget,bot.id);
+    action(host,joined.playerId,{type:'FINAL_VOTE',targetId:bot.id});
+    await nextState(host,s=>s.phase==='FINAL');
+    return true;
+  }finally{host.ws.close();}
+}
 
 async function runSubmissionCountScenario(playerCount, reverseOrder=false){
   const clients=[];
