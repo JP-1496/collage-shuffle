@@ -183,6 +183,9 @@ const BOT_PROMPTS=[
   'Create something that belongs in a museum nobody visits.',
   'Make the pieces tell a completely ridiculous story.'
 ];
+const BOT_NAMES=[
+  'Jeffrey','Alakazam','Gizmo','Biscuit','Waffle','Pickle','Nigel','Kevin','Marmalade','Baz','Terry','Professor Noodle','Bongo','Derek','Beans','Sir Fluffington','Reginald','Gary','Toast','Barry','Zippy','Colin','Mochi','Trevor','Winston','Pudding','Keith','Banjo','Dave','Crumpet'
+];
 const BOT_IMAGES=[
   'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2ZmNGY4NyIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjE1MCIgcj0iNzAiIGZpbGw9IiNmZmQ4NGQiLz48L3N2Zz4=',
   'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzU1YzhmZiIvPjxjaXJjbGUgY3g9IjI4MCIgY3k9IjE1MCIgcj0iOTAiIGZpbGw9IiM3MzU3ZmYiLz48L3N2Zz4=',
@@ -199,13 +202,14 @@ function botPieces(g,pid){
 }
 function runBotsForImageSubmission(g){
   botList(g).forEach((p,bi)=>{
-    for(let i=0;i<g.settings.imagesPerPlayer;i++)botDelay(g,()=>botAction(g,p.id,{type:'ADD_SOURCE',data:BOT_IMAGES[i%BOT_IMAGES.length]}),350+bi*180+i*220);
+    const chosenImages=shuffle(BOT_IMAGES).slice(0,Math.min(g.settings.imagesPerPlayer,BOT_IMAGES.length));
+    for(let i=0;i<g.settings.imagesPerPlayer;i++)botDelay(g,()=>botAction(g,p.id,{type:'ADD_SOURCE',data:chosenImages[i%chosenImages.length]}),350+bi*180+i*220);
     botDelay(g,()=>botAction(g,p.id,{type:'IMAGE_READY'}),350+bi*180+g.settings.imagesPerPlayer*220+180);
   });
 }
 function runBotsForPrompts(g){
   botList(g).forEach((p,bi)=>{
-    const text=BOT_PROMPTS[bi%BOT_PROMPTS.length];
+    const text=BOT_PROMPTS[Math.floor(Math.random()*BOT_PROMPTS.length)];
     botDelay(g,()=>botAction(g,p.id,{type:'ADD_PROMPT',text}),450+bi*220);
   });
 }
@@ -376,7 +380,10 @@ function handle(g,pid,a){
       if(!p.host) { send(pid,{type:'ERROR',message:'Only the host can add bots.'}); break; }
       if(g.players.length>=g.settings.capacity) { send(pid,{type:'ERROR',message:'The lobby is full.'}); break; }
       let n=1;while(g.players.some(x=>x.isBot&&x.botNumber===n))n++;
-      const bot={id:id(),name:`Bot ${n}`,avatar:String(((n-1)%24)+1),host:false,ready:true,connected:true,isBot:true,botNumber:n};
+      const usedNames=new Set(g.players.filter(x=>x.isBot).map(x=>x.name));
+      const availableNames=BOT_NAMES.filter(x=>!usedNames.has(`Bot ${x}`));
+      const botName=availableNames.length?availableNames[Math.floor(Math.random()*availableNames.length)]:`Guest ${n}`;
+      const bot={id:id(),name:`Bot ${botName}`,avatar:String(Math.floor(Math.random()*24)+1),host:false,ready:true,connected:true,isBot:true,botNumber:n};
       g.players.push(bot);
       console.log(`[BOT] ADD_BOT received from ${p.name} — created ${bot.name} (${bot.id}) in lobby ${g.code}`);
       send(pid,{type:'BOT_ADDED',bot:{id:bot.id,name:bot.name,avatar:bot.avatar}});
