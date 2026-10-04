@@ -271,7 +271,7 @@ function stateFor(g,pid){
   }
   return s;
 }
-function newGame(name,settings,host){ const g={code:code(),name,phase:'LOBBY',minPlayers:MIN_PLAYERS,settings,players:[host],sources:[],submittedSources:{},prompts:[],promptOrder:[],round:0,currentPromptId:null,roundSources:{},roundPlayerSets:{},collages:{},travelingSets:{},votes:{},scores:{},lastTally:{},finalResults:[],finalIndex:0,finalVotes:{},bestCollages:{},timerEndsAt:null}; games.set(g.code,g); return g; }
+function newGame(name,settings,host){ const g={code:code(),name,phase:'LOBBY',minPlayers:MIN_PLAYERS,settings,players:[host],sources:[],submittedSources:{},prompts:[],promptOrder:[],round:0,currentPromptId:null,roundSources:{},roundPlayerSets:{},collages:{},travelingSets:{},votes:{},scores:{},lastTally:{},finalResults:[],finalIndex:0,finalStage:null,finalSlideIndex:0,finalVotes:{},bestCollages:{},timerEndsAt:null}; games.set(g.code,g); return g; }
 function cancelTimer(g){ const t=timers.get(g.code); if(t) clearTimeout(t); timers.delete(g.code); }
 function schedule(g,ms,fn){ cancelTimer(g); const marker=Date.now()+':'+g.phase+':'+g.round; g.timerMarker=marker; timers.set(g.code,setTimeout(()=>{timers.delete(g.code);if(g.timerMarker===marker)fn();},ms)); }
 function transition(g,phase){cancelTimer(g);g.phase=phase;g.timerEndsAt=null;broadcast(g);}
