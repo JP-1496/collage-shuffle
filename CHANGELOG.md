@@ -1,3 +1,9 @@
+## V1.5.15
+- Fixed the Final Showcase Next masterpiece / Finish slideshow control using a dedicated click handler and server action.
+- Final Showcase and voting are now sized to fit within the viewport without page scrolling.
+- Fixed the lobby player counter updating after the first bot is added.
+- Restored the lobby minimum to 3 players and the default lobby capacity to 8 players.
+
 ## V1.5.13
 - Fixed Final Showcase so every prompt reliably begins in slideshow mode before voting.
 - The slideshow is anonymous: it no longer reveals which player created each masterpiece.
