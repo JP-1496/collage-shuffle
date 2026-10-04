@@ -378,6 +378,8 @@ function handle(g,pid,a){
       let n=1;while(g.players.some(x=>x.isBot&&x.botNumber===n))n++;
       const bot={id:id(),name:`Bot ${n}`,avatar:String(((n-1)%24)+1),host:false,ready:true,connected:true,isBot:true,botNumber:n};
       g.players.push(bot);
+      console.log(`[BOT] ADD_BOT received from ${p.name} — created ${bot.name} (${bot.id}) in lobby ${g.code}`);
+      send(pid,{type:'BOT_ADDED',bot:{id:bot.id,name:bot.name,avatar:bot.avatar}});
       break;
     }
     case 'REMOVE_BOT': { if(g.phase==='LOBBY'&&p.host){const target=g.players.find(x=>x.id===String(a.botId)&&x.isBot);if(target)g.players=g.players.filter(x=>x.id!==target.id);} break; }
