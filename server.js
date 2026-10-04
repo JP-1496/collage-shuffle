@@ -183,9 +183,10 @@ const BOT_PROMPTS=[
   'Create something that belongs in a museum nobody visits.',
   'Make the pieces tell a completely ridiculous story.'
 ];
-const BOT_PNGS=[
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+const BOT_IMAGES=[
+  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2ZmNGY4NyIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjE1MCIgcj0iNzAiIGZpbGw9IiNmZmQ4NGQiLz48L3N2Zz4=',
+  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzU1YzhmZiIvPjxjaXJjbGUgY3g9IjI4MCIgY3k9IjE1MCIgcj0iOTAiIGZpbGw9IiM3MzU3ZmYiLz48L3N2Zz4=',
+  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzYxZGY5YSIvPjxwYXRoIGQ9Ik0yMCAyNTAgTDIwMCAzMCBMMzgwIDI1MCBaIiBmaWxsPSIjZmY0Zjg3Ii8+PC9zdmc+'
 ];
 function botPieces(g,pid){
   if(g.round===0){
@@ -198,7 +199,7 @@ function botPieces(g,pid){
 }
 function runBotsForImageSubmission(g){
   botList(g).forEach((p,bi)=>{
-    for(let i=0;i<g.settings.imagesPerPlayer;i++)botDelay(g,()=>botAction(g,p.id,{type:'ADD_SOURCE',data:BOT_PNGS[i%BOT_PNGS.length]}),350+bi*180+i*220);
+    for(let i=0;i<g.settings.imagesPerPlayer;i++)botDelay(g,()=>botAction(g,p.id,{type:'ADD_SOURCE',data:BOT_IMAGES[i%BOT_IMAGES.length]}),350+bi*180+i*220);
     botDelay(g,()=>botAction(g,p.id,{type:'IMAGE_READY'}),350+bi*180+g.settings.imagesPerPlayer*220+180);
   });
 }
