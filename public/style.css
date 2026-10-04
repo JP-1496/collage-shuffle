@@ -363,3 +363,15 @@ body::after{content:"✦  +  ~  ◇  •  ↗  ✎  ✦  +  ~";position:fixed;in
   .lobbyLayout .playerAvatar{width:44px;height:44px;flex-basis:44px}
   .playerInfo b{font-size:13px}
 }
+
+/* V1.5.10 — show full lobby names */
+.lobbyLayout .player{
+  min-height:74px;
+}
+.playerInfo b{
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+  line-height:1.05;
+  overflow-wrap:anywhere;
+}
