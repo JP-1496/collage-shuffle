@@ -1,3 +1,9 @@
+## V1.5.9
+- Fixed compact lobby player cards so player and bot names are visible again.
+- Reworked lobby cards to show avatar, name and status in a dedicated identity area.
+- Kept host kick controls compact and aligned on the right.
+- Updated the visible client fallback and package version to V1.5.9.
+
 ## V1.5.8
 - Fixed the V1.5.7 JavaScript syntax error that caused the entire UI to render as a blank page.
 
