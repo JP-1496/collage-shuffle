@@ -12,7 +12,7 @@ const http = createServer(app);
 const wss = new WebSocketServer({ server: http, path: '/ws' });
 const PORT = Number(process.env.PORT || 10000);
 const TEST_MODE = process.env.COLLAGE_TEST_MODE === '1';
-const BOTS_ENABLED = process.env.COLLAGE_BOTS !== '0';
+const BOTS_ENABLED = true;
 const games = new Map();
 const sockets = new Map();
 const timers = new Map();
@@ -371,7 +371,15 @@ function finishFinalGame(g){
 function handle(g,pid,a){
   const p=g.players.find(x=>x.id===pid);if(!p)return;
   switch(a.type){
-    case 'ADD_BOT': { if(g.phase==='LOBBY'&&p.host&&BOTS_ENABLED&&g.players.length<g.settings.capacity){let n=1;while(g.players.some(x=>x.isBot&&x.botNumber===n))n++;const bot={id:id(),name:`Bot ${n}`,avatar:String(((n-1)%24)+1),host:false,ready:true,connected:true,isBot:true,botNumber:n};g.players.push(bot);} break; }
+    case 'ADD_BOT': {
+      if(g.phase!=='LOBBY') { send(pid,{type:'ERROR',message:'Bots can only be added from the lobby.'}); break; }
+      if(!p.host) { send(pid,{type:'ERROR',message:'Only the host can add bots.'}); break; }
+      if(g.players.length>=g.settings.capacity) { send(pid,{type:'ERROR',message:'The lobby is full.'}); break; }
+      let n=1;while(g.players.some(x=>x.isBot&&x.botNumber===n))n++;
+      const bot={id:id(),name:`Bot ${n}`,avatar:String(((n-1)%24)+1),host:false,ready:true,connected:true,isBot:true,botNumber:n};
+      g.players.push(bot);
+      break;
+    }
     case 'REMOVE_BOT': { if(g.phase==='LOBBY'&&p.host){const target=g.players.find(x=>x.id===String(a.botId)&&x.isBot);if(target)g.players=g.players.filter(x=>x.id!==target.id);} break; }
     case 'SET_READY': if(g.phase==='LOBBY'&&!p.host)p.ready=!!a.ready; break;
     case 'START': if(g.phase==='LOBBY'&&p.host&&g.players.filter(x=>x.connected).length>=MIN_PLAYERS)startGame(g); break;
