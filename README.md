@@ -1,4 +1,4 @@
-# Collage — Shuffle V1.4.68
+# Collage — Shuffle V1.4.98
 
 ### V1.4.68
 - Uses the 20 final cleaned avatar images in a 5×4 profile picker.
