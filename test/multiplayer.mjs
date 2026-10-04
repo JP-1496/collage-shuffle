@@ -23,9 +23,6 @@ assert.match(appSource,/loading="lazy"/);
 assert.match(serverSource,/ADD_BOT/);
 assert.match(serverSource,/isBot/);
 assert.match(appSource,/ADD_BOT/);
-await runBotScenario();
-
-
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function waitFor(fn, timeout=5000){
   const end=Date.now()+timeout;
@@ -210,3 +207,5 @@ async function main(){
     action(host,hj.playerId,{type:'SYNC_COLLAGE',pieces:p1});
     action(guest,gj.playerId,{type:'SYNC_COLLAGE',pieces:p2});
     action(host,hj.playerId,{type:'SUBMIT_COLLAGE',pieces:p1});
+
+await runBotScenario();
