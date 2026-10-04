@@ -1,3 +1,8 @@
+## V1.5.2 — bot button interaction fix
+- Replaced the lobby **+ Bot** inline click handler with a delegated browser click handler.
+- The control continues to work when the lobby UI is refreshed or rebuilt dynamically.
+- A disconnected WebSocket now produces a visible client error instead of silently doing nothing.
+
 ## V1.5.1 — bot lobby fix
 - Fixed silent failures when the host clicks **+ Bot**.
 - Bot creation is enabled for the development build without an environment-variable dependency.
