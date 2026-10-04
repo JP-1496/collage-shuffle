@@ -390,6 +390,7 @@ function handle(g,pid,a){
       break;
     }
     case 'REMOVE_BOT': { if(g.phase==='LOBBY'&&p.host){const target=g.players.find(x=>x.id===String(a.botId)&&x.isBot);if(target)g.players=g.players.filter(x=>x.id!==target.id);} break; }
+    case 'KICK_PLAYER': { if(g.phase==='LOBBY'&&p.host){const target=g.players.find(x=>x.id===String(a.targetId)&&!x.host);if(target){g.players=g.players.filter(x=>x.id!==target.id);const targetWs=sockets.get(target.id);if(targetWs){try{targetWs.send(JSON.stringify({type:'ERROR',message:'You were kicked from the lobby by the host.'}));targetWs.close(4003,'Kicked');}catch{}}sockets.delete(target.id);}} break; }
     case 'SET_READY': if(g.phase==='LOBBY'&&!p.host)p.ready=!!a.ready; break;
     case 'START': if(g.phase==='LOBBY'&&p.host&&g.players.filter(x=>x.connected).length>=MIN_PLAYERS)startGame(g); break;
     case 'ADD_SOURCE': if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid]&&g.sources.filter(s=>s.ownerId===pid).length<g.settings.imagesPerPlayer&&typeof a.data==='string'&&a.data.startsWith('data:image/'))g.sources.push({id:id(),data:a.data,ownerId:pid,approved:true}); break;
