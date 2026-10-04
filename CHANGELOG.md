@@ -1,3 +1,7 @@
+## V1.5.11
+- Fixed the remaining lobby name truncation rule overriding the previous wrapping fix.
+- Player and bot names now wrap instead of showing ellipses.
+
 ## V1.5.10
 - Fixed lobby player names being truncated by the compact three-column cards.
 - Names now wrap within the identity area instead of being replaced with ellipses.
