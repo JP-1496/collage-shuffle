@@ -12,9 +12,11 @@ const http = createServer(app);
 const wss = new WebSocketServer({ server: http, path: '/ws' });
 const PORT = Number(process.env.PORT || 10000);
 const TEST_MODE = process.env.COLLAGE_TEST_MODE === '1';
+const BOTS_ENABLED = process.env.COLLAGE_BOTS !== '0';
 const games = new Map();
 const sockets = new Map();
 const timers = new Map();
+const botJobs = new Map();
 const id = () => crypto.randomUUID();
 const CODE_CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const code = () => { let c; do { c=''; for(let i=0;i<4;i++) c+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]; } while(games.has(c)); return c; };
@@ -162,6 +164,68 @@ app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
 function send(pid, msg){ const ws=sockets.get(pid); if(ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(msg)); }
 function broadcast(g){ for(const p of g.players) send(p.id,{type:'STATE',state:stateFor(g,p.id)}); }
+function botList(g){ return g.players.filter(p=>p.isBot); }
+function botDelay(g,fn,ms=500){
+  if(!BOTS_ENABLED)return;
+  const job=setTimeout(()=>{const jobs=botJobs.get(g.code);jobs?.delete(job);if(g.phase!=='FINAL'||g.players.some(p=>p.isBot))fn();},ms);
+  if(!botJobs.has(g.code))botJobs.set(g.code,new Set());
+  botJobs.get(g.code).add(job);
+}
+function clearBotJobs(g){const jobs=botJobs.get(g.code);if(jobs){for(const job of jobs)clearTimeout(job);botJobs.delete(g.code);}}
+function botAction(g,pid,action){if(g.players.some(p=>p.id===pid&&p.isBot))handle(g,pid,action);}
+const BOT_PROMPTS=[
+  'Make this look like it was designed by a sleep-deprived genius.',
+  'Turn ordinary chaos into something suspiciously impressive.',
+  'Create something that absolutely should not exist.',
+  'Make it dramatic. Way more dramatic than necessary.',
+  'Build the weirdest masterpiece you can justify.',
+  'Make this look like a terrible idea that somehow worked.',
+  'Create something that belongs in a museum nobody visits.',
+  'Make the pieces tell a completely ridiculous story.'
+];
+const BOT_PNGS=[
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+];
+function botPieces(g,pid){
+  if(g.round===0){
+    const sourceIds=g.roundSources[pid]||[];
+    const sources=sourceIds.map(x=>g.sources.find(s=>s.id===x)).filter(Boolean);
+    return sources.map((s,i)=>({id:id(),src:s.data,x:25+i*45,y:30+i*32,w:28+i*5,rotation:(i%2?12:-9),flipX:i%3===0,flipY:false,z:i}));
+  }
+  const pieces=clone(g.collages[pid]?.pieces||[]);
+  return pieces.map((p,i)=>({...p,x:Math.max(5,Math.min(95,(p.x||50)+((i%3)-1)*9)),y:Math.max(5,Math.min(95,(p.y||50)+((i%2)?8:-6))),rotation:(p.rotation||0)+(i%2?15:-10),flipX:i%3===0?!p.flipX:p.flipX,w:Math.max(5,Math.min(80,(p.w||24)+(i%2?5:-3))),z:i}));
+}
+function runBotsForImageSubmission(g){
+  botList(g).forEach((p,bi)=>{
+    for(let i=0;i<g.settings.imagesPerPlayer;i++)botDelay(g,()=>botAction(g,p.id,{type:'ADD_SOURCE',data:BOT_PNGS[i%BOT_PNGS.length]}),350+bi*180+i*220);
+    botDelay(g,()=>botAction(g,p.id,{type:'IMAGE_READY'}),350+bi*180+g.settings.imagesPerPlayer*220+180);
+  });
+}
+function runBotsForPrompts(g){
+  botList(g).forEach((p,bi)=>{
+    const text=BOT_PROMPTS[bi%BOT_PROMPTS.length];
+    botDelay(g,()=>botAction(g,p.id,{type:'ADD_PROMPT',text}),450+bi*220);
+  });
+}
+function runBotsForRound(g){
+  botList(g).forEach((p,bi)=>{
+    botDelay(g,()=>{
+      const pieces=botPieces(g,p.id);
+      botAction(g,p.id,{type:'SYNC_COLLAGE',pieces});
+      botDelay(g,()=>botAction(g,p.id,{type:'SUBMIT_COLLAGE',pieces}),350+bi*180);
+    },600+bi*250);
+  });
+}
+function runBotsForFinalShowcase(g){
+  botList(g).forEach((p,bi)=>{
+    botDelay(g,()=>{
+      const result=g.finalResults[g.finalIndex];
+      const choices=Object.keys(result?.collages||{}).filter(target=>target!==p.id);
+      if(choices.length)botAction(g,p.id,{type:'FINAL_VOTE',targetId:choices[(bi+g.finalIndex)%choices.length]});
+    },450+bi*180);
+  });
+}
 function checkExpiredRounds(){
   const now=Date.now();
   for(const g of games.values()){
@@ -203,9 +267,9 @@ function newGame(name,settings,host){ const g={code:code(),name,phase:'LOBBY',mi
 function cancelTimer(g){ const t=timers.get(g.code); if(t) clearTimeout(t); timers.delete(g.code); }
 function schedule(g,ms,fn){ cancelTimer(g); const marker=Date.now()+':'+g.phase+':'+g.round; g.timerMarker=marker; timers.set(g.code,setTimeout(()=>{timers.delete(g.code);if(g.timerMarker===marker)fn();},ms)); }
 function transition(g,phase){cancelTimer(g);g.phase=phase;g.timerEndsAt=null;broadcast(g);}
-function startGame(g){g.phase='IMAGE_SUBMISSION';g.imageReady={};g.timerEndsAt=Date.now()+g.settings.imageSeconds*1000;broadcast(g);schedule(g,g.settings.imageSeconds*1000,()=>finishImageSubmission(g));}
+function startGame(g){g.phase='IMAGE_SUBMISSION';g.imageReady={};g.timerEndsAt=Date.now()+g.settings.imageSeconds*1000;broadcast(g);runBotsForImageSubmission(g);schedule(g,g.settings.imageSeconds*1000,()=>finishImageSubmission(g));}
 function finishImageSubmission(g){if(g.phase!=='IMAGE_SUBMISSION')return;for(const p of g.players)g.imageReady[p.id]=true;g.submittedSources={};for(const p of g.players)g.submittedSources[p.id]=true;if(g.settings.hostApproval)transition(g,'HOST_APPROVAL');else beginPrompts(g);}
-function beginPrompts(g){g.phase='PROMPT_SUBMISSION';g.prompts=[];g.promptOrder=[];g.timerEndsAt=Date.now()+g.settings.promptSeconds*1000;broadcast(g);schedule(g,g.settings.promptSeconds*1000,()=>finishPromptSubmission(g));}
+function beginPrompts(g){g.phase='PROMPT_SUBMISSION';g.prompts=[];g.promptOrder=[];g.timerEndsAt=Date.now()+g.settings.promptSeconds*1000;broadcast(g);runBotsForPrompts(g);schedule(g,g.settings.promptSeconds*1000,()=>finishPromptSubmission(g));}
 function finishPromptSubmission(g){
   if(g.phase!=='PROMPT_SUBMISSION')return;
   const connected=g.players.filter(p=>p.connected);
@@ -249,7 +313,7 @@ function beginRound(g){
   if(g.round===0){assignRound1Sources(g);for(const p of g.players)g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:[],submitted:false};}
   else {for(const p of g.players){const owner=g.roundPlayerSets[p.id];g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:scatter(g.travelingSets[owner]||[]),submitted:false};}}
   if(!g.finalResults[g.round])g.finalResults[g.round]={promptId:g.currentPromptId,collages:{}};
-  g.phase='ROUND';g.timerEndsAt=Date.now()+g.settings.creationSeconds*1000;broadcast(g);
+  g.phase='ROUND';g.timerEndsAt=Date.now()+g.settings.creationSeconds*1000;broadcast(g);runBotsForRound(g);
   schedule(g,g.settings.creationSeconds*1000,()=>finishRound(g));
 }
 function finishRound(g){
@@ -272,7 +336,7 @@ function finishRound(g){
     beginRound(g);
   }
 }
-function startFinalShowcase(g){g.finalIndex=0;g.finalVotes={};g.phase='FINAL_SHOWCASE';g.currentPromptId=g.finalResults[0]?.promptId||null;g.timerEndsAt=Date.now()+g.settings.votingSeconds*1000;broadcast(g);schedule(g,g.settings.votingSeconds*1000,()=>finishFinalPrompt(g));}
+function startFinalShowcase(g){g.finalIndex=0;g.finalVotes={};g.phase='FINAL_SHOWCASE';g.currentPromptId=g.finalResults[0]?.promptId||null;g.timerEndsAt=Date.now()+g.settings.votingSeconds*1000;broadcast(g);runBotsForFinalShowcase(g);schedule(g,g.settings.votingSeconds*1000,()=>finishFinalPrompt(g));}
 function finishFinalPrompt(g){
   const r=g.finalResults[g.finalIndex];
   if(!r){finishFinalGame(g);return;}
@@ -286,6 +350,7 @@ function finishFinalPrompt(g){
   g.timerEndsAt=Date.now()+g.settings.votingSeconds*1000;
   g.finalVotes[g.finalIndex]={};
   broadcast(g);
+  runBotsForFinalShowcase(g);
   schedule(g,g.settings.votingSeconds*1000,()=>finishFinalPrompt(g));
 }
 function finishFinalGame(g){
@@ -299,11 +364,14 @@ function finishFinalGame(g){
   }
   g.phase='FINAL';
   g.timerEndsAt=null;
+  clearBotJobs(g);
   broadcast(g);
 }
 function handle(g,pid,a){
   const p=g.players.find(x=>x.id===pid);if(!p)return;
   switch(a.type){
+    case 'ADD_BOT': { if(g.phase==='LOBBY'&&p.host&&BOTS_ENABLED&&g.players.length<g.settings.capacity){let n=1;while(g.players.some(x=>x.isBot&&x.botNumber===n))n++;const bot={id:id(),name:`Bot ${n}`,avatar:String(((n-1)%24)+1),host:false,ready:true,connected:true,isBot:true,botNumber:n};g.players.push(bot);} break; }
+    case 'REMOVE_BOT': { if(g.phase==='LOBBY'&&p.host){const target=g.players.find(x=>x.id===String(a.botId)&&x.isBot);if(target)g.players=g.players.filter(x=>x.id!==target.id);} break; }
     case 'SET_READY': if(g.phase==='LOBBY'&&!p.host)p.ready=!!a.ready; break;
     case 'START': if(g.phase==='LOBBY'&&p.host&&g.players.filter(x=>x.connected).length>=MIN_PLAYERS)startGame(g); break;
     case 'ADD_SOURCE': if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid]&&g.sources.filter(s=>s.ownerId===pid).length<g.settings.imagesPerPlayer&&typeof a.data==='string'&&a.data.startsWith('data:image/'))g.sources.push({id:id(),data:a.data,ownerId:pid,approved:true}); break;
@@ -343,8 +411,8 @@ wss.on('connection',ws=>{
   ws.on('message',raw=>{try{const m=JSON.parse(String(raw));
     if(m.type==='CLIENT_PING'){if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'CLIENT_PONG'}));return;}
     if(m.type==='RESUME'){const c=String(m.code||'').trim().toUpperCase(),g=games.get(c),pid=String(m.playerId||'');const p=g?.players.find(x=>x.id===pid);if(!g||!p){ws.send(JSON.stringify({type:'ERROR',message:'That game session is no longer available.'}));return;}const old=sockets.get(pid);if(old&&old!==ws){try{old.close(4000,'Reconnected')}catch{}}p.connected=true;sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code,resumed:true}));broadcast(g);return;}
-    if(m.type==='HOST_CREATE'){const pid=id();const host={id:pid,name:String(m.name||'Player').trim().slice(0,24)||'Player',avatar:avatar(m.avatar),host:true,ready:true,connected:true};const st=m.settings||{};const settings={capacity:Math.max(2,Math.min(16,Number(st.capacity)||8)),imagesPerPlayer:Math.max(1,Math.min(20,Number(st.imagesPerPlayer)||2)),round1Images:st.round1Images==='all'?'all':Math.max(1,Math.min(320,Number(st.round1Images)||4)),imageSeconds:Math.max(30,Math.min(600,Number(st.imageSeconds)||120)),hostApproval:!!st.hostApproval,creationSeconds:Math.max(TEST_MODE?1:30,Math.min(600,Number(st.creationSeconds)||120)),votingSeconds:Math.max(15,Math.min(300,Number(st.votingSeconds)||45)),promptSeconds:Math.max(15,Math.min(300,Number(st.promptSeconds)||60))};const g=newGame(String(m.lobbyName||'Collage Game').slice(0,40),settings,host);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
-    if(m.type==='JOIN'){const c=String(m.code||'').trim().toUpperCase(),g=games.get(c),name=String(m.name||'').trim();if(!g||g.phase!=='LOBBY'){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is unavailable.'}));return;}if(g.players.length>=g.settings.capacity){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is full.'}));return;}if(!name){ws.send(JSON.stringify({type:'ERROR',message:'Enter a nickname before joining.'}));return;}const pid=id();const pl={id:pid,name:name.slice(0,24),avatar:avatar(m.avatar),host:false,ready:false,connected:true};g.players.push(pl);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
+    if(m.type==='HOST_CREATE'){const pid=id();const host={id:pid,name:String(m.name||'Player').trim().slice(0,24)||'Player',avatar:avatar(m.avatar),host:true,ready:true,connected:true,isBot:false};const st=m.settings||{};const settings={capacity:Math.max(2,Math.min(16,Number(st.capacity)||8)),imagesPerPlayer:Math.max(1,Math.min(20,Number(st.imagesPerPlayer)||2)),round1Images:st.round1Images==='all'?'all':Math.max(1,Math.min(320,Number(st.round1Images)||4)),imageSeconds:Math.max(30,Math.min(600,Number(st.imageSeconds)||120)),hostApproval:!!st.hostApproval,creationSeconds:Math.max(TEST_MODE?1:30,Math.min(600,Number(st.creationSeconds)||120)),votingSeconds:Math.max(15,Math.min(300,Number(st.votingSeconds)||45)),promptSeconds:Math.max(15,Math.min(300,Number(st.promptSeconds)||60))};const g=newGame(String(m.lobbyName||'Collage Game').slice(0,40),settings,host);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
+    if(m.type==='JOIN'){const c=String(m.code||'').trim().toUpperCase(),g=games.get(c),name=String(m.name||'').trim();if(!g||g.phase!=='LOBBY'){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is unavailable.'}));return;}if(g.players.length>=g.settings.capacity){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is full.'}));return;}if(!name){ws.send(JSON.stringify({type:'ERROR',message:'Enter a nickname before joining.'}));return;}const pid=id();const pl={id:pid,name:name.slice(0,24),avatar:avatar(m.avatar),host:false,ready:false,connected:true,isBot:false};g.players.push(pl);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
     if(m.type==='ACTION'){const pid=m.playerId;if(sockets.get(pid)!==ws)return;const g=[...games.values()].find(x=>x.players.some(p=>p.id===pid));if(g)handle(g,pid,m.action);}
   }catch(e){ws.send(JSON.stringify({type:'ERROR',message:'Invalid message.'}));}});
   ws.on('error',()=>{});
