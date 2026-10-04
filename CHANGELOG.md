@@ -1,3 +1,11 @@
+## V1.5.12
+- Reworked Final Showcase into a host-controlled slideshow followed by voting.
+- Each prompt now shows every player's finished masterpiece one at a time to everyone.
+- The host controls the slideshow with Next masterpiece / Finish slideshow.
+- Once the slideshow finishes, all players receive thumbnail-style voting cards.
+- Bots now wait until the voting stage before submitting their votes.
+- Updated the client and package build to V1.5.12.
+
 ## V1.5.11
 - Fixed the remaining lobby name truncation rule overriding the previous wrapping fix.
 - Player and bot names now wrap instead of showing ellipses.
