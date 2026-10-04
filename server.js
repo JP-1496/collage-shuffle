@@ -247,7 +247,7 @@ function stateFor(g,pid){
     players:g.players,prompts:g.prompts,promptOrder:g.promptOrder,round:g.round,
     currentPromptId:g.currentPromptId,roundPlayerSets:{},timerEndsAt:g.timerEndsAt,
     serverNow:Date.now(),sources:[],imageReady:g.phase==='IMAGE_SUBMISSION'?g.imageReady:{},collages:{},submissionStatus:{},
-    finalResults:[],finalIndex:g.finalIndex,scores:g.scores,bestCollages:g.phase==='FINAL'?g.bestCollages:{}
+    finalResults:[],finalIndex:g.finalIndex,finalStage:g.finalStage||null,finalSlideIndex:g.finalSlideIndex||0,scores:g.scores,bestCollages:g.phase==='FINAL'?g.bestCollages:{}
   };
   if(g.phase==='IMAGE_SUBMISSION') s.sources=g.sources.filter(x=>x.ownerId===pid);
   else if(g.phase==='HOST_APPROVAL') s.sources=g.sources;
@@ -341,7 +341,9 @@ function finishRound(g){
     beginRound(g);
   }
 }
-function startFinalShowcase(g){g.finalIndex=0;g.finalVotes={};g.phase='FINAL_SHOWCASE';g.currentPromptId=g.finalResults[0]?.promptId||null;g.timerEndsAt=Date.now()+g.settings.votingSeconds*1000;broadcast(g);runBotsForFinalShowcase(g);schedule(g,g.settings.votingSeconds*1000,()=>finishFinalPrompt(g));}
+function startFinalShowcase(g){g.finalIndex=0;g.finalVotes={};g.finalStage='SLIDESHOW';g.finalSlideIndex=0;g.phase='FINAL_SHOWCASE';g.currentPromptId=g.finalResults[0]?.promptId||null;g.timerEndsAt=null;broadcast(g);}
+function startFinalVoting(g){g.finalStage='VOTE';g.finalVotes[g.finalIndex]={};g.timerEndsAt=Date.now()+g.settings.votingSeconds*1000;broadcast(g);runBotsForFinalShowcase(g);schedule(g,g.settings.votingSeconds*1000,()=>finishFinalPrompt(g));}
+function nextFinalSlide(g){if(g.phase!=='FINAL_SHOWCASE'||g.finalStage!=='SLIDESHOW')return;const r=g.finalResults[g.finalIndex];const total=Object.keys(r?.collages||{}).length;if(g.finalSlideIndex+1<total){g.finalSlideIndex++;broadcast(g);return;}startFinalVoting(g);}
 function finishFinalPrompt(g){
   const r=g.finalResults[g.finalIndex];
   if(!r){finishFinalGame(g);return;}
@@ -420,7 +422,8 @@ function handle(g,pid,a){
       if(connected.length>0 && submitted===connected.length) finishRound(g);
       break;
     }
-    case 'FINAL_VOTE': {const result=g.finalResults[g.finalIndex];const target=String(a.targetId||'');if(g.phase==='FINAL_SHOWCASE'&&result?.collages?.[target]&&target!==pid&&!g.finalVotes[g.finalIndex]?.[pid]){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=target;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected)finishFinalPrompt(g);}}break;
+    case 'FINAL_NEXT_SLIDE': {if(g.phase==='FINAL_SHOWCASE'&&g.finalStage==='SLIDESHOW'&&p.host)nextFinalSlide(g);break;}
+     case 'FINAL_VOTE': {const result=g.finalResults[g.finalIndex];const target=String(a.targetId||'');if(g.phase==='FINAL_SHOWCASE'&&result?.collages?.[target]&&target!==pid&&!g.finalVotes[g.finalIndex]?.[pid]){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=target;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected)finishFinalPrompt(g);}}break;
   }
   broadcast(g);
 }
