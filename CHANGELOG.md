@@ -1,3 +1,8 @@
+## V1.5.1 — bot lobby fix
+- Fixed silent failures when the host clicks **+ Bot**.
+- Bot creation is enabled for the development build without an environment-variable dependency.
+- Invalid bot actions now return a visible error instead of appearing to do nothing.
+
 ## V1.5.0 — automated bot players
 - Added a host-only **+ Bot** control in the lobby.
 - Bots use the normal server-authoritative player pipeline and count towards the configured player capacity.
