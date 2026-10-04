@@ -223,6 +223,7 @@ function runBotsForRound(g){
   });
 }
 function runBotsForFinalShowcase(g){
+  if(g.finalStage!=='VOTE')return;
   botList(g).forEach((p,bi)=>{
     botDelay(g,()=>{
       const result=g.finalResults[g.finalIndex];
@@ -354,11 +355,10 @@ function finishFinalPrompt(g){
   g.finalIndex++;
   if(g.finalIndex>=g.finalResults.length){finishFinalGame(g);return;}
   g.currentPromptId=g.finalResults[g.finalIndex].promptId;
-  g.timerEndsAt=Date.now()+g.settings.votingSeconds*1000;
-  g.finalVotes[g.finalIndex]={};
+  g.finalStage='SLIDESHOW';
+  g.finalSlideIndex=0;
+  g.timerEndsAt=null;
   broadcast(g);
-  runBotsForFinalShowcase(g);
-  schedule(g,g.settings.votingSeconds*1000,()=>finishFinalPrompt(g));
 }
 function finishFinalGame(g){
   g.bestCollages={};
