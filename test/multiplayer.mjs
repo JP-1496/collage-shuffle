@@ -12,7 +12,7 @@ const appSource=await fs.readFile(new URL('../public/app.js',import.meta.url),'u
 assert.equal(packageJson.version,'1.4.98');
 assert.match(serverSource,/readFileSync\(new URL\('\.\/package\.json'/);
 assert.match(serverSource,/app\.get\('\/build\.js'/);
-assert.match(c=appSource,/globalThis\.COLLAGE_VERSION/);
+assert.match(appSource,/globalThis\.COLLAGE_VERSION/);
 assert.match(serverSource,/MAX_SEARCH_RESULTS=100/);
 assert.match(serverSource,/dgControl_list/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH=3840/);
