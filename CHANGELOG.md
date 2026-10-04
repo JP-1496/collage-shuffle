@@ -1,3 +1,8 @@
+## V1.5.3 — remove client-side bot disable
+- The host **+ Bot** control is no longer disabled by potentially stale client lobby state.
+- The server remains authoritative for capacity and host checks.
+- Lobby errors are now displayed directly in the lobby.
+
 ## V1.5.2 — bot button interaction fix
 - Replaced the lobby **+ Bot** inline click handler with a delegated browser click handler.
 - The control continues to work when the lobby UI is refreshed or rebuilt dynamically.
