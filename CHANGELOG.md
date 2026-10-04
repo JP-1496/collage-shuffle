@@ -1,6 +1,6 @@
 ## V1.4.98 — centralised build version
 - Made `package.json` the single source of truth for the Collage build version.
-- Runtime `/health`, browser build display and cache-busting now derive from the same version.
+- Runtime `/health`, browser build display and sprite cache-busting now derive from the same version.
 - Removed the obsolete root-level copies of the live client files so they cannot drift from `public/` again.
 - Current build: V1.4.98.
 
