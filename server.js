@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.12';
+const VERSION = '1.6.13';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 3;
 const app = express();
@@ -439,7 +439,7 @@ function handle(g,pid,a){
     case 'DELETE_SOURCE': if(g.phase==='HOST_APPROVAL'&&p.host)g.sources=g.sources.filter(x=>x.id!==a.sourceId); break;
     case 'APPROVAL_DONE': if(g.phase==='HOST_APPROVAL'&&p.host){g.sources=g.sources.filter(x=>x.approved!==false);if(g.sources.length)beginPrompts(g);} break;
     case 'ADD_PROMPT': if(g.phase==='PROMPT_SUBMISSION'&&!g.prompts.some(x=>x.ownerId===pid)&&String(a.text||'').trim()){g.prompts.push({id:id(),text:String(a.text).trim().slice(0,500),ownerId:pid});if(g.prompts.length===g.players.length){g.promptOrder=shuffle(g.prompts.map(x=>x.id));g.round=0;beginRound(g);}} break;
-    case 'SYNC_COLLAGE': if(g.phase==='ROUND'){const c=g.collages[pid];if(c&&!c.submitted){c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));}}break;
+    case 'SYNC_COLLAGE': { if(g.phase==='ROUND'){const c=g.collages[pid];if(c&&!c.submitted)c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));} return; }
     case 'SUBMIT_COLLAGE': {
       if(g.phase!=='ROUND')break;
       const c=g.collages[pid];
@@ -455,14 +455,14 @@ function handle(g,pid,a){
       const submitted=connected.filter(x=>g.collages[x.id]?.submitted).length;
       // Broadcast the accepted count first. WebSocket delivery preserves message
       // order, so clients receive 2/2 before the Round 2 state.
-      broadcast(g);
       if(connected.length>0 && submitted===connected.length) finishRound(g);
-      break;
+      else broadcast(g);
+      return;
     }
     case 'FINAL_NEW_PLAYERS': {if(g.phase==='FINAL'&&p.host)restartNewPlayers(g);break;}
     case 'FINAL_SAME_PLAYERS': {if(g.phase==='FINAL'&&p.host)restartSamePlayers(g);break;}
-    case 'FINAL_NEXT_SLIDE': {if(g.phase==='FINAL_SHOWCASE'&&g.finalStage==='SLIDESHOW'&&p.host)nextFinalSlide(g);else send(pid,{type:'ERROR',message:'The slideshow can only be advanced by the host while it is active.'});break;}
-     case 'FINAL_VOTE': {const result=g.finalResults[g.finalIndex];const target=String(a.targetId||'');if(g.phase==='FINAL_SHOWCASE'&&result?.collages?.[target]&&target!==pid&&!g.finalVotes[g.finalIndex]?.[pid]){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=target;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected)finishFinalPrompt(g);}}break;
+    case 'FINAL_NEXT_SLIDE': {if(g.phase==='FINAL_SHOWCASE'&&g.finalStage==='SLIDESHOW'&&p.host){nextFinalSlide(g);return;}send(pid,{type:'ERROR',message:'The slideshow can only be advanced by the host while it is active.'});break;}
+     case 'FINAL_VOTE': {const result=g.finalResults[g.finalIndex];const target=String(a.targetId||'');if(g.phase==='FINAL_SHOWCASE'&&result?.collages?.[target]&&target!==pid&&!g.finalVotes[g.finalIndex]?.[pid]){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=target;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected){finishFinalPrompt(g);return;}}}break;}
   }
   broadcast(g);
 }
