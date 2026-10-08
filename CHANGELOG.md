@@ -1,3 +1,8 @@
+## V1.5.17
+- Moved the fixed Leave Game and player identity controls to the lower corners so they no longer overlap gameplay headers and prompt text.
+- Fixed the Final Showcase Next masterpiece action firing twice from duplicate click handlers, which could skip from one masterpiece to the third.
+- Tightened the Final Showcase voting grid so the existing responsive viewport sizing can use the available height and centre the voting cards instead of leaving them stuck at the bottom.
+
 ## V1.5.16
 - Round 1 still allows players to use their own submitted image pool.
 - Added creator tracking to submitted pieces so a cut piece can never return to the player who created it in a later Canvas round.
