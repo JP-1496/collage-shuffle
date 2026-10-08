@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
+const VERSION = '1.6.12';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 3;
 const app = express();
