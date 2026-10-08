@@ -1,12 +1,3 @@
-## V1.6.0 — Layout foundation
-- Rebuilt the game around a consistent left-hand sidebar and viewport-contained main play area.
-- Removed the floating in-game player badge and Leave Game control in favour of persistent sidebar information.
-- Added lobby Server Settings: everyone can view them and the host can edit them before the game starts.
-- Increased player-name support to 30 characters across the server and client.
-- Prompt submission now automatically focuses the text box when the phase opens.
-- Reworked Surprise Me to use short 1–3 word-style concepts instead of long four-part sentences.
-- Established a no-page-scroll desktop layout foundation for the game screens.
-
 ## V1.5.18
 - Fixed lobby controls and player cards so waiting text and longer player names fit cleanly.
 - Moved the in-game Leave Game control away from the gameplay sidebar and stopped bot-added confirmation text from carrying into gameplay rounds.
