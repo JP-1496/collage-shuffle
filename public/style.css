@@ -387,16 +387,15 @@ body::after{content:"✦  +  ~  ◇  •  ↗  ✎  ✦  +  ~";position:fixed;in
   line-height:1.05;
 }
 
-/* V1.5.15 — fullscreen Final Showcase and voting */
+/* V1.5.16 — keep Final Showcase controls clear of the fixed HUD */
 .finalShowcaseShell{
   max-width:1400px;
   height:100dvh;
   min-height:0;
   overflow:hidden;
+  padding-top:62px;
 }
-.finalShowcaseShell .promptBanner{
-  flex:0 0 auto;
-}
+.finalShowcaseShell .promptBanner{flex:0 0 auto}
 .showcaseSlideCounter{
   flex:0 0 auto;
   text-align:center;
@@ -407,8 +406,8 @@ body::after{content:"✦  +  ~  ◇  •  ↗  ✎  ✦  +  ~";position:fixed;in
 }
 .showcaseStage{
   position:relative;
-  width:min(720px,82vw,calc(100dvh - 285px));
-  height:min(720px,82vw,calc(100dvh - 285px));
+  width:min(720px,82vw,calc(100dvh - 347px));
+  height:min(720px,82vw,calc(100dvh - 347px));
   margin:0 auto;
   background:white;
   border:4px solid var(--ink);
@@ -417,18 +416,8 @@ body::after{content:"✦  +  ~  ◇  •  ↗  ✎  ✦  +  ~";position:fixed;in
   box-shadow:7px 7px 0 var(--ink);
   flex:0 1 auto;
 }
-.showcaseStage .miniCanvas{
-  width:100%;
-  height:100%;
-  border:0;
-  border-radius:0;
-}
-.finalShowcaseShell .showcaseStage>.canvas{
-  width:100%;
-  height:100%;
-  border:0;
-  border-radius:0;
-}
+.showcaseStage .miniCanvas{width:100%;height:100%;border:0;border-radius:0}
+.finalShowcaseShell .showcaseStage>.canvas{width:100%;height:100%;border:0;border-radius:0}
 .showcaseControls{
   flex:0 0 auto;
   display:flex;
@@ -437,15 +426,8 @@ body::after{content:"✦  +  ~  ◇  •  ↗  ✎  ✦  +  ~";position:fixed;in
   min-height:48px;
   margin-top:8px;
 }
-.showcaseControls .notice{
-  display:flex;
-  align-items:center;
-}
-.showcaseVoteIntro{
-  flex:0 0 auto;
-  margin:2px 0 8px;
-  font-weight:800;
-}
+.showcaseControls .notice{display:flex;align-items:center}
+.showcaseVoteIntro{flex:0 0 auto;margin:2px 0 8px;font-weight:800}
 .finalShowcaseShell .voteGrid{
   flex:1;
   min-height:0;
@@ -454,29 +436,23 @@ body::after{content:"✦  +  ~  ◇  •  ↗  ✎  ✦  +  ~";position:fixed;in
   overflow:hidden;
   gap:10px;
 }
-.finalShowcaseShell .voteCard{
-  min-width:0;
-  padding:8px;
-}
-.finalShowcaseShell .voteCard .miniCanvas{
-  width:100%;
-  max-width:none;
-}
+.finalShowcaseShell .voteCard{min-width:0;padding:8px}
+.finalShowcaseShell .voteCard .miniCanvas{width:100%;max-width:none}
 @media(max-width:900px){
+  .finalShowcaseShell{padding-top:58px}
   .showcaseStage{
-    width:min(92vw,calc(100dvh - 285px));
-    height:min(92vw,calc(100dvh - 285px));
+    width:min(92vw,calc(100dvh - 335px));
+    height:min(92vw,calc(100dvh - 335px));
   }
-  .finalShowcaseShell .voteGrid{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
+  .finalShowcaseShell .voteGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:600px){
+  .finalShowcaseShell{padding-top:54px}
   .finalShowcaseShell .promptBanner h2{font-size:20px}
   .showcaseSlideCounter{font-size:15px}
   .showcaseStage{
-    width:min(94vw,calc(100dvh - 260px));
-    height:min(94vw,calc(100dvh - 260px));
+    width:min(94vw,calc(100dvh - 310px));
+    height:min(94vw,calc(100dvh - 310px));
   }
   .finalShowcaseShell .voteGrid{gap:7px}
   .finalShowcaseShell .voteCard{padding:5px}
