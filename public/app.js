@@ -31,6 +31,7 @@ function v16Sidebar(kind='game'){
     if(lobby)h+='<div class="v16SideBlock"><small>LOBBY</small><b>'+esc(lobby)+'</b></div>';
     if(g?.code)h+='<div class="v16SideBlock v16Code"><small>CODE</small><b>'+esc(g.code)+'</b></div>';
   }
+  if(kind==='host')h+='<div class="v16ModeBadge">SHUFFLE MODE</div><div class="v16BuildBadge">V'+VERSION+'</div>';
   if(g?.phase==='LOBBY')h+='<button class="v16SideButton secondary" onclick="openServerSettings()">⚙ Server Settings</button>';
   else if(g?.phase){
     h+='<div class="v16SideBlock"><small>PHASE</small><b>'+esc(phase.replaceAll('_',' '))+'</b></div>';
