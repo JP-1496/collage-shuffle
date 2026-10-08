@@ -1,3 +1,10 @@
+## V1.6.1
+- Reworked the V1.6 persistent sidebar so host setup fields live in the sidebar and gameplay timers stay there throughout timed phases.
+- Changed Host Game settings to a 2-column by 4-row layout and removed the shuffle tip.
+- Rebuilt Server Settings as a popup that mirrors the host setup cards and remains within the sidebar-based layout.
+- Kept the sidebar visible when image search opens and moved the search panel clear of it.
+- Tightened the gameplay editor spacing so the canvas uses the available play area more effectively.
+
 ## V1.6.0 — Layout foundation
 - Rebuilt the game around a consistent left-hand sidebar and viewport-contained main play area.
 - Removed the floating in-game player badge and Leave Game control in favour of persistent sidebar information.
