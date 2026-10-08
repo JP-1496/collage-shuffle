@@ -1,3 +1,10 @@
+## V1.6.6
+- Performed a global viewport containment pass across the V1.6 main-area screens.
+- Added consistent right-side breathing room for borders, shadows, grids, cards and flex layouts.
+- Prevented nested page content from forcing the main area wider than its available viewport.
+- Fixed Host Approval image deletion refresh so deleted images disappear immediately after the server confirms the change.
+- Updated the displayed build version to V1.6.6.
+
 ## V1.6.5
 - Tidied the persistent sidebar into a deliberate top-to-bottom structure.
 - Anchored the build badge and Back button as a fixed bottom block.
