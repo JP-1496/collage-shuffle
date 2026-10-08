@@ -1,3 +1,7 @@
+## V1.6.12
+- Anchored lobby player cards to the top instead of vertically distributing the first row.
+- Locked the running server/build version to V1.6.12 so the CMD startup message and splash build badge stay in sync.
+
 ## V1.6.11
 - Moved lobby controls into the left sidebar and lobby name above the player list.
 - Removed the Final Showcase sidebar timer during the slideshow.
