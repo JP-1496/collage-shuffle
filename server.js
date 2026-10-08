@@ -462,7 +462,7 @@ function handle(g,pid,a){
     case 'FINAL_NEW_PLAYERS': {if(g.phase==='FINAL'&&p.host)restartNewPlayers(g);break;}
     case 'FINAL_SAME_PLAYERS': {if(g.phase==='FINAL'&&p.host)restartSamePlayers(g);break;}
     case 'FINAL_NEXT_SLIDE': {if(g.phase==='FINAL_SHOWCASE'&&g.finalStage==='SLIDESHOW'&&p.host){nextFinalSlide(g);return;}send(pid,{type:'ERROR',message:'The slideshow can only be advanced by the host while it is active.'});break;}
-     case 'FINAL_VOTE': {const result=g.finalResults[g.finalIndex];const target=String(a.targetId||'');if(g.phase==='FINAL_SHOWCASE'&&result?.collages?.[target]&&target!==pid&&!g.finalVotes[g.finalIndex]?.[pid]){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=target;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected){finishFinalPrompt(g);return;}}}break;}
+     case 'FINAL_VOTE': {const result=g.finalResults[g.finalIndex];const target=String(a.targetId||'');if(g.phase==='FINAL_SHOWCASE'&&result?.collages?.[target]&&target!==pid&&!g.finalVotes[g.finalIndex]?.[pid]){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=target;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected){finishFinalPrompt(g);return;}}break;}
   }
   broadcast(g);
 }
