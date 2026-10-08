@@ -1,3 +1,13 @@
+## V1.6.8
+- Fixed Join Game right-edge containment.
+- Prevented Lobby button hover movement from clipping at the left edge.
+- Removed the redundant dashed pool/footer divider when the image pool is empty or populated.
+- Changed Canvas source selection to a green highlight without the redundant selected-image preview.
+- Added queued rapid-click handling for the Host showcase Next button to speed up testing.
+- Tightened Voting mode vertical spacing and bottom containment.
+- Redesigned Final Results into a compact ranked list showing every player's standout collages as thumbnails with hover enlargement.
+- Updated the displayed build version to V1.6.8.
+
 ## V1.6.7
 - Reworked viewport containment rules as an authoritative full-screen pass for every V1.6 main-area page.
 - Added explicit width, min-width, max-width and flex/grid containment for image pools, approval cards, prompts, lobbies, editor, voting, showcase and final results.
