@@ -1,3 +1,8 @@
+## V1.6.11
+- Moved lobby controls into the left sidebar and lobby name above the player list.
+- Removed the Final Showcase sidebar timer during the slideshow.
+- Simplified slideshow advancement so the host can reliably progress through masterpieces.
+
 ## V1.6.10
 - Final Results gallery auto-scrolls through masterpieces.
 - Final Results collage canvases preserve the original square 1:1 format without stretching/cropping.
