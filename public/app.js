@@ -1,4 +1,4 @@
-const VERSION=globalThis.COLLAGE_VERSION||'1.5.16';
+const VERSION=globalThis.COLLAGE_VERSION||'1.5.17';
 const MIN_PLAYERS=3;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
@@ -8,7 +8,7 @@ function avatarSVG(id,cls='avatarIcon'){const n=String(id);const idx=Math.max(0,
 const savedAvatar=localStorage.getItem('collageAvatar');
 const state={screen:'home',name:localStorage.getItem('collageName')||'',avatar:/^(?:[1-9]|1[0-9]|2[0-4])$/.test(savedAvatar||'')?savedAvatar:'1',ws:null,pid:null,code:'',game:null,error:'',settings:{capacity:8,imagesPerPlayer:2,round1Images:4,imageSeconds:120,hostApproval:false,creationSeconds:120,votingSeconds:45,promptSeconds:60},lobby:'My Collage',prompt:'',promptSubmitted:false,sourceSelected:null,sourceWorking:{},pieces:[],selected:null,drag:null,timerHandle:null,cutCanvas:null,cutPoints:[],cutZoom:1,cutImg:null,lastPhase:null,_lastImageCount:-1,_lastReadyCount:-1,_lastSubmittedCount:-1,serverClockOffset:0,lastTimerEnd:null,_lastPromptCount:-1,syncTimer:null,_lastFinalIndex:-1,_lastFinalVote:null,reconnectTimer:null,pingTimer:null,pongTimer:null,intentionalClose:false};
 const app=document.querySelector('#app');
-document.addEventListener('click',e=>{const next=e.target.closest('[data-final-next]');if(next){e.preventDefault();finalNextSlide();return;}const b=e.target.closest('[data-add-bot]');if(!b)return;e.preventDefault();state.error='Adding bot…';render(true);console.log('[BOT] + Bot clicked');if(!send({type:'ADD_BOT'})){state.error='Connection unavailable — please wait and try again.';render(true);console.error('[BOT] ADD_BOT could not be sent');}else console.log('[BOT] ADD_BOT sent');});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-add-bot]');if(!b)return;e.preventDefault();state.error='Adding bot…';render(true);console.log('[BOT] + Bot clicked');if(!send({type:'ADD_BOT'})){state.error='Connection unavailable — please wait and try again.';render(true);console.error('[BOT] ADD_BOT could not be sent');}else console.log('[BOT] ADD_BOT sent');});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 function send(action){if(state.ws?.readyState!==1)return false;try{state.ws.send(JSON.stringify({type:'ACTION',playerId:state.pid,action}));return true}catch{return false;}}
