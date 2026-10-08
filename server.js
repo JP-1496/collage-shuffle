@@ -310,13 +310,38 @@ function beginRound(g){
   // "visit every other player exactly once" cannot both be true while
   // also forbidding the original owner.
   const n=ids.length;
-  let perm;
   const previousMap=g.round>0?previous:null;
-  do{
-    perm=shuffle(ids);
-  }while(n>1 && perm.some((recipient,i)=>recipient===ids[i]) ||
-         (previousMap && n>2 && perm.some((recipient,i)=>recipient===previousMap[ids[i]])));
-  for(let i=0;i<n;i++)g.roundPlayerSets[ids[i]]=perm[i];
+  if(g.round>0){
+    const assignments={};
+    const used=new Set();
+    const sources=shuffle(ids).sort((a,b)=>{
+      const ac=new Set((g.travelingSets[a]||[]).map(x=>x.createdBy).filter(Boolean)).size;
+      const bc=new Set((g.travelingSets[b]||[]).map(x=>x.createdBy).filter(Boolean)).size;
+      return bc-ac;
+    });
+    function assignSource(i){
+      if(i>=sources.length)return true;
+      const sourceId=sources[i];
+      const creators=new Set((g.travelingSets[sourceId]||[]).map(x=>x.createdBy).filter(Boolean));
+      let candidates=shuffle(ids).filter(recipient=>!used.has(recipient)&&!creators.has(recipient));
+      if(previousMap&&n>2)candidates.sort((a,b)=>Number(a===previousMap[sourceId])-Number(b===previousMap[sourceId]));
+      for(const recipient of candidates){
+        assignments[sourceId]=recipient;
+        used.add(recipient);
+        if(assignSource(i+1))return true;
+        used.delete(recipient);
+        delete assignments[sourceId];
+      }
+      return false;
+    }
+    if(!assignSource(0)){
+      throw new Error('Unable to create a valid no-self round assignment');
+    }
+    Object.assign(g.roundPlayerSets,assignments);
+  }else{
+    const perm=shuffle(ids);
+    for(let i=0;i<n;i++)g.roundPlayerSets[ids[i]]=perm[i];
+  }
   g.votes={};g.collages={};
   if(g.round===0){assignRound1Sources(g);for(const p of g.players)g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:[],submitted:false};}
   else {for(const p of g.players){const owner=Object.keys(g.roundPlayerSets).find(sourceId=>g.roundPlayerSets[sourceId]===p.id);g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:scatter(g.travelingSets[owner]||[]),submitted:false};}}
@@ -413,7 +438,9 @@ function handle(g,pid,a){
       if(!c || c.submitted)break;
       c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));
       c.submitted=true;
-      g.travelingSets[pid]=clone(c.pieces);
+      const submittedPieces=clone(c.pieces||[]).map(piece=>piece.createdBy?piece:{...piece,createdBy:pid});
+      c.pieces=submittedPieces;
+      g.travelingSets[pid]=clone(submittedPieces);
       g.finalResults[g.round].collages[pid]=clone(c);
       sockets.get(pid)?.send(JSON.stringify({type:'SUBMISSION_ACCEPTED',round:g.round}));
       const connected=g.players.filter(x=>x.connected);
