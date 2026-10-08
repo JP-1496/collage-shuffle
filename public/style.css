@@ -459,3 +459,12 @@ body::after{content:"✦  +  ~  ◇  •  ↗  ✎  ✦  +  ~";position:fixed;in
   .finalShowcaseShell .voteCard{padding:5px}
   .finalShowcaseShell .voteCard button{padding:8px 6px;font-size:12px}
 }
+
+
+/* V1.5.18 — lobby/gameplay UI cleanup */
+.lobbyControls button{white-space:normal;line-height:1.05;min-height:54px}
+.lobbyLayout .players{grid-template-columns:repeat(2,minmax(0,1fr))}
+.searchTip{margin:6px 0 10px;font-size:12px;font-weight:800;line-height:1.25;opacity:.75}
+.leaveGameBtn{left:330px;right:auto;bottom:18px}
+@media(max-width:900px){.lobbyLayout .players{grid-template-columns:repeat(2,minmax(0,1fr))}.leaveGameBtn{left:10px;bottom:10px}}
+@media(max-width:650px){.lobbyLayout .players{grid-template-columns:1fr 1fr}.leaveGameBtn{left:10px;bottom:10px}}

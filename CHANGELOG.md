@@ -1,3 +1,8 @@
+## V1.5.18
+- Fixed lobby controls and player cards so waiting text and longer player names fit cleanly.
+- Moved the in-game Leave Game control away from the gameplay sidebar and stopped bot-added confirmation text from carrying into gameplay rounds.
+- Added a small image-search reminder explaining that changing search terms clears the current selection.
+
 ## V1.5.17
 - Moved the fixed Leave Game and player identity controls to the lower corners so they no longer overlap gameplay headers and prompt text.
 - Fixed the Final Showcase Next masterpiece action firing twice from duplicate click handlers, which could skip from one masterpiece to the third.
