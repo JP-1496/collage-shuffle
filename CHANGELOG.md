@@ -1,3 +1,9 @@
+## V1.6.5
+- Tidied the persistent sidebar into a deliberate top-to-bottom structure.
+- Anchored the build badge and Back button as a fixed bottom block.
+- Kept the main Host Game layout unchanged.
+- Updated the displayed build version to V1.6.5.
+
 ## V1.6.4
 - Moved Shuffle Mode and build version badges into the persistent left sidebar.
 - Removed those badges from the Host Game main content area.
