@@ -1,3 +1,15 @@
+# Changelog
+
+## V1.6.9
+- Redesigned Final Results to show player scores on the left and a scrollable gallery of every finished collage on the right, ordered by votes without displaying vote totals.
+- Added host-only New Players and Same Players controls to restart from the final screen.
+- New Players returns the host to the lobby and removes everyone else.
+- Same Players preserves the current player roster and starts a fresh Image Submission phase.
+- Removed the dotted image-pool empty-state outline.
+- Fixed image-pool cards being clipped at the bottom of the stage.
+- Disabled GIF uploads and GIF paste handling, and filtered GIFs out of image search results.
+- Added server-side GIF rejection as a second line of protection.
+
 ## V1.6.8
 - Fixed Join Game right-edge containment.
 - Prevented Lobby button hover movement from clipping at the left edge.
