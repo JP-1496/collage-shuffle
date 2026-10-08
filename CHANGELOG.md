@@ -1,3 +1,10 @@
+## V1.6.7
+- Reworked viewport containment rules as an authoritative full-screen pass for every V1.6 main-area page.
+- Added explicit width, min-width, max-width and flex/grid containment for image pools, approval cards, prompts, lobbies, editor, voting, showcase and final results.
+- Added internal overflow handling where content can legitimately exceed the available page area instead of allowing the page itself to overflow.
+- Preserved the existing sidebar and Host Game visual design.
+- Updated the displayed build version to V1.6.7.
+
 ## V1.6.6
 - Performed a global viewport containment pass across the V1.6 main-area screens.
 - Added consistent right-side breathing room for borders, shadows, grids, cards and flex layouts.
