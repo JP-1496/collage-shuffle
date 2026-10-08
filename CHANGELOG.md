@@ -1,3 +1,8 @@
+## V1.6.3
+- Added a visual right-side gutter to keep card borders and shadows fully inside the viewport.
+- Applied the same containment treatment to Host Settings and footer controls.
+- Updated the displayed build version to V1.6.3.
+
 ## V1.6.2
 - Fixed viewport containment rules to prevent the main play area from being clipped at the right edge.
 - Enlarged the Host Game settings cards while keeping the 2×4 layout inside the available viewport.
