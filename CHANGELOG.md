@@ -1,3 +1,7 @@
+## V1.6.10
+- Final Results gallery auto-scrolls through masterpieces.
+- Final Results collage canvases preserve the original square 1:1 format without stretching/cropping.
+
 # Changelog
 
 ## V1.6.9
