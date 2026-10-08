@@ -533,3 +533,37 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
   .v16Modal,.searchModal{left:0}
   .v16ServerGrid{grid-template-columns:1fr}
 }
+
+/* V1.6.2 — viewport width containment + larger host settings */
+*,*::before,*::after{box-sizing:border-box}
+.v16Page,.v16Main,.v16Main>.shell{max-width:100%;min-width:0}
+.v16Main{width:100%;padding-left:12px;padding-right:12px}
+.v16Main>.shell{overflow:hidden!important}
+.v16Main .hostShell{width:100%;max-width:100%!important;padding-left:0;padding-right:0}
+.v16Main .hostTitle{min-width:0}
+.v16Main .hostSettingsGrid{width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.v16Main .settingCard{min-width:0;min-height:92px;padding:12px 13px;gap:12px}
+.v16Main .settingCard .cardIcon{width:44px;height:44px;flex-basis:44px;font-size:21px}
+.v16Main .settingCard b{font-size:16px;line-height:1.1}
+.v16Main .settingCard small{font-size:11px;margin:4px 0 7px}
+.v16Main .settingCard select{height:38px;font-size:14px;padding:5px 10px}
+.v16Main .hostFooter{min-height:56px}
+.v16Main .hostActions button{padding:11px 17px}
+.v16Main .lobbyLayout,.v16Main .editorGrid,.v16Main .voteGrid{min-width:0;width:100%;max-width:100%}
+.v16Main .lobbyLayout>*,
+.v16Main .editorGrid>*,
+.v16Main .voteGrid>*{min-width:0}
+.v16Main .canvas{max-width:100%}
+.v16Main img{max-width:100%}
+@media(max-height:800px) and (min-width:651px){
+  .v16Main .settingCard{min-height:82px;padding:9px 10px}
+  .v16Main .settingCard .cardIcon{width:38px;height:38px;flex-basis:38px;font-size:18px}
+  .v16Main .settingCard b{font-size:14px}
+  .v16Main .settingCard small{font-size:10px;margin:3px 0 5px}
+  .v16Main .settingCard select{height:33px;font-size:13px}
+}
+@media(max-width:900px) and (min-width:651px){
+  .v16Main{padding-left:8px;padding-right:8px}
+  .v16Main .hostSettingsGrid{gap:8px}
+  .v16Main .settingCard{min-height:84px;padding:9px}
+}
