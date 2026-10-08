@@ -653,3 +653,100 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
     position:static;
   }
 }
+
+/* V1.6.6 — global main-area viewport audit */
+.v16Main{
+  overflow:hidden;
+  min-width:0;
+}
+.v16Main>.shell{
+  box-sizing:border-box!important;
+  width:calc(100% - 8px)!important;
+  max-width:calc(100% - 8px)!important;
+  min-width:0!important;
+}
+.v16Main>.shell>*{
+  min-width:0;
+  max-width:100%;
+}
+.v16Main .thumbs{
+  width:calc(100% - 8px);
+  max-width:calc(100% - 8px);
+  padding-right:8px;
+}
+.v16Main .thumb{
+  min-width:0;
+  max-width:calc(100% - 8px);
+}
+.v16Main .players,
+.v16Main .poolGrid,
+.v16Main .voteGrid,
+.v16Main .bestGrid,
+.v16Main .hostSettingsGrid{
+  min-width:0;
+  max-width:calc(100% - 8px);
+}
+.v16Main .player,
+.v16Main .poolCard,
+.v16Main .voteCard,
+.v16Main .finalResult,
+.v16Main .settingCard{
+  min-width:0;
+  max-width:100%;
+}
+.v16Main .stageTop,
+.v16Main .promptBanner,
+.v16Main .imageFooter,
+.v16Main .hostFooter,
+.v16Main .hostTitle,
+.v16Main .poolHeader{
+  min-width:0;
+  max-width:calc(100% - 8px);
+}
+.v16Main .editorGrid{
+  min-width:0;
+  max-width:calc(100% - 8px);
+}
+.v16Main .editorGrid>aside,
+.v16Main .editorGrid>.canvas{
+  min-width:0;
+}
+.v16Main .canvas{
+  max-width:100%!important;
+}
+.v16Main .roundNote,
+.v16Main .error,
+.v16Main .notice{
+  max-width:calc(100% - 8px);
+  box-sizing:border-box;
+}
+@media(max-width:900px){
+  .v16Main>.shell{
+    width:calc(100% - 6px)!important;
+    max-width:calc(100% - 6px)!important;
+  }
+  .v16Main .thumbs,
+  .v16Main .players,
+  .v16Main .poolGrid,
+  .v16Main .voteGrid,
+  .v16Main .bestGrid,
+  .v16Main .hostSettingsGrid,
+  .v16Main .editorGrid{
+    max-width:calc(100% - 6px);
+  }
+}
+@media(max-width:650px){
+  .v16Main>.shell{
+    width:100%!important;
+    max-width:100%!important;
+  }
+  .v16Main .thumbs,
+  .v16Main .players,
+  .v16Main .poolGrid,
+  .v16Main .voteGrid,
+  .v16Main .bestGrid,
+  .v16Main .hostSettingsGrid,
+  .v16Main .editorGrid{
+    max-width:100%;
+  }
+}
