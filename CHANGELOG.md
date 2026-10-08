@@ -1,3 +1,10 @@
+## V1.5.16
+- Round 1 still allows players to use their own submitted image pool.
+- Added creator tracking to submitted pieces so a cut piece can never return to the player who created it in a later Canvas round.
+- Reworked later-round set assignment to enforce the no-self rule across the actual piece creators.
+- Hardened the Final Showcase advance action and added a direct client handler for Next masterpiece / Finish slideshow.
+- Fixed the Final Showcase fixed HUD overlapping the prompt area while keeping the responsive showcase sizing.
+
 ## V1.5.15
 - Fixed the Final Showcase Next masterpiece / Finish slideshow control using a dedicated click handler and server action.
 - Final Showcase and voting are now sized to fit within the viewport without page scrolling.
