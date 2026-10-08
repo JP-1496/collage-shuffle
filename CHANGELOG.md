@@ -595,3 +595,10 @@
 - Visible build number on landing screen.
 - Join screen nickname field.
 - Cache-busting and deployment verification improvements.
+
+
+## V1.6.13
+- Fixed lobby/game WebSocket performance by removing redundant full-state broadcasts during collage syncing and round submission.
+- Fixed duplicate broadcasts around slideshow advancement and final voting transitions.
+- Fixed Final Results gallery auto-scroll by restoring its missing gallery element ID.
+- Optimised masterpiece image decoding/loading to reduce browser rendering work.
