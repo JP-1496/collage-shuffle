@@ -1184,3 +1184,13 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 @media(max-height:760px) and (min-width:901px){.finalGalleryItem{min-height:230px}.finalGalleryCanvas{height:230px;aspect-ratio:1/1}.finalGalleryCanvas .miniCanvas{height:100%}.finalResultsActions{padding-top:7px}}
 
 .v16Main .finalGalleryCanvas .voteCanvas{width:100%;height:100%;max-width:none;margin:0;}
+
+/* V1.6.11 — lobby layout */
+.v16Main .lobbyShell{width:100%;max-width:none!important;text-align:left}
+.lobbyMainHead{margin-bottom:12px}.lobbyMainHead .brand{margin-bottom:2px}.lobbyMainHead h2{margin:0}.lobbyMainHead .lobbyHint{margin:4px 0 0;max-width:720px}
+.v16Main .lobbyLayout{grid-template-columns:minmax(0,1fr);margin-top:0}
+.v16Main .lobbyLayout .players{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.v16Main .lobbyLayout .player{min-height:74px}
+.v16LobbyControls{display:flex;flex-direction:column;gap:9px}.v16LobbyControls>*{width:100%;box-sizing:border-box}.v16LobbyCount{display:block;text-align:center;padding:9px 8px;background:white;border:3px solid var(--ink);border-radius:11px;box-shadow:2px 2px 0 var(--ink);font-size:13px;font-weight:1000}
+.lobbyError{margin-top:10px}
+@media(max-width:900px){.v16Main .lobbyLayout .players{grid-template-columns:1fr}}
