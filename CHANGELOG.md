@@ -1,3 +1,9 @@
+## V1.6.4
+- Moved Shuffle Mode and build version badges into the persistent left sidebar.
+- Removed those badges from the Host Game main content area.
+- Kept the larger Host Settings layout intact.
+- Updated the displayed build version to V1.6.4.
+
 ## V1.6.3
 - Added a visual right-side gutter to keep card borders and shadows fully inside the viewport.
 - Applied the same containment treatment to Host Settings and footer controls.
