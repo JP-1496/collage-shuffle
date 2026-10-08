@@ -750,3 +750,236 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
     max-width:100%;
   }
 }
+
+/* V1.6.7 — authoritative viewport rules for every V1.6 screen */
+.v16Page{
+  width:100%;
+  height:100dvh;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+}
+.v16Main{
+  width:100%;
+  min-width:0;
+  min-height:0;
+  height:100dvh;
+  overflow:hidden;
+  padding:12px 16px;
+}
+.v16Main>.shell{
+  box-sizing:border-box!important;
+  width:calc(100% - 12px)!important;
+  max-width:calc(100% - 12px)!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0 0 8px!important;
+  overflow:hidden!important;
+}
+.v16Main>.shell>*,
+.v16Main .shell>*{
+  box-sizing:border-box;
+  min-width:0;
+  max-width:100%;
+}
+.v16Main .stageTop,
+.v16Main .promptBanner,
+.v16Main .hostTitle,
+.v16Main .hostFooter,
+.v16Main .imageFooter,
+.v16Main .poolHeader,
+.v16Main .showcaseControls{
+  width:calc(100% - 8px);
+  max-width:calc(100% - 8px);
+}
+.v16Main .stageTop>*, 
+.v16Main .promptBanner>*,
+.v16Main .hostTitle>*{
+  min-width:0;
+  max-width:100%;
+}
+.v16Main .imageMethods{
+  width:calc(100% - 8px);
+  max-width:calc(100% - 8px);
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+.v16Main .imageMethods>*,
+.v16Main .poolGrid>*,
+.v16Main .voteGrid>*,
+.v16Main .bestGrid>*,
+.v16Main .players>*,
+.v16Main .hostSettingsGrid>*{
+  min-width:0;
+}
+.v16Main .poolGrid{
+  width:calc(100% - 8px);
+  max-width:calc(100% - 8px);
+  min-width:0;
+  overflow:auto;
+}
+.v16Main .poolCard{
+  min-width:0;
+  width:100%;
+}
+.v16Main .poolCard img{
+  max-width:100%;
+}
+.v16Main .imageShell{
+  min-height:0;
+}
+.v16Main .imageShell .imageFooter{
+  flex:0 0 auto;
+}
+.v16Main .thumbs{
+  width:calc(100% - 8px);
+  max-width:calc(100% - 8px);
+  min-width:0;
+  flex:1 1 auto;
+  min-height:0;
+  max-height:none;
+  overflow:auto;
+  align-content:flex-start;
+  padding:8px 8px 8px 0;
+}
+.v16Main .thumb{
+  flex:0 1 120px;
+  min-width:0;
+  max-width:120px;
+}
+.v16Main .thumb img{
+  max-width:100%;
+}
+.v16Main .promptInput{
+  box-sizing:border-box;
+  width:calc(100% - 8px);
+  max-width:calc(100% - 8px);
+  flex:1 1 auto;
+  min-height:130px;
+  max-height:none;
+}
+.v16Main .promptInput+ .row{
+  flex:0 0 auto;
+  max-width:calc(100% - 8px);
+}
+.v16Main .editorGrid{
+  width:calc(100% - 8px);
+  max-width:calc(100% - 8px);
+  min-width:0;
+  min-height:0;
+}
+.v16Main .editorGrid>aside{
+  min-width:0;
+  max-width:100%;
+}
+.v16Main .canvas{
+  min-width:0;
+  max-width:100%!important;
+}
+.v16Main .finalShowcaseShell{
+  min-height:0;
+}
+.v16Main .showcaseStage{
+  max-width:100%;
+}
+.v16Main .voteGrid{
+  width:calc(100% - 8px);
+  max-width:calc(100% - 8px);
+  min-width:0;
+  min-height:0;
+  overflow:auto;
+  padding-right:4px;
+}
+.v16Main .voteCard{
+  min-width:0;
+  max-width:100%;
+}
+.v16Main .finalResult{
+  width:calc(100% - 8px);
+  max-width:calc(100% - 8px);
+  min-width:0;
+}
+.v16Main .bestGrid{
+  min-width:0;
+  max-width:100%;
+}
+.v16Main .lobbyLayout{
+  width:calc(100% - 8px);
+  max-width:calc(100% - 8px);
+  min-width:0;
+}
+.v16Main .lobbyLayout>*{
+  min-width:0;
+  max-width:100%;
+}
+.v16Main .lobbyLayout .players{
+  min-width:0;
+  max-width:100%;
+}
+.v16Main .hostSettingsGrid{
+  width:calc(100% - 8px)!important;
+  max-width:calc(100% - 8px)!important;
+  min-width:0;
+}
+.v16Main .hostFooter{
+  flex:0 0 auto;
+}
+.v16Main .hostActions{
+  min-width:0;
+  max-width:100%;
+}
+.v16Main .hostActions button{
+  max-width:100%;
+}
+@media(max-width:900px){
+  .v16Main{padding:8px 8px 8px 8px}
+  .v16Main>.shell{
+    width:calc(100% - 6px)!important;
+    max-width:calc(100% - 6px)!important;
+  }
+  .v16Main .stageTop,
+  .v16Main .promptBanner,
+  .v16Main .hostTitle,
+  .v16Main .hostFooter,
+  .v16Main .imageFooter,
+  .v16Main .poolHeader,
+  .v16Main .showcaseControls,
+  .v16Main .imageMethods,
+  .v16Main .poolGrid,
+  .v16Main .thumbs,
+  .v16Main .promptInput,
+  .v16Main .editorGrid,
+  .v16Main .voteGrid,
+  .v16Main .finalResult,
+  .v16Main .lobbyLayout,
+  .v16Main .hostSettingsGrid{
+    width:calc(100% - 6px);
+    max-width:calc(100% - 6px);
+  }
+}
+@media(max-width:650px){
+  .v16Main>.shell,
+  .v16Main .stageTop,
+  .v16Main .promptBanner,
+  .v16Main .hostTitle,
+  .v16Main .hostFooter,
+  .v16Main .imageFooter,
+  .v16Main .poolHeader,
+  .v16Main .showcaseControls,
+  .v16Main .imageMethods,
+  .v16Main .poolGrid,
+  .v16Main .thumbs,
+  .v16Main .promptInput,
+  .v16Main .editorGrid,
+  .v16Main .voteGrid,
+  .v16Main .finalResult,
+  .v16Main .lobbyLayout,
+  .v16Main .hostSettingsGrid{
+    width:100%;
+    max-width:100%;
+  }
+  .v16Main .imageMethods{
+    grid-template-columns:1fr 1fr;
+  }
+}
