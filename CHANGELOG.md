@@ -1,3 +1,8 @@
+## V1.6.2
+- Fixed viewport containment rules to prevent the main play area from being clipped at the right edge.
+- Enlarged the Host Game settings cards while keeping the 2×4 layout inside the available viewport.
+- Updated the displayed build version to V1.6.2.
+
 ## V1.6.1
 - Reworked the V1.6 persistent sidebar so host setup fields live in the sidebar and gameplay timers stay there throughout timed phases.
 - Changed Host Game settings to a 2-column by 4-row layout and removed the shuffle tip.
