@@ -1155,3 +1155,30 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
   .finalResultsShell .finalResult{padding:5px 8px}
   .finalResultsShell .result{min-height:30px}
 }
+
+
+/* V1.6.9 — final results gallery, image pool cleanup and GIF-safe input */
+.v16Main .emptyPool{border:0!important;background:rgba(255,255,255,.65)}
+.v16Main .imageShell .poolGrid{overflow:visible!important;padding:2px 6px 10px 0}
+.v16Main .imageShell .poolCard{margin-bottom:3px}
+.finalResultsShell{gap:0}
+.finalResultsContent{display:grid;grid-template-columns:minmax(260px,.7fr) minmax(420px,1.3fr);gap:14px;flex:1 1 auto;min-height:0;overflow:hidden}
+.finalScorePanel,.finalGalleryPanel{min-width:0;min-height:0;background:rgba(255,255,255,.62);border:3px solid var(--ink);border-radius:16px;padding:10px}
+.finalScorePanel{display:flex;flex-direction:column}
+.finalScorePanel h3,.finalGalleryHead h3{margin:0;font-size:14px}
+.finalScoreList{display:flex;flex-direction:column;gap:7px;margin-top:9px;overflow:auto;min-height:0;padding:2px 5px 5px 0}
+.finalScoreRow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 9px;background:white;border:3px solid var(--ink);border-radius:12px;box-shadow:2px 2px 0 var(--ink)}
+.finalScoreRow b{display:flex;align-items:center;gap:7px;min-width:0}
+.finalScoreRow strong{white-space:nowrap;font-size:16px}
+.finalScoreRow .resultAvatar{width:32px;height:32px;flex:0 0 32px}
+.finalGalleryPanel{display:flex;flex-direction:column}
+.finalGalleryHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.finalGalleryHead span{font-size:11px;font-weight:900;opacity:.7}
+.finalGallery{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:auto;padding:3px 8px 8px 3px}
+.finalGalleryItem{flex:0 0 auto;min-height:300px;background:white;border:3px solid var(--ink);border-radius:14px;padding:8px;box-shadow:3px 3px 0 var(--ink)}
+.finalGalleryCanvas,.finalGalleryCanvas .miniCanvas{width:100%;height:300px;max-width:none}
+.finalGalleryCanvas .miniCanvas{border:2px solid var(--ink);border-radius:10px;background:#fff}
+.finalResultsActions{display:flex;justify-content:center;gap:12px;padding:10px 0 2px}
+.finalResultsActions button{min-width:170px}
+@media(max-width:900px){.finalResultsContent{grid-template-columns:1fr;overflow:auto}.finalScorePanel{min-height:220px}.finalGalleryPanel{min-height:420px}.finalGalleryItem,.finalGalleryCanvas,.finalGalleryCanvas .miniCanvas{min-height:240px;height:240px}}
+@media(max-height:760px) and (min-width:901px){.finalGalleryItem{min-height:230px}.finalGalleryCanvas,.finalGalleryCanvas .miniCanvas{height:230px}.finalResultsActions{padding-top:7px}}
