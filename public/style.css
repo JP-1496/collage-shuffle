@@ -567,3 +567,25 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
   .v16Main .hostSettingsGrid{gap:8px}
   .v16Main .settingCard{min-height:84px;padding:9px}
 }
+
+/* V1.6.3 — visual gutter for card borders and shadows */
+.v16Main{
+  padding-right:20px;
+}
+.v16Main .hostSettingsGrid{
+  width:calc(100% - 8px);
+  margin-right:8px;
+}
+.v16Main .hostFooter{
+  padding-right:8px;
+}
+.v16Main .settingCard,
+.v16Main .v16SideBlock,
+.v16Main .v16Identity{
+  min-width:0;
+}
+@media(max-width:900px){
+  .v16Main{padding-right:16px}
+  .v16Main .hostSettingsGrid{width:calc(100% - 6px);margin-right:6px}
+  .v16Main .hostFooter{padding-right:6px}
+}
