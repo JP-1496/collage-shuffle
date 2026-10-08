@@ -451,7 +451,7 @@ function handle(g,pid,a){
       if(connected.length>0 && submitted===connected.length) finishRound(g);
       break;
     }
-    case 'FINAL_NEXT_SLIDE': {if(g.phase==='FINAL_SHOWCASE'&&g.finalStage==='SLIDESHOW'&&p.host)nextFinalSlide(g);break;}
+    case 'FINAL_NEXT_SLIDE': {if(g.phase==='FINAL_SHOWCASE'&&g.finalStage==='SLIDESHOW'&&p.host)nextFinalSlide(g);else send(pid,{type:'ERROR',message:'The slideshow can only be advanced by the host while it is active.'});break;}
      case 'FINAL_VOTE': {const result=g.finalResults[g.finalIndex];const target=String(a.targetId||'');if(g.phase==='FINAL_SHOWCASE'&&result?.collages?.[target]&&target!==pid&&!g.finalVotes[g.finalIndex]?.[pid]){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=target;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected)finishFinalPrompt(g);}}break;
   }
   broadcast(g);
