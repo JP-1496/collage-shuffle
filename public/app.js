@@ -1,4 +1,4 @@
-const VERSION=globalThis.COLLAGE_VERSION||'1.6.13';
+const VERSION=globalThis.COLLAGE_VERSION||'1.6.14';
 const MIN_PLAYERS=3;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
@@ -20,6 +20,12 @@ function scheduleReconnect(){if(state.intentionalClose||state.reconnectTimer||!s
 
 function connect(first,resume=false){clearTimeout(state.reconnectTimer);state.reconnectTimer=null;state.intentionalClose=false;if(state.ws&&(state.ws.readyState===0||state.ws.readyState===1)){try{state.ws.close()}catch{}}stopConnectionWatch();const proto=location.protocol==='https:'?'wss':'ws';state.ws=new WebSocket(proto+'://'+location.host+'/ws');state.ws.onopen=()=>{startConnectionWatch();if(resume)state.ws.send(JSON.stringify({type:'RESUME',playerId:state.pid,code:state.code}));else first?.(state.ws)};state.ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==='CLIENT_PONG'){clearTimeout(state.pongTimer);state.pongTimer=null}else if(m.type==='JOINED'){state.pid=m.playerId;state.code=m.code;saveSession();state.screen='game';state.error='';render(true)}else if(m.type==='SUBMISSION_ACCEPTED'){if(state.game?.phase==='ROUND'&&m.round===state.game.round){state.game.submissionStatus={...(state.game.submissionStatus||{}),[state.pid]:true};render(true)}}else if(m.type==='STATE'){const promptEl=state.game?.phase==='PROMPT_SUBMISSION'&&!state.promptSubmitted?document.querySelector('#prompt'):null;const draftPrompt=promptEl?.value??null;const promptFocused=promptEl&&document.activeElement===promptEl;const promptSelectionStart=promptEl?.selectionStart??null;const promptSelectionEnd=promptEl?.selectionEnd??null;const old=state.game?.phase,oldRound=state.game?.round,oldTimerEnd=state.game?.timerEndsAt;const receivedAt=Date.now();if(m.state.serverNow&&m.state.timerEndsAt!==oldTimerEnd)state.serverClockOffset=m.state.serverNow-receivedAt;state.game=m.state;if(draftPrompt!==null)state.prompt=draftPrompt;if(state.game.phase==='PROMPT_SUBMISSION'){state.promptSubmitted=!!state.game.prompts?.some(p=>p.ownerId===state.pid);/* prompt count is handled by updateLive */}else if(state.game.phase!=='ROUND'){state.pieces=[];state.selected=null;state.drag=null}if(old!==state.game.phase||oldRound!==state.game.round){state.lastTimerEnd=state.game.timerEndsAt;if(old!==state.game.phase)state.error='';if(oldRound!==state.game.round)state.pieces=[];render(true)}else {updateLive();if(promptFocused&&!state.promptSubmitted){const next=document.querySelector('#prompt');if(next){next.focus();try{next.setSelectionRange(promptSelectionStart,promptSelectionEnd)}catch{}}}}}else if(m.type==='BOT_ADDED'){state.error=state.game?.phase==='LOBBY'?(m.bot?.name||'Bot')+' added — server confirmed it.':'';console.log('[BOT] server confirmed',m.bot);render(true)}else if(m.type==='ERROR'){if(m.message==='That game session is no longer available.'||m.message==='You were kicked from the lobby by the host.'){clearSession();state.intentionalClose=true;state.pid=null;state.code='';state.game=null;state.screen='home';}state.error=m.message;render(true)}};state.ws.onclose=()=>{stopConnectionWatch();if(!state.intentionalClose){state.error='Connection lost — reconnecting…';render(true);scheduleReconnect();}}}
 function finalNextSlide(){if(state.game?.phase!=='FINAL_SHOWCASE'||state.game.finalStage!=='SLIDESHOW')return;const me=state.game.players.find(p=>p.id===state.pid);if(!me?.host)return;if(!send({type:'FINAL_NEXT_SLIDE'})){state.error='Connection unavailable — please wait.';render(true)}}
+function lobbySidebarControls(g,me){
+const connected=g.players.filter(p=>p.connected).length,minPlayers=g.minPlayers||MIN_PLAYERS;
+if(!me)return '';
+if(me.host)return '<button type="button" class="v16SideButton secondary botAddBtn" data-add-bot>+ Bot</button><button class="v16SideButton" '+(connected>=minPlayers?'':'disabled')+' onclick="send({type:\'START\'})">'+(connected>=minPlayers?'Start Game 🚀':'Waiting for '+minPlayers+' players…')+'</button><span class="v16LobbyCount">'+connected+'/'+g.settings.capacity+' players</span>';
+return '<button class="v16SideButton" onclick="send({type:\'SET_READY\',ready:'+(!me.ready)+'})">'+(me.ready?'✓ Ready — click to undo':'Ready up')+'</button><span class="v16LobbyCount">'+connected+'/'+g.settings.capacity+' players • minimum '+minPlayers+'</span>';
+}
 function v16Sidebar(kind='game'){
   const g=state.game,me=g?.players?.find(p=>p.id===state.pid),name=me?.name||state.name||'Player',avatar=me?.avatar||state.avatar,lobby=g?.name||state.lobby||'',phase=g?.phase||kind.toUpperCase();
   const remaining=g?.timerEndsAt?Math.max(0,Math.ceil((g.timerEndsAt-(Date.now()+state.serverClockOffset))/1000)):0;
@@ -33,7 +39,7 @@ function v16Sidebar(kind='game'){
   }
   if(kind==='host')h+='<div class="v16ModeBadge">SHUFFLE MODE</div><div class="v16BuildBadge">V'+VERSION+'</div>';
   if(g?.phase==='LOBBY'){
-    h+='<div class="v16LobbyControls" id="v16LobbyControls"></div>';
+    h+='<div class="v16LobbyControls" id="v16LobbyControls">'+lobbySidebarControls(g,me)+'</div>';
     h+='<button class="v16SideButton secondary" onclick="openServerSettings()">⚙ Server Settings</button>';
   }
   else if(g?.phase){
