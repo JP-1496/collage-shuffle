@@ -602,3 +602,8 @@
 - Fixed duplicate broadcasts around slideshow advancement and final voting transitions.
 - Fixed Final Results gallery auto-scroll by restoring its missing gallery element ID.
 - Optimised masterpiece image decoding/loading to reduce browser rendering work.
+
+
+## V1.6.14
+- Render lobby sidebar controls immediately on first lobby render, rather than waiting for a later live state update.
+- Keep player count, host start/waiting status, bot control, and ready button synchronised with subsequent lobby updates.
