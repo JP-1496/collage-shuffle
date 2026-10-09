@@ -1,3 +1,8 @@
+## V1.6.17
+- Renamed the cutting button to “Cut”.
+- Added direct movement, proportional corner resizing, side stretching and rotation handles for canvas pieces.
+- Retained the left-hand editing buttons as a backup.
+
 ## V1.6.16
 - Added Freehand, Circle and Square selection tools to the image cutting editor.
 - Circle and Square selections can be moved, stretched from side handles, scaled proportionally from corner handles using their current aspect ratio, and rotated directly.
