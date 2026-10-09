@@ -1,3 +1,8 @@
+## V1.6.16
+- Added Freehand, Circle and Square selection tools to the image cutting editor.
+- Circle and Square selections can be moved, stretched from side handles, scaled proportionally from corner handles using their current aspect ratio, and rotated directly.
+- Kept the canvas-piece size/rotate controls unchanged for this release.
+
 ## V1.6.12
 - Anchored lobby player cards to the top instead of vertically distributing the first row.
 - Locked the running server/build version to V1.6.12 so the CMD startup message and splash build badge stay in sync.
