@@ -607,3 +607,8 @@
 ## V1.6.14
 - Render lobby sidebar controls immediately on first lobby render, rather than waiting for a later live state update.
 - Keep player count, host start/waiting status, bot control, and ready button synchronised with subsequent lobby updates.
+
+
+## V1.6.15
+- Made each Final Results masterpiece card and canvas square at all supported screen sizes.
+- Hid the Final Results gallery scrollbar while preserving manual and automatic scrolling.
