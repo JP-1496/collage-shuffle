@@ -1235,3 +1235,14 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
   max-height:none;
   margin:0;
 }
+
+/* V1.6.16 — selection tools for image cutting */
+.cutWorkspace{display:flex;gap:12px;flex:1;min-height:0}
+.cutTools{display:flex;flex-direction:column;gap:8px;width:112px;flex:0 0 112px}
+.cutTool{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:70px;padding:9px 5px;background:#fff;border:3px solid var(--ink);border-radius:14px;box-shadow:3px 3px 0 var(--ink);font-size:26px;line-height:1}
+.cutTool span{font-size:11px;font-weight:1000}
+.cutTool.active{background:var(--yellow);transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.cutViewport{min-width:0}
+.cutCanvas{width:auto;max-width:100%;max-height:100%;height:auto;touch-action:none}
+.cutActions{align-items:center;flex-wrap:wrap}
+@media(max-width:800px){.cutWorkspace{flex-direction:column;gap:8px}.cutTools{width:100%;flex:0 0 auto;flex-direction:row}.cutTool{min-height:52px;min-width:0;flex:1;flex-direction:row;font-size:21px}.cutTool span{font-size:11px}.cutActions .notice{width:100%}}
