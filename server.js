@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.20';
+const VERSION = '1.6.21';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 3;
 const app = express();
@@ -353,6 +353,7 @@ function beginRound(g){
   g.phase='ROUND';g.timerEndsAt=Date.now()+g.settings.creationSeconds*1000;broadcast(g);runBotsForRound(g);
   schedule(g,g.settings.creationSeconds*1000,()=>finishRound(g));
 }
+function pieceIntersectsCanvas(p){const w=Math.max(.1,Number(p.w)||24),h=Math.max(.1,Number(p.h)||w*(Number(p.ratio)||.75)),a=(Number(p.rotation)||0)*Math.PI/180,c=Math.cos(a),s=Math.sin(a),cx=Number(p.x)||0,cy=Number(p.y)||0;let poly=[[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].map(([x,y])=>[cx+x*c-y*s,cy+x*s+y*c]);for(const [axis,bound,keep] of [[0,0,1],[0,100,-1],[1,0,1],[1,100,-1]]){const input=poly;poly=[];if(!input.length)break;for(let i=0;i<input.length;i++){const cur=input[i],prev=input[(i+input.length-1)%input.length],ci=keep*(cur[axis]-bound)>=0,pi=keep*(prev[axis]-bound)>=0;if(ci!==pi){const t=(bound-prev[axis])/(cur[axis]-prev[axis]);poly.push([prev[0]+t*(cur[0]-prev[0]),prev[1]+t*(cur[1]-prev[1])])}if(ci)poly.push(cur)}}if(poly.length<3)return false;let area=0;for(let i=0;i<poly.length;i++){const q=poly[(i+1)%poly.length];area+=poly[i][0]*q[1]-q[0]*poly[i][1]}return Math.abs(area)>1e-7}
 function finishRound(g){
   if(g.phase!=='ROUND' || g.roundFinishing)return;
   // Lock completion before doing any work so a submission and timer cannot
@@ -362,7 +363,8 @@ function finishRound(g){
   for(const [pid,c] of Object.entries(g.collages)){
     if(!c.submitted){
       c.submitted=true;
-      g.travelingSets[pid]=clone(c.pieces||[]);
+      c.pieces=(c.pieces||[]).filter(pieceIntersectsCanvas);
+      g.travelingSets[pid]=clone(c.pieces);
       g.finalResults[g.round].collages[pid]=clone(c);
     }
   }
@@ -444,7 +446,7 @@ function handle(g,pid,a){
       if(g.phase!=='ROUND')break;
       const c=g.collages[pid];
       if(!c || c.submitted)break;
-      c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));
+      c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i})).filter(pieceIntersectsCanvas);
       c.submitted=true;
       const submittedPieces=clone(c.pieces||[]).map(piece=>piece.createdBy?piece:{...piece,createdBy:pid});
       c.pieces=submittedPieces;

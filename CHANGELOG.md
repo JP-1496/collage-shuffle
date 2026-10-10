@@ -1,3 +1,8 @@
+## V1.6.21
+- Added a Delete button for the selected piece and removed redundant rotate/size toolbar buttons; per-piece handles remain the way to rotate and resize.
+- Added a warning that pieces fully outside the canvas are deleted when submitted.
+- Filtered pieces by rotated bounds at submission and on server-side round transitions so fully off-canvas pieces cannot be passed to the next player.
+
 ## V1.6.20
 - Removed canvas-edge clamping when dragging pieces, allowing pieces to be positioned freely beyond the canvas boundaries.
 - Kept resizing, rotation, submission and gameplay behaviour unchanged.
