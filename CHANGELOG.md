@@ -1,3 +1,10 @@
+## V1.6.52
+- Shuffle every prompt's masterpiece order before the first final-showcase slide so slideshow and voting share the same random order.
+- Preserve the ingredient-list scroll position when live image/ready counts trigger a redraw.
+- Open Surprise Me's search modal with the chosen query immediately, removing the delayed 50ms handoff.
+- Remove the redundant voting-only shuffle so the order does not change between showcase and vote.
+- Update runtime and cache-busting versions.
+
 ## V1.6.51
 - Randomise masterpiece order on the server when each prompt enters voting.
 - Broadcast the shuffled lineup so every player sees the same order for that vote.
