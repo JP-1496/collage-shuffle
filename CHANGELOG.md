@@ -1,3 +1,7 @@
+## V1.6.37
+- Enforce ingredient card height (76px) and thumbnail height (62px) outside responsive breakpoints, avoiding the previous breakpoint-dependent shrinkage.
+- Keep the ingredient list independently scrollable and reinforce rounded ingredient/tool panel corners and shadows.
+
 ## V1.6.36
 - Use viewport-based small-screen rules for the editor rather than relying on a potentially misleading container width.
 - Fix ingredient cards at 76px with 62px thumbnails and an independently scrolling list.
