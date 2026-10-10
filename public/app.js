@@ -1,4 +1,4 @@
-const VERSION=globalThis.COLLAGE_VERSION||'1.6.54';
+const VERSION=globalThis.COLLAGE_VERSION||'1.6.55';
 const MIN_PLAYERS=3;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
@@ -103,7 +103,8 @@ async function searchImages(q){
 function renderSearchResults(){
   const box=document.querySelector('#searchResults');
   if(!box)return;
-  box.innerHTML=state.searchResults.map((x,i)=>`<button class="searchResult ${state.searchSelected.includes(i)?'selected':''}" onclick="toggleSearchImage(${i})"><img src="${x.thumb}" loading="lazy" decoding="async" alt=""><span class="check">${state.searchSelected.includes(i)?'✓':''}</span></button>`).join('')||'<div class="searchEmpty">No images found.</div>';
+  box.onclick=e=>{const result=e.target.closest('.searchResult[data-search-index]');if(result)toggleSearchImage(Number(result.dataset.searchIndex))};
+  box.innerHTML=state.searchResults.map((x,i)=>`<button type="button" class="searchResult ${state.searchSelected.includes(i)?'selected':''}" data-search-index="${i}"><img src="${x.thumb}" loading="lazy" decoding="async" alt=""><span class="check">${state.searchSelected.includes(i)?'✓':''}</span></button>`).join('')||'<div class="searchEmpty">No images found.</div>';
   const count=state.searchSelected.length;
   const el=document.querySelector('#searchSelected');
   if(el)el.textContent=`${count} selected`;
