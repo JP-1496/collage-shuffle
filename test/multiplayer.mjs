@@ -223,12 +223,8 @@ async function main(){
     assert.equal(submittedHost.submissionStatus[hj.playerId],true);
     assert.equal(submittedHost.submissionStatus[gj.playerId],false);
     action(guest,gj.playerId,{type:'SUBMIT_COLLAGE',pieces:p2});
-    const submittedBoth=await Promise.all([
-      nextState(host,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===2),
-      nextState(guest,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===2)
-    ]);
-    for(const s of submittedBoth)assert.equal(Object.values(s.submissionStatus).filter(Boolean).length,2);
-
+    // The final submission can immediately advance the round, so the server
+    // is not guaranteed to broadcast an intermediate state with both submitted.
     const r2h=await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
     const r2g=await nextState(guest,s=>s.phase==='ROUND'&&s.round===1);
     assert.equal(r2h.roundPlayerSets[hj.playerId],gj.playerId);
