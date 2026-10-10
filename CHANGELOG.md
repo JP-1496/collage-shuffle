@@ -1,3 +1,8 @@
+## V1.6.23
+- Store each Round 1 cut's original source and polygon mask with the piece.
+- Deleting a Round 1 piece restores its masked area from the original image, making that area available to cut again.
+- Deletion and restoration remain disabled outside Round 1.
+
 ## V1.6.22
 - Limited deleting pieces to Round 1; deleted cuts can be recreated from the still-available original image.
 - Off-canvas piece removal now applies only to Round 1. In later rounds, pieces moved fully off-canvas are preserved when submitted or when the round timer expires.
