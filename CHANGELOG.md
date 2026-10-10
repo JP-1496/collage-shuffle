@@ -1,3 +1,7 @@
+## V1.6.18
+- Fixed finished masterpiece rendering so saved stretched piece heights are preserved in the slideshow, voting cards and final-results gallery.
+- Pieces without a saved custom height retain their original image proportions.
+
 ## V1.6.17
 - Renamed the cutting button to “Cut”.
 - Added direct movement, proportional corner resizing, side stretching and rotation handles for canvas pieces.
