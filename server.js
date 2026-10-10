@@ -6,12 +6,12 @@ import { readFileSync } from 'node:fs';
 
 const VERSION = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
 const HEARTBEAT_MS = 10000;
-const MIN_PLAYERS = 3;
 const app = express();
 const http = createServer(app);
 const wss = new WebSocketServer({ server: http, path: '/ws' });
 const PORT = Number(process.env.PORT || 10000);
 const TEST_MODE = process.env.COLLAGE_TEST_MODE === '1';
+const MIN_PLAYERS = TEST_MODE ? 2 : 3;
 const BOTS_ENABLED = true;
 const games = new Map();
 const sockets = new Map();
