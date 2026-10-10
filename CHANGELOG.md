@@ -1,3 +1,8 @@
+## V1.6.58
+- Prevent the initial ROUND state from triggering a second full render just to initialise the submitted-collage counter; this redraw could reset the ingredient list scroll position shortly after entering the editor.
+- Reset the submitted counter when the round changes, then seed it on the first live update of that round to preserve later submission-status updates.
+- Keep the V1.6.56 image-pool acknowledgement fix and V1.6.57 avatar loading fix intact.
+
 ## V1.6.57
 - Prevent late avatar-sprite loading from forcing a full application redraw. The sprite CSS variable updates existing avatar elements directly, so the editor's ingredient scroll position is not reset during initial page settling.
 - Keep the V1.6.56 image-search-to-pool acknowledgement and visible pool update fix unchanged.
