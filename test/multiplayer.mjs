@@ -253,7 +253,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8')).version);
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version,packageJson.version);
     host.ws.close();guest.ws.close();
 
     // Repeat the final-submission transition repeatedly and in both orders.
