@@ -1,3 +1,7 @@
+## V1.6.38
+- Prevent the inner shell and editor grid from clipping the rounded panel borders and shadows; preserve page-level viewport containment.
+- Keep ingredient card dimensions and independent scrolling unchanged.
+
 ## V1.6.37
 - Enforce ingredient card height (76px) and thumbnail height (62px) outside responsive breakpoints, avoiding the previous breakpoint-dependent shrinkage.
 - Keep the ingredient list independently scrollable and reinforce rounded ingredient/tool panel corners and shadows.
