@@ -1,4 +1,4 @@
-const VERSION=globalThis.COLLAGE_VERSION||'1.6.38';
+const VERSION=globalThis.COLLAGE_VERSION||'1.6.39';
 const MIN_PLAYERS=3;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
@@ -167,7 +167,7 @@ function onPaste(e){if(state.game?.phase!=='IMAGE_SUBMISSION')return;const items
 function handleDrop(e){e.preventDefault();e.currentTarget.classList.remove('drag');files(e.dataTransfer.files)}
 function submitSources(){send({type:'SUBMIT_SOURCES'})}
 function submitPrompt(){if(state.promptSubmitted||state.game?.phase!=='PROMPT_SUBMISSION')return;const el=document.querySelector('#prompt');const t=el?.value.trim();if(!t)return;state.prompt=t;state.promptSubmitted=true;render(true);send({type:'ADD_PROMPT',text:t})}
-function selectSource(id){state.sourceSelected=id;render(true)}
+function selectSource(id){const list=document.querySelector('.sourceList');const scrollTop=list?list.scrollTop:0;state.sourceSelected=id;render(true);const updatedList=document.querySelector('.sourceList');if(updatedList)updatedList.scrollTop=scrollTop}
 function openCutTool(){
 if(!state.sourceSelected){alert('Pick an image first.');return}
 const src=state.sourceWorking[state.sourceSelected]||state.game.sources.find(s=>s.id===state.sourceSelected)?.data;if(!src)return;
