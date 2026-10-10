@@ -1,3 +1,8 @@
+## V1.6.59 — Ingredient scroll diagnostics
+- Added temporary browser-console diagnostics for the first 7 seconds of Round 1.
+- Records scroll/wheel events, scroll position, list/panel/grid dimensions, list replacement, content mutations and resize events.
+- No gameplay or scrolling behavior is changed by the diagnostics.
+
 ## V1.6.58
 - Prevent the initial ROUND state from triggering a second full render just to initialise the submitted-collage counter; this redraw could reset the ingredient list scroll position shortly after entering the editor.
 - Reset the submitted counter when the round changes, then seed it on the first live update of that round to preserve later submission-status updates.
