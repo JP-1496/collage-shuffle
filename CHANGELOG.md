@@ -1,3 +1,9 @@
+## V1.6.45
+- Restore the fixed four-column, two-row final voting layout.
+- Disable voting-grid overflow so the voting page does not require a scrollbar.
+- Keep square thumbnails sized to fit within each row and preserve visible vote buttons.
+- Update runtime and asset cache versions.
+
 ## V1.6.44
 - Correct the final-voting square thumbnail rule using higher CSS specificity so it overrides earlier canvas sizing.
 - Center bounded square canvases within voting cards while keeping vote controls visible below.
