@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.21';
+const VERSION = '1.6.22';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 3;
 const app = express();
@@ -363,8 +363,8 @@ function finishRound(g){
   for(const [pid,c] of Object.entries(g.collages)){
     if(!c.submitted){
       c.submitted=true;
-      c.pieces=(c.pieces||[]).filter(pieceIntersectsCanvas);
-      g.travelingSets[pid]=clone(c.pieces);
+      if(g.round===0)c.pieces=(c.pieces||[]).filter(pieceIntersectsCanvas);
+      g.travelingSets[pid]=clone(c.pieces||[]);
       g.finalResults[g.round].collages[pid]=clone(c);
     }
   }
@@ -446,7 +446,8 @@ function handle(g,pid,a){
       if(g.phase!=='ROUND')break;
       const c=g.collages[pid];
       if(!c || c.submitted)break;
-      c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i})).filter(pieceIntersectsCanvas);
+      c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));
+      if(g.round===0)c.pieces=c.pieces.filter(pieceIntersectsCanvas);
       c.submitted=true;
       const submittedPieces=clone(c.pieces||[]).map(piece=>piece.createdBy?piece:{...piece,createdBy:pid});
       c.pieces=submittedPieces;

@@ -1,3 +1,7 @@
+## V1.6.22
+- Limited deleting pieces to Round 1; deleted cuts can be recreated from the still-available original image.
+- Off-canvas piece removal now applies only to Round 1. In later rounds, pieces moved fully off-canvas are preserved when submitted or when the round timer expires.
+
 ## V1.6.21
 - Added a Delete button for the selected piece and removed redundant rotate/size toolbar buttons; per-piece handles remain the way to rotate and resize.
 - Added a warning that pieces fully outside the canvas are deleted when submitted.
