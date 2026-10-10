@@ -1,3 +1,9 @@
+## V1.6.42
+- Reworked final voting layout against the actual showcase shell and rendered canvas classes.
+- Constrain each voting card to its grid row so collage canvases shrink above their vote buttons.
+- Keep four columns and two rows on desktop; use two columns and four compact rows on narrow screens.
+- Update runtime, package, visible build and asset cache versions.
+
 ## V1.6.41
 - Limit the final voting grid to four masterpieces per row (two rows for eight players on desktop).
 - Scale each collage canvas into the space above its vote control so buttons remain visible without a voting-page scrollbar.
