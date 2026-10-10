@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.51';
+const VERSION = '1.6.52';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 3;
 const app = express();
@@ -360,12 +360,13 @@ function finishRound(g){
     beginRound(g);
   }
 }
-function startFinalShowcase(g){g.finalIndex=0;g.finalVotes={};g.finalStage='SLIDESHOW';g.finalSlideIndex=0;g.phase='FINAL_SHOWCASE';g.currentPromptId=g.finalResults[0]?.promptId||null;g.timerEndsAt=null;broadcast(g);}
-function startFinalVoting(g){
-  g.finalStage='VOTE';
-  // Shuffle once on the server so every player sees the same random order for this prompt.
-  const result=g.finalResults[g.finalIndex];
-  if(result?.collages){
+function startFinalShowcase(g){
+  g.finalIndex=0;
+  g.finalVotes={};
+  // Randomise each prompt's lineup before the first showcase slide, not only at voting.
+  // This preserves one shared order for the slideshow and voting on every client.
+  for(const result of g.finalResults){
+    if(!result?.collages)continue;
     const entries=Object.entries(result.collages);
     for(let i=entries.length-1;i>0;i--){
       const j=Math.floor(Math.random()*(i+1));
@@ -373,6 +374,15 @@ function startFinalVoting(g){
     }
     result.collages=Object.fromEntries(entries);
   }
+  g.finalStage='SLIDESHOW';
+  g.finalSlideIndex=0;
+  g.phase='FINAL_SHOWCASE';
+  g.currentPromptId=g.finalResults[0]?.promptId||null;
+  g.timerEndsAt=null;
+  broadcast(g);
+}
+function startFinalVoting(g){
+  g.finalStage='VOTE';
   g.finalVotes[g.finalIndex]={};
   g.timerEndsAt=Date.now()+g.settings.votingSeconds*1000;
   broadcast(g);
