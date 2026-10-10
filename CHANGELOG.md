@@ -1,3 +1,8 @@
+## V1.6.50
+- Slightly increase vote-button width, height, padding, and text size for readability.
+- Keep square canvases and the four-by-two desktop voting layout.
+- Update runtime and asset cache versions.
+
 ## V1.6.49
 - Slightly enlarge square voting canvases from 24dvh to 28dvh.
 - Preserve compact centered vote buttons, square thumbnails, and the fixed voting grid.
