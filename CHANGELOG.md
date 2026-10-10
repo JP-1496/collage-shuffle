@@ -1,3 +1,8 @@
+## V1.6.35
+- Restore full-size 62px ingredient thumbnails and independent scrolling in the narrow editor.
+- Replace conflicting responsive CSS blocks with one authoritative three-row layout.
+- Adjust ingredient and tool panel margins, rounded corners and shadows to prevent clipped square overhangs.
+
 ## V1.6.34
 - Rebuilt the narrow editor grid so ingredients, controls, and canvas occupy separate rows; ingredient thumbnails scroll independently.
 
