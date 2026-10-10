@@ -1,3 +1,7 @@
+## V1.6.29
+- Replaced recursive per-round assignment with a fixed cyclic rotation over randomly assigned player positions, ensuring every set visits every other player exactly once without returning to its creator.
+- Player positions are freshly randomised per game/rematch; the round count remains equal to the player count.
+
 ## V1.6.28
 - Default lobby settings are now all Round 1 starting images and one submitted image per player.
 - Bots can see the full Round 1 image pool but deliberately select only their own submitted image; later rounds still shuffle inherited collages as before.

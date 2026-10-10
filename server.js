@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.28';
+const VERSION = '1.6.29';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 3;
 const app = express();
@@ -311,45 +311,25 @@ function beginRound(g){
   if(g.round>=g.players.length){transition(g,'FINAL');return;}
   const ids=g.players.map(p=>p.id);
   g.currentPromptId=g.promptOrder[g.round];
-  const previous=g.roundPlayerSets;
   g.roundPlayerSets={};
-  // Every round uses a derangement: every set goes to a different player,
-  // and no set can ever return to its original owner. This intentionally
-  // allows a set to revisit a player in later rounds because N rounds and
-  // "visit every other player exactly once" cannot both be true while
-  // also forbidding the original owner.
   const n=ids.length;
-  const previousMap=g.round>0?previous:null;
-  if(g.round>0){
-    const assignments={};
-    const used=new Set();
-    const sources=shuffle(ids).sort((a,b)=>{
-      const ac=new Set((g.travelingSets[a]||[]).map(x=>x.createdBy).filter(Boolean)).size;
-      const bc=new Set((g.travelingSets[b]||[]).map(x=>x.createdBy).filter(Boolean)).size;
-      return bc-ac;
-    });
-    function assignSource(i){
-      if(i>=sources.length)return true;
-      const sourceId=sources[i];
-      const creators=new Set((g.travelingSets[sourceId]||[]).map(x=>x.createdBy).filter(Boolean));
-      let candidates=shuffle(ids).filter(recipient=>!used.has(recipient)&&!creators.has(recipient));
-      if(previousMap&&n>2)candidates.sort((a,b)=>Number(a===previousMap[sourceId])-Number(b===previousMap[sourceId]));
-      for(const recipient of candidates){
-        assignments[sourceId]=recipient;
-        used.add(recipient);
-        if(assignSource(i+1))return true;
-        used.delete(recipient);
-        delete assignments[sourceId];
-      }
-      return false;
-    }
-    if(!assignSource(0)){
-      throw new Error('Unable to create a valid no-self round assignment');
-    }
-    Object.assign(g.roundPlayerSets,assignments);
+  // Randomise stable player positions once per game/rematch, then use a fixed cyclic rotation.
+  if(!g.rotationSlots||Object.keys(g.rotationSlots).length!==n){
+    const shuffled=shuffle(ids);
+    g.rotationSlots=Object.fromEntries(shuffled.map((pid,slot)=>[pid,slot]));
+  }
+  if(g.round===0){
+    for(const pid of ids)g.roundPlayerSets[pid]=pid;
   }else{
-    const perm=shuffle(ids);
-    for(let i=0;i<n;i++)g.roundPlayerSets[ids[i]]=perm[i];
+    // Each set moves one position per round. Across n-1 shuffle rounds, each player
+    // receives every other player's set exactly once and never their own.
+    for(const sourceId of ids){
+      const sourceSlot=g.rotationSlots[sourceId];
+      const recipientSlot=(sourceSlot+g.round)%n;
+      const recipient=ids.find(pid=>g.rotationSlots[pid]===recipientSlot);
+      if(!recipient||recipient===sourceId)throw new Error('Invalid cyclic round assignment');
+      g.roundPlayerSets[sourceId]=recipient;
+    }
   }
   g.votes={};g.collages={};
   if(g.round===0){assignRound1Sources(g);for(const p of g.players)g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:[],submitted:false};}
@@ -412,7 +392,7 @@ function finishFinalGame(g){
   clearBotJobs(g);
   broadcast(g);
 }
-function resetGameState(g){g.sources=[];g.submittedSources={};g.imageReady={};g.prompts=[];g.promptOrder=[];g.round=0;g.currentPromptId=null;g.roundSources={};g.roundPlayerSets={};g.collages={};g.travelingSets={};g.votes={};g.scores={};g.lastTally={};g.finalResults=[];g.finalIndex=0;g.finalStage=null;g.finalSlideIndex=0;g.finalVotes={};g.bestCollages={};g.timerEndsAt=null;}
+function resetGameState(g){g.sources=[];g.submittedSources={};g.imageReady={};g.prompts=[];g.promptOrder=[];g.round=0;g.currentPromptId=null;g.roundSources={};g.roundPlayerSets={};g.rotationSlots=null;g.collages={};g.travelingSets={};g.votes={};g.scores={};g.lastTally={};g.finalResults=[];g.finalIndex=0;g.finalStage=null;g.finalSlideIndex=0;g.finalVotes={};g.bestCollages={};g.timerEndsAt=null;}
 function restartSamePlayers(g){clearBotJobs(g);resetGameState(g);g.phase='IMAGE_SUBMISSION';g.timerEndsAt=Date.now()+g.settings.imageSeconds*1000;broadcast(g);runBotsForImageSubmission(g);schedule(g,g.settings.imageSeconds*1000,()=>finishImageSubmission(g));}
 function restartNewPlayers(g){clearBotJobs(g);const host=g.players.find(p=>p.host);for(const p of g.players){if(p===host)continue;const ws=sockets.get(p.id);if(ws){try{ws.send(JSON.stringify({type:'ERROR',message:'The host started a new lobby for new players.'}));ws.close(4004,'New players');}catch{}}sockets.delete(p.id);}g.players=host?[host]:[];if(host)host.connected=true;resetGameState(g);g.phase='LOBBY';if(host)host.ready=true;broadcast(g);}
 function handle(g,pid,a){
