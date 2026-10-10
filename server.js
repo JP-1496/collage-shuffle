@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.27';
+const VERSION = '1.6.28';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 3;
 const app = express();
@@ -192,7 +192,10 @@ function botImage(number){const n=Number(number)||1;const svg='<svg xmlns="http:
 function botPieces(g,pid){
   if(g.round===0){
     const sourceIds=g.roundSources[pid]||[];
-    const sources=sourceIds.map(x=>g.sources.find(s=>s.id===x)).filter(Boolean);
+    let sources=sourceIds.map(x=>g.sources.find(s=>s.id===x)).filter(Boolean);
+    // Bots can see the full Round 1 pool, but deliberately choose only their own submitted image.
+    const player=g.players.find(p=>p.id===pid);
+    if(player?.isBot)sources=sources.filter(s=>s.ownerId===pid).slice(0,1);
     return sources.map((s,i)=>({id:id(),src:s.data,x:25+i*45,y:30+i*32,w:28+i*5,rotation:(i%2?12:-9),flipX:i%3===0,flipY:false,z:i}));
   }
   const pieces=clone(g.collages[pid]?.pieces||[]);
@@ -477,7 +480,7 @@ wss.on('connection',ws=>{
   ws.on('message',raw=>{try{const m=JSON.parse(String(raw));
     if(m.type==='CLIENT_PING'){if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({type:'CLIENT_PONG'}));return;}
     if(m.type==='RESUME'){const c=String(m.code||'').trim().toUpperCase(),g=games.get(c),pid=String(m.playerId||'');const p=g?.players.find(x=>x.id===pid);if(!g||!p){ws.send(JSON.stringify({type:'ERROR',message:'That game session is no longer available.'}));return;}const old=sockets.get(pid);if(old&&old!==ws){try{old.close(4000,'Reconnected')}catch{}}p.connected=true;sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code,resumed:true}));broadcast(g);return;}
-    if(m.type==='HOST_CREATE'){const pid=id();const host={id:pid,name:String(m.name||'Player').trim().slice(0,30)||'Player',avatar:avatar(m.avatar),host:true,ready:true,connected:true,isBot:false};const st=m.settings||{};const settings={capacity:Math.max(2,Math.min(16,Number(st.capacity)||8)),imagesPerPlayer:Math.max(1,Math.min(20,Number(st.imagesPerPlayer)||2)),round1Images:st.round1Images==='all'?'all':Math.max(1,Math.min(320,Number(st.round1Images)||4)),imageSeconds:Math.max(30,Math.min(600,Number(st.imageSeconds)||120)),hostApproval:!!st.hostApproval,creationSeconds:Math.max(TEST_MODE?1:30,Math.min(600,Number(st.creationSeconds)||120)),votingSeconds:Math.max(15,Math.min(300,Number(st.votingSeconds)||45)),promptSeconds:Math.max(15,Math.min(300,Number(st.promptSeconds)||60))};const g=newGame(String(m.lobbyName||'Collage Game').slice(0,40),settings,host);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
+    if(m.type==='HOST_CREATE'){const pid=id();const host={id:pid,name:String(m.name||'Player').trim().slice(0,30)||'Player',avatar:avatar(m.avatar),host:true,ready:true,connected:true,isBot:false};const st=m.settings||{};const settings={capacity:Math.max(2,Math.min(16,Number(st.capacity)||8)),imagesPerPlayer:Math.max(1,Math.min(20,Number(st.imagesPerPlayer)||1)),round1Images:st.round1Images==='all'?'all':Math.max(1,Math.min(320,Number(st.round1Images)||0)),imageSeconds:Math.max(30,Math.min(600,Number(st.imageSeconds)||120)),hostApproval:!!st.hostApproval,creationSeconds:Math.max(TEST_MODE?1:30,Math.min(600,Number(st.creationSeconds)||120)),votingSeconds:Math.max(15,Math.min(300,Number(st.votingSeconds)||45)),promptSeconds:Math.max(15,Math.min(300,Number(st.promptSeconds)||60))};const g=newGame(String(m.lobbyName||'Collage Game').slice(0,40),settings,host);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
     if(m.type==='JOIN'){const c=String(m.code||'').trim().toUpperCase(),g=games.get(c),name=String(m.name||'').trim();if(!g||g.phase!=='LOBBY'){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is unavailable.'}));return;}if(g.players.length>=g.settings.capacity){ws.send(JSON.stringify({type:'ERROR',message:'That lobby is full.'}));return;}if(!name){ws.send(JSON.stringify({type:'ERROR',message:'Enter a nickname before joining.'}));return;}const pid=id();const pl={id:pid,name:name.slice(0,30),avatar:avatar(m.avatar),host:false,ready:false,connected:true,isBot:false};g.players.push(pl);sockets.set(pid,ws);ws.send(JSON.stringify({type:'JOINED',playerId:pid,code:g.code}));broadcast(g);return;}
     if(m.type==='ACTION'){const pid=m.playerId;if(sockets.get(pid)!==ws)return;const g=[...games.values()].find(x=>x.players.some(p=>p.id===pid));if(g)handle(g,pid,m.action);}
   }catch(e){ws.send(JSON.stringify({type:'ERROR',message:'Invalid message.'}));}});
