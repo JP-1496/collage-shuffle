@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.50';
+const VERSION = '1.6.51';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 3;
 const app = express();
@@ -361,7 +361,24 @@ function finishRound(g){
   }
 }
 function startFinalShowcase(g){g.finalIndex=0;g.finalVotes={};g.finalStage='SLIDESHOW';g.finalSlideIndex=0;g.phase='FINAL_SHOWCASE';g.currentPromptId=g.finalResults[0]?.promptId||null;g.timerEndsAt=null;broadcast(g);}
-function startFinalVoting(g){g.finalStage='VOTE';g.finalVotes[g.finalIndex]={};g.timerEndsAt=Date.now()+g.settings.votingSeconds*1000;broadcast(g);runBotsForFinalShowcase(g);schedule(g,g.settings.votingSeconds*1000,()=>finishFinalPrompt(g));}
+function startFinalVoting(g){
+  g.finalStage='VOTE';
+  // Shuffle once on the server so every player sees the same random order for this prompt.
+  const result=g.finalResults[g.finalIndex];
+  if(result?.collages){
+    const entries=Object.entries(result.collages);
+    for(let i=entries.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [entries[i],entries[j]]=[entries[j],entries[i]];
+    }
+    result.collages=Object.fromEntries(entries);
+  }
+  g.finalVotes[g.finalIndex]={};
+  g.timerEndsAt=Date.now()+g.settings.votingSeconds*1000;
+  broadcast(g);
+  runBotsForFinalShowcase(g);
+  schedule(g,g.settings.votingSeconds*1000,()=>finishFinalPrompt(g));
+}
 function nextFinalSlide(g){if(g.phase!=='FINAL_SHOWCASE'||g.finalStage!=='SLIDESHOW')return;const r=g.finalResults[g.finalIndex];const total=Object.keys(r?.collages||{}).length;if(g.finalSlideIndex+1<total){g.finalSlideIndex++;broadcast(g);return;}startFinalVoting(g);}
 function finishFinalPrompt(g){
   const r=g.finalResults[g.finalIndex];
