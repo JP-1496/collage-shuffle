@@ -1,3 +1,8 @@
+## V1.6.44
+- Correct the final-voting square thumbnail rule using higher CSS specificity so it overrides earlier canvas sizing.
+- Center bounded square canvases within voting cards while keeping vote controls visible below.
+- Update runtime and cache-busting versions.
+
 ## V1.6.43
 - Keep final voting collage canvases square within the compact grid.
 - Size square canvases to available card width/height while preserving visible vote controls.
