@@ -1,3 +1,6 @@
+## V1.6.39
+- Preserve the ingredient list's scroll position when selecting an image, so the list no longer jumps back to the top.
+
 ## V1.6.38
 - Prevent the inner shell and editor grid from clipping the rounded panel borders and shadows; preserve page-level viewport containment.
 - Keep ingredient card dimensions and independent scrolling unchanged.
