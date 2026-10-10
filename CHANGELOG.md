@@ -1,3 +1,10 @@
+## V1.6.48
+- Remove legacy final-voting card borders/backgrounds and obsolete scrolling/auto-fit rules.
+- Keep square collage canvases in a fixed four-column, two-row desktop grid.
+- Shorten vote-button label to “Vote” and reduce its width, height, padding, font size, and shadow.
+- Center compact vote controls beneath each canvas; simplify the “Your collage” label.
+- Update runtime and cache-busting versions.
+
 ## V1.6.47
 - Enlarge square voting canvases to use more of each card's available space.
 - Remove inline full-width/top-margin vote-button sizing and use a narrower button aligned lower in the card.
