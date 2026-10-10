@@ -118,9 +118,18 @@ async function runBotScenario(){
     action(host,joined.playerId,{type:'SUBMIT_COLLAGE',pieces});
     await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
     action(host,joined.playerId,{type:'SUBMIT_COLLAGE',pieces:[{...pieces[0],x:60,y:40,rotation:15,flipX:true}]});
-    const finalState=await nextState(host,s=>s.phase==='FINAL_SHOWCASE');
+    const finalState=await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalStage==='SLIDESHOW');
     assert.equal(Object.keys(finalState.finalResults[0].collages||{}).length,2);
-    assert.equal(Object.keys(finalState.finalResults[1].collages||{}).length,2);
+    // Future showcase slides are intentionally hidden until the host advances to them.
+    action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
+    const secondSlide=await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===0&&s.finalSlideIndex===1);
+    assert.equal(Object.keys(secondSlide.finalResults[0].collages||{}).length,2);
+    action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
+    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalStage==='VOTE');
+    action(host,joined.playerId,{type:'FINAL_VOTE',targetId:bot.id});
+    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1);
+    action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
+    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalStage==='VOTE');
     action(host,joined.playerId,{type:'FINAL_VOTE',targetId:bot.id});
     await nextState(host,s=>s.phase==='FINAL');
     return true;
