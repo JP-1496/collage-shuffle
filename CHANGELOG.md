@@ -1,3 +1,8 @@
+## V1.6.49
+- Slightly enlarge square voting canvases from 24dvh to 28dvh.
+- Preserve compact centered vote buttons, square thumbnails, and the fixed voting grid.
+- Update runtime and cache-busting versions.
+
 ## V1.6.48
 - Remove legacy final-voting card borders/backgrounds and obsolete scrolling/auto-fit rules.
 - Keep square collage canvases in a fixed four-column, two-row desktop grid.
