@@ -1589,15 +1589,15 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
   display:block;
   flex:0 0 auto;
   align-self:center;
-  width:60%;
+  width:68%;
   min-height:0;
   margin:0;
-  padding:2px 3px;
+  padding:4px 4px;
   border:2px solid var(--ink);
   border-radius:8px;
   box-shadow:2px 2px 0 var(--ink);
-  font-size:11px;
-  line-height:1;
+  font-size:12px;
+  line-height:1.1;
   text-align:center;
 }
 .finalShowcaseShell .voteCard .voteOwnLabel{
@@ -1612,6 +1612,6 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
   }
   .finalShowcaseShell .voteCard .voteButton,
   .finalShowcaseShell .voteCard .voteOwnLabel{
-    font-size:10px;
+    font-size:11px;
   }
 }
