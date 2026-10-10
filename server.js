@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.25';
+const VERSION = '1.6.26';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 3;
 const app = express();
@@ -187,11 +187,8 @@ const BOT_PROMPTS=[
 const BOT_NAMES=[
   'Jeffrey','Alakazam','Gizmo','Biscuit','Waffle','Pickle','Nigel','Kevin','Marmalade','Baz','Terry','Professor Noodle','Bongo','Derek','Beans','Sir Fluffington','Reginald','Gary','Toast','Barry','Zippy','Colin','Mochi','Trevor','Winston','Pudding','Keith','Banjo','Dave','Crumpet'
 ];
-const BOT_IMAGES=[
-  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2ZmNGY4NyIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjE1MCIgcj0iNzAiIGZpbGw9IiNmZmQ4NGQiLz48L3N2Zz4=',
-  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzU1YzhmZiIvPjxjaXJjbGUgY3g9IjI4MCIgY3k9IjE1MCIgcj0iOTAiIGZpbGw9IiM3MzU3ZmYiLz48L3N2Zz4=',
-  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzYxZGY5YSIvPjxwYXRoIGQ9Ik0yMCAyNTAgTDIwMCAzMCBMMzgwIDI1MCBaIiBmaWxsPSIjZmY0Zjg3Ii8+PC9zdmc+'
-];
+function botImage(number){const n=Number(number)||1;const svg='<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><rect width="600" height="400" rx="24" fill="#172033"/><rect x="14" y="14" width="572" height="372" rx="18" fill="none" stroke="#48d7c4" stroke-width="8"/><text x="300" y="155" font-family="Arial,sans-serif" font-size="48" font-weight="700" text-anchor="middle" fill="#48d7c4">COLLAGE TEST</text><text x="300" y="275" font-family="Arial,sans-serif" font-size="112" font-weight="900" text-anchor="middle" fill="#ffffff">BOT '+n+'</text></svg>';return 'data:image/svg+xml;base64,'+Buffer.from(svg).toString('base64')}
+
 function botPieces(g,pid){
   if(g.round===0){
     const sourceIds=g.roundSources[pid]||[];
@@ -203,8 +200,8 @@ function botPieces(g,pid){
 }
 function runBotsForImageSubmission(g){
   botList(g).forEach((p,bi)=>{
-    const chosenImages=shuffle(BOT_IMAGES).slice(0,Math.min(g.settings.imagesPerPlayer,BOT_IMAGES.length));
-    for(let i=0;i<g.settings.imagesPerPlayer;i++)botDelay(g,()=>botAction(g,p.id,{type:'ADD_SOURCE',data:chosenImages[i%chosenImages.length]}),350+bi*180+i*220);
+    const numberedImage=botImage(p.botNumber);
+    for(let i=0;i<g.settings.imagesPerPlayer;i++)botDelay(g,()=>botAction(g,p.id,{type:'ADD_SOURCE',data:numberedImage}),350+bi*180+i*220);
     botDelay(g,()=>botAction(g,p.id,{type:'IMAGE_READY'}),350+bi*180+g.settings.imagesPerPlayer*220+180);
   });
 }
@@ -420,8 +417,8 @@ function handle(g,pid,a){
       let n=1;while(g.players.some(x=>x.isBot&&x.botNumber===n))n++;
       const usedNames=new Set(g.players.filter(x=>x.isBot).map(x=>x.name));
       const availableNames=BOT_NAMES.filter(x=>!usedNames.has(`Bot ${x}`));
-      const botName=availableNames.length?availableNames[Math.floor(Math.random()*availableNames.length)]:`Guest ${n}`;
-      const bot={id:id(),name:`Bot ${botName}`,avatar:String(Math.floor(Math.random()*24)+1),host:false,ready:true,connected:true,isBot:true,botNumber:n};
+      const botName=`Bot ${n}`;
+      const bot={id:id(),name:botName,avatar:String(Math.floor(Math.random()*24)+1),host:false,ready:true,connected:true,isBot:true,botNumber:n};
       g.players.push(bot);
       console.log(`[BOT] ADD_BOT received from ${p.name} — created ${bot.name} (${bot.id}) in lobby ${g.code}`);
       send(pid,{type:'BOT_ADDED',bot:{id:bot.id,name:bot.name,avatar:bot.avatar}});

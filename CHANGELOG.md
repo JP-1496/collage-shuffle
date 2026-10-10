@@ -1,3 +1,7 @@
+## V1.6.26
+- Bots are now named sequentially Bot 1, Bot 2, Bot 3, etc.
+- Each bot submits a generated image labelled with its bot number, making images and downstream cuts easy to trace.
+
 ## V1.6.25
 - Fixed cut restoration capture: save the currently visible source pixels inside the cut polygon before erasing them, so deleting a cut restores those pixels without resurrecting earlier overlapping cuts.
 
