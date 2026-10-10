@@ -1,3 +1,6 @@
+## V1.6.33
+- Use the game panel's actual width for responsive editor layout, keeping ingredients and tools above a visible canvas in narrow panels.
+
 ## V1.6.32
 - Corrected the narrow-screen editor layout so the ingredient list and tool controls no longer force the canvas out of view; ingredient thumbnails remain independently scrollable.
 - Tightened Final Showcase layout so the masterpiece and navigation controls fit within the available viewport.
