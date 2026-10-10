@@ -1,3 +1,8 @@
+## V1.6.47
+- Enlarge square voting canvases to use more of each card's available space.
+- Remove inline full-width/top-margin vote-button sizing and use a narrower button aligned lower in the card.
+- Update runtime and asset cache versions.
+
 ## V1.6.46
 - Apply the fixed 4x2 voting grid directly to the rendered voting grid to avoid conflicting legacy layout rules.
 - Add unprefixed fallback CSS to keep four columns, two rows, square canvases, and no grid scrollbar.
