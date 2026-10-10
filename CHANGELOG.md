@@ -1,3 +1,9 @@
+## V1.6.54
+- Remove the custom wheel handler from the ingredient list and rely on native overflow scrolling.
+- Update ingredient thumbnails and counts in place when image counts change, avoiding full-screen redraws that reset scroll.
+- Preserve Surprise Me and random showcase-order fixes.
+- Update runtime and asset cache versions.
+
 ## V1.6.53
 - Seed image/ready counts on entry to image submission to prevent an unnecessary first live redraw.
 - Stop rebuilding the ingredient list when only other players' ready status changes; update the ready control in place.
