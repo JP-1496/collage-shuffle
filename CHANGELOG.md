@@ -1,3 +1,8 @@
+## V1.6.55
+- Fixed image-search selection with a delegated click handler on the results container.
+- Made thumbnail and checkmark decorations pass pointer events through to the result button.
+- Preserved the V1.6.54 ingredient-list native scrolling and in-place update changes.
+
 ## V1.6.54
 - Remove the custom wheel handler from the ingredient list and rely on native overflow scrolling.
 - Update ingredient thumbnails and counts in place when image counts change, avoiding full-screen redraws that reset scroll.
