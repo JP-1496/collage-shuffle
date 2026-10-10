@@ -1,3 +1,8 @@
+## V1.6.30
+- Server Settings in the lobby are now read-only for everyone, displaying the host's configured values without editable controls or a Save Settings action.
+- Fixed Round 1 ingredient access by making the ingredient list independently scrollable while keeping editing and submission controls accessible.
+- Corrected the Submit collage button's clipped-looking lower-right edge by removing its overflowing button shadow and enforcing rounded corners.
+
 ## V1.6.29
 - Replaced recursive per-round assignment with a fixed cyclic rotation over randomly assigned player positions, ensuring every set visits every other player exactly once without returning to its creator.
 - Player positions are freshly randomised per game/rematch; the round count remains equal to the player count.
