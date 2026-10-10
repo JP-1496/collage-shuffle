@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.55';
+const VERSION = '1.6.56';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 3;
 const app = express();
@@ -445,7 +445,22 @@ function handle(g,pid,a){
     case 'UPDATE_SETTINGS': { if(g.phase==='LOBBY'&&p.host&&a.settings){const st=a.settings,capacity=Math.max(2,Math.min(16,Number(st.capacity)||g.settings.capacity));if(capacity<g.players.length){send(pid,{type:'ERROR',message:'Player limit cannot be lower than the players already in the lobby.'});break;}g.settings.capacity=capacity;g.settings.imagesPerPlayer=Math.max(1,Math.min(20,Number(st.imagesPerPlayer)||g.settings.imagesPerPlayer));g.settings.round1Images=st.round1Images==='all'?'all':Math.max(1,Math.min(g.settings.capacity*g.settings.imagesPerPlayer,Number(st.round1Images)||g.settings.round1Images));g.settings.imageSeconds=Math.max(30,Math.min(600,Number(st.imageSeconds)||g.settings.imageSeconds));g.settings.creationSeconds=Math.max(30,Math.min(600,Number(st.creationSeconds)||g.settings.creationSeconds));g.settings.promptSeconds=Math.max(15,Math.min(300,Number(st.promptSeconds)||g.settings.promptSeconds));g.settings.votingSeconds=Math.max(15,Math.min(300,Number(st.votingSeconds)||g.settings.votingSeconds));g.settings.hostApproval=!!st.hostApproval;} break; }
     case 'START': if(g.phase==='LOBBY'&&p.host&&g.players.filter(x=>x.connected).length>=MIN_PLAYERS)startGame(g); break;
     case 'ADD_SOURCE': if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid]&&g.sources.filter(s=>s.ownerId===pid).length<g.settings.imagesPerPlayer&&typeof a.data==='string'&&a.data.startsWith('data:image/')&&!/^data:image\/gif(?:;|,)/i.test(a.data))g.sources.push({id:id(),data:a.data,ownerId:pid,approved:true}); break;
-    case 'ADD_SOURCES_BATCH': if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid]&&!Array.isArray(a.images)===false){const existing=g.sources.filter(s=>s.ownerId===pid);const room=Math.max(0,g.settings.imagesPerPlayer-existing.length);const seen=new Set(existing.map(s=>s.data));for(const data of a.images.slice(0,room)){if(typeof data==='string'&&data.startsWith('data:image/')&&!/^data:image\/gif(?:;|,)/i.test(data)&&!seen.has(data)){g.sources.push({id:id(),data,ownerId:pid,approved:true});seen.add(data);}}} break;
+    case 'ADD_SOURCES_BATCH': {
+      let added=0;
+      if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid]&&Array.isArray(a.images)){
+        const existing=g.sources.filter(s=>s.ownerId===pid);
+        const room=Math.max(0,g.settings.imagesPerPlayer-existing.length);
+        const seen=new Set(existing.map(s=>s.data));
+        for(const data of a.images.slice(0,room)){
+          if(typeof data==='string'&&data.startsWith('data:image/')&&!/^data:image\/gif(?:;|,)/i.test(data)&&!seen.has(data)){
+            g.sources.push({id:id(),data,ownerId:pid,approved:true});seen.add(data);added++;
+          }
+        }
+      }
+      broadcast(g);
+      send(pid,{type:'SOURCES_ADDED',added,message:added?'':'No images were accepted. Check that you still have room in your pool and try again.'});
+      return;
+    }
     case 'ADD_SOURCE_URL': if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid]&&g.sources.filter(s=>s.ownerId===pid).length<g.settings.imagesPerPlayer&&typeof a.data==='string'&&a.data.startsWith('data:image/')&&!/^data:image\/gif(?:;|,)/i.test(a.data))g.sources.push({id:id(),data:a.data,ownerId:pid,approved:true}); break;
     case 'DELETE_OWN_SOURCE': if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid])g.sources=g.sources.filter(s=>!(s.id===a.sourceId&&s.ownerId===pid)); break;
     case 'IMAGE_READY': if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid]&&g.sources.filter(s=>s.ownerId===pid).length===g.settings.imagesPerPlayer){g.imageReady[pid]=true;if(g.players.filter(x=>x.connected).every(x=>g.imageReady[x.id]))finishImageSubmission(g);} break;
