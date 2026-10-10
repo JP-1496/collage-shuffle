@@ -1,3 +1,7 @@
+## V1.6.40
+- Update the selected ingredient's highlight in place instead of rebuilding the editor DOM.
+- Route mouse-wheel scrolling directly to the ingredient list and contain scroll chaining; disable scroll anchoring on the list.
+
 ## V1.6.39
 - Preserve the ingredient list's scroll position when selecting an image, so the list no longer jumps back to the top.
 
