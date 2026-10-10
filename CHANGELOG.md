@@ -1,3 +1,9 @@
+## V1.6.19
+- Removed the 100% maximum size limit for canvas pieces; pieces can now extend beyond the canvas.
+- Reduced the minimum width and height for direct resizing to 0.1% of the canvas.
+- Corner resizing now scales proportionally from the piece’s current dimensions without being blocked by a width/height cap.
+- Updated the left-side width adjustment to use the same 0.1% minimum and no maximum.
+
 ## V1.6.18
 - Fixed finished masterpiece rendering so saved stretched piece heights are preserved in the slideshow, voting cards and final-results gallery.
 - Pieces without a saved custom height retain their original image proportions.
