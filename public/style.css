@@ -1556,24 +1556,35 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
   scroll-behavior:auto!important;
 }
 
-/* V1.6.41 — fit all final-voting masterpieces and their buttons in the viewport.
-   Four columns maximum; rows share the available height, and canvases shrink to
-   their card's remaining space so the vote controls never get covered. */
-.v16Main .finalShowcaseShell .voteGrid{
+/* V1.6.42 — make final voting fit the actual rendered shell and canvas classes.
+   Keep four cards per row whenever the viewport can support them, and give each
+   card a bounded row height so its collage cannot cover the vote control. */
+.finalShowcaseShell{
+  display:flex!important;
+  flex-direction:column!important;
+  height:100dvh!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.finalShowcaseShell .showcaseVoteIntro{
+  flex:0 0 auto!important;
+}
+.finalShowcaseShell .voteGrid{
   display:grid!important;
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  grid-template-rows:repeat(2,minmax(0,1fr))!important;
   grid-auto-rows:minmax(0,1fr)!important;
   align-content:stretch!important;
   align-items:stretch!important;
   gap:8px!important;
   flex:1 1 0!important;
-  height:auto!important;
+  height:0!important;
   max-height:none!important;
   min-height:0!important;
   overflow:hidden!important;
   padding:0 4px 4px 0!important;
 }
-.v16Main .finalShowcaseShell .voteCard{
+.finalShowcaseShell .voteCard{
   display:flex!important;
   flex-direction:column!important;
   align-items:stretch!important;
@@ -1584,7 +1595,10 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
   padding:5px!important;
   overflow:hidden!important;
 }
-.v16Main .finalShowcaseShell .voteCard .voteCanvas{
+.finalShowcaseShell .voteCard>.canvas,
+.finalShowcaseShell .voteCard>.voteCanvas{
+  display:block!important;
+  position:relative!important;
   flex:1 1 0!important;
   width:100%!important;
   height:0!important;
@@ -1593,29 +1607,28 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
   max-width:none!important;
   max-height:none!important;
   aspect-ratio:auto!important;
+  overflow:hidden!important;
   border-radius:10px!important;
 }
-.v16Main .finalShowcaseShell .voteCard button{
+.finalShowcaseShell .voteCard button,
+.finalShowcaseShell .voteCard .notice{
+  position:relative!important;
   flex:0 0 auto!important;
   width:100%!important;
+  min-height:0!important;
   margin-top:5px!important;
-  padding:7px 4px!important;
+  padding:6px 4px!important;
   font-size:clamp(10px,1vw,14px)!important;
   line-height:1.05!important;
   white-space:normal!important;
 }
-.v16Main .finalShowcaseShell .voteCard .notice{
-  flex:0 0 auto!important;
-  margin-top:5px!important;
-  padding:5px!important;
-  font-size:clamp(10px,1vw,13px)!important;
-  line-height:1.05!important;
-}
-@media(max-width:900px){
-  .v16Main .finalShowcaseShell .voteGrid{
+@media(max-width:600px){
+  .finalShowcaseShell .voteGrid{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-template-rows:repeat(4,minmax(0,1fr))!important;
   }
-  .v16Main .finalShowcaseShell .voteCard button{
+  .finalShowcaseShell .voteCard button,
+  .finalShowcaseShell .voteCard .notice{
     font-size:12px!important;
   }
 }
