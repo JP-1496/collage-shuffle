@@ -1,3 +1,7 @@
+## V1.6.57
+- Prevent late avatar-sprite loading from forcing a full application redraw. The sprite CSS variable updates existing avatar elements directly, so the editor's ingredient scroll position is not reset during initial page settling.
+- Keep the V1.6.56 image-search-to-pool acknowledgement and visible pool update fix unchanged.
+
 ## V1.6.56
 - Reverted the V1.6.55 delegated image-selection handler and pointer-events override to the previous inline click behaviour.
 - Fixed the actual pool refresh: update the image-submission `.poolGrid` and count in place when the server confirms newly added images.
