@@ -1,3 +1,7 @@
+## V1.6.20
+- Removed canvas-edge clamping when dragging pieces, allowing pieces to be positioned freely beyond the canvas boundaries.
+- Kept resizing, rotation, submission and gameplay behaviour unchanged.
+
 ## V1.6.19
 - Removed the 100% maximum size limit for canvas pieces; pieces can now extend beyond the canvas.
 - Reduced the minimum width and height for direct resizing to 0.1% of the canvas.
