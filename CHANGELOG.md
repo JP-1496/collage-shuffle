@@ -1,3 +1,8 @@
+## V1.6.43
+- Keep final voting collage canvases square within the compact grid.
+- Size square canvases to available card width/height while preserving visible vote controls.
+- Update runtime and cache-busting versions.
+
 ## V1.6.42
 - Reworked final voting layout against the actual showcase shell and rendered canvas classes.
 - Constrain each voting card to its grid row so collage canvases shrink above their vote buttons.
