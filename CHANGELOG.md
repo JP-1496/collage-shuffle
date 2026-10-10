@@ -1,3 +1,6 @@
+## V1.6.34
+- Rebuilt the narrow editor grid so ingredients, controls, and canvas occupy separate rows; ingredient thumbnails scroll independently.
+
 ## V1.6.33
 - Use the game panel's actual width for responsive editor layout, keeping ingredients and tools above a visible canvas in narrow panels.
 
