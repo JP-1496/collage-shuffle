@@ -1,3 +1,7 @@
+## V1.6.32
+- Corrected the narrow-screen editor layout so the ingredient list and tool controls no longer force the canvas out of view; ingredient thumbnails remain independently scrollable.
+- Tightened Final Showcase layout so the masterpiece and navigation controls fit within the available viewport.
+
 ## V1.6.31
 - Simplified the read-only Server Settings modal spacing so all eight settings fit without a desktop scrollbar.
 - Restored ingredient thumbnails to their previous 62px desktop height while retaining an independent scrollable ingredient grid; removed the extra selected-image preview that was squeezing the grid.
