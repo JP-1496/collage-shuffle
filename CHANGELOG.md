@@ -1,3 +1,7 @@
+## V1.6.24
+- Fixed overlapping Round 1 cuts: each piece stores only pixels that were actually present and removed at cut time.
+- Deleting a later overlapping piece restores only those pixels, keeping earlier cut-outs transparent and preventing duplication.
+
 ## V1.6.23
 - Store each Round 1 cut's original source and polygon mask with the piece.
 - Deleting a Round 1 piece restores its masked area from the original image, making that area available to cut again.
