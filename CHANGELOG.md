@@ -1,3 +1,10 @@
+## V1.6.53
+- Seed image/ready counts on entry to image submission to prevent an unnecessary first live redraw.
+- Stop rebuilding the ingredient list when only other players' ready status changes; update the ready control in place.
+- Preserve the ingredient-list scroll offset when the player's own image count genuinely changes.
+- Prevent spurious redraws that could dismiss the Surprise Me search modal.
+- Update runtime and cache-busting versions.
+
 ## V1.6.52
 - Shuffle every prompt's masterpiece order before the first final-showcase slide so slideshow and voting share the same random order.
 - Preserve the ingredient-list scroll position when live image/ready counts trigger a redraw.
