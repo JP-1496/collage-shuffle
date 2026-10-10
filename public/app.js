@@ -1,9 +1,9 @@
-const VERSION=globalThis.COLLAGE_VERSION||'1.6.56';
+const VERSION=globalThis.COLLAGE_VERSION||'1.6.57';
 const MIN_PLAYERS=3;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
 const avatars=Array.from({length:24},(_,i)=>String(i+1));
-async function loadAvatarSprite(){try{const r=await fetch(AVATAR_SPRITE_PATH+'?v='+VERSION);if(!r.ok)throw new Error('Avatar sprite load failed');const b64=(await r.text()).trim();AVATAR_SPRITE='data:image/webp;base64,'+b64;document.documentElement.style.setProperty('--avatar-sprite','url("'+AVATAR_SPRITE+'")');render(true)}catch(e){console.error(e)}}
+async function loadAvatarSprite(){try{const r=await fetch(AVATAR_SPRITE_PATH+'?v='+VERSION);if(!r.ok)throw new Error('Avatar sprite load failed');const b64=(await r.text()).trim();AVATAR_SPRITE='data:image/webp;base64,'+b64;document.documentElement.style.setProperty('--avatar-sprite','url("'+AVATAR_SPRITE+'")')}catch(e){console.error(e)}}
 function avatarSVG(id,cls='avatarIcon'){const n=String(id);const idx=Math.max(0,Math.min(23,(parseInt(n,10)||1)-1));const col=idx%6,row=Math.floor(idx/6);const x=(col/5)*100,y=(row/3)*100;return `<div class="${cls} avatarIcon" data-avatar="${n}" style="background-position:${x}% ${y}%" aria-hidden="true"></div>`}
 const savedAvatar=localStorage.getItem('collageAvatar');
 const state={screen:'home',name:localStorage.getItem('collageName')||'',avatar:/^(?:[1-9]|1[0-9]|2[0-4])$/.test(savedAvatar||'')?savedAvatar:'1',ws:null,pid:null,code:'',game:null,error:'',settings:{capacity:8,imagesPerPlayer:1,round1Images:'all',imageSeconds:120,hostApproval:false,creationSeconds:120,votingSeconds:45,promptSeconds:60},lobby:'My Collage',prompt:'',promptSubmitted:false,sourceSelected:null,sourceWorking:{},pieces:[],selected:null,drag:null,timerHandle:null,cutCanvas:null,cutPoints:[],cutZoom:1,cutImg:null,lastPhase:null,_lastImageCount:-1,_lastReadyCount:-1,_lastSubmittedCount:-1,serverClockOffset:0,lastTimerEnd:null,_lastPromptCount:-1,_lastApprovalCount:-1,syncTimer:null,_lastFinalIndex:-1,_lastFinalVote:null,reconnectTimer:null,pingTimer:null,pongTimer:null,intentionalClose:false};
