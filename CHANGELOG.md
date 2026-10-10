@@ -1,3 +1,9 @@
+## V1.6.51
+- Randomise masterpiece order on the server when each prompt enters voting.
+- Broadcast the shuffled lineup so every player sees the same order for that vote.
+- Shuffle each prompt independently, without changing slideshow order or vote targets.
+- Update runtime and asset cache versions.
+
 ## V1.6.50
 - Slightly increase vote-button width, height, padding, and text size for readability.
 - Keep square canvases and the four-by-two desktop voting layout.
