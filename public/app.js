@@ -1,4 +1,4 @@
-const VERSION=globalThis.COLLAGE_VERSION||'1.6.58';
+const VERSION=globalThis.COLLAGE_VERSION||'1.6.59';
 const MIN_PLAYERS=3;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
@@ -159,7 +159,58 @@ function finalShowcase(){const g=state.game,prompt=g.prompts.find(p=>p.id===g.cu
 function final(){const g=state.game,rows=[...g.players].sort((a,b)=>(g.scores[b.id]||0)-(g.scores[a.id]||0)),gallery=(g.finalResults||[]).flatMap(r=>Object.values(r.collages||{}).map(c=>({pieces:c.pieces||[],votes:r.tally?.[c.playerId]||0,promptId:r.promptId}))).sort((a,b)=>(b.votes||0)-(a.votes||0));return `<div class="shell wide finalResultsShell"><div class="brand">FINAL RESULTS</div><div class="finalResultsHead"><div><h2>🏆 Final results</h2><p>Scores on the left. Every masterpiece on the right.</p></div><div class="notice">V${VERSION}</div></div><div class="finalResultsContent"><div class="finalScorePanel"><h3>PLAYER SCORES</h3><div class="finalScoreList">${rows.map((p,i)=>`<div class="finalScoreRow"><b>${avatarSVG(p.avatar,'resultAvatar')}${i+1}. ${esc(p.name)}</b><strong>${g.scores[p.id]||0} pts</strong></div>`).join('')}</div></div><div class="finalGalleryPanel"><div class="finalGalleryHead"><h3>THE MASTERPIECES</h3><span>${gallery.length} collages</span></div><div class="finalGallery" id="finalGallery">${gallery.map(c=>`<div class="finalGalleryItem"><div class="finalGalleryCanvas">${canvasHTML(c.pieces,true)}</div></div>`).join('')||'<div class="searchEmpty">No collages to show.</div>'}</div></div></div><div class="finalResultsActions"><button onclick="send({type:'FINAL_NEW_PLAYERS'})">New players</button><button class="secondary" onclick="send({type:'FINAL_SAME_PLAYERS'})">Same players</button></div></div>`}
 let finalGalleryScrollTimer=null;
 function startFinalGalleryAutoScroll(){clearInterval(finalGalleryScrollTimer);finalGalleryScrollTimer=null;const el=document.querySelector("#finalGallery");if(!el||el.scrollHeight<=el.clientHeight)return;let dir=1;finalGalleryScrollTimer=setInterval(()=>{if(!document.body.contains(el)){clearInterval(finalGalleryScrollTimer);finalGalleryScrollTimer=null;return}const max=Math.max(0,el.scrollHeight-el.clientHeight);if(max<=0)return;if(dir>0&&el.scrollTop>=max-2)dir=-1;else if(dir<0&&el.scrollTop<=2)dir=1;el.scrollTop+=dir*2},50)}
-function render(force=false){if(!force&&state.game?.phase===state.lastPhase)return;clearInterval(state.timerHandle);let html=state.screen==='home'?home():state.screen==='host'?host():state.screen==='join'?join():state.game?.phase==='LOBBY'?lobby():state.game?.phase==='IMAGE_SUBMISSION'?imageSubmit():state.game?.phase==='HOST_APPROVAL'?approval():state.game?.phase==='PROMPT_SUBMISSION'?prompts():state.game?.phase==='ROUND'?round():state.game?.phase==='FINAL_SHOWCASE'?finalShowcase():state.game?.phase==='FINAL'?final():`<div class="shell">Connecting…</div>`;const kind=state.screen==='host'?'host':state.screen==='join'?'join':state.screen==='home'?'home':'game';app.innerHTML=v16Frame(html,kind,state.game?.phase||state.screen||'');if(state.game?.phase==='FINAL')setTimeout(startFinalGalleryAutoScroll,100);state.lastPhase=state.game?.phase||null;bindPhase();startTimerIfNeeded();if(state.game?.phase==='PROMPT_SUBMISSION'&&!state.promptSubmitted)setTimeout(()=>document.querySelector('#prompt')?.focus(),0)}
+
+/* V1.6.59 temporary diagnostics: observe the ingredient list for 7 seconds after entering Round 1. */
+function startIngredientScrollDiagnostics(){
+  if(window.__collageScrollDiagActive)return;
+  const list=document.querySelector('.v16Main .editorGrid .sourceList');
+  if(!list)return;
+  window.__collageScrollDiagActive=true;
+  window.__collageScrollDiag=[];
+  const started=performance.now();
+  let lastSignature='';
+  const log=(event,extra={})=>{
+    const entry={ms:Math.round(performance.now()-started),event,...extra};
+    window.__collageScrollDiag.push(entry);
+    console.log('[INGREDIENT-SCROLL-DIAG]',entry);
+  };
+  const find=()=>document.querySelector('.v16Main .editorGrid .sourceList');
+  const metrics=()=>{
+    const el=find(),panel=el?.closest('.sourcePanel'),grid=el?.closest('.editorGrid');
+    const rect=el?.getBoundingClientRect(),pr=panel?.getBoundingClientRect(),gr=grid?.getBoundingClientRect();
+    return {sameList:el===list,scrollTop:el?.scrollTop??null,scrollHeight:el?.scrollHeight??null,clientHeight:el?.clientHeight??null,listTop:rect?Math.round(rect.top):null,listHeight:rect?Math.round(rect.height):null,panelTop:pr?Math.round(pr.top):null,panelHeight:pr?Math.round(pr.height):null,gridTop:gr?Math.round(gr.top):null,gridHeight:gr?Math.round(gr.height):null,sourceCount:el?.children.length??null};
+  };
+  const snapshot=(event,force=false)=>{
+    const m=metrics(),signature=JSON.stringify(m);
+    if(force||signature!==lastSignature){lastSignature=signature;log(event,m);}
+  };
+  log('start',metrics());
+  const onScroll=()=>snapshot('scroll',true);
+  const onWheel=e=>log('wheel',{deltaY:Math.round(e.deltaY),deltaMode:e.deltaMode,...metrics()});
+  list.addEventListener('scroll',onScroll,{passive:true});
+  list.addEventListener('wheel',onWheel,{passive:true});
+  const resizeObserver=typeof ResizeObserver!=='undefined'?new ResizeObserver(()=>snapshot('resize',true)):null;
+  [list,list.closest('.sourcePanel'),list.closest('.editorGrid')].filter(Boolean).forEach(el=>resizeObserver?.observe(el));
+  const mutationObserver=new MutationObserver(records=>{
+    const current=find();
+    if(current!==list)log('list-replaced',metrics());
+    if(records.some(r=>r.target===list||list.contains(r.target)))snapshot('list-content-mutated',true);
+  });
+  mutationObserver.observe(app,{subtree:true,childList:true});
+  const poll=setInterval(()=>snapshot('sample'),100);
+  setTimeout(()=>{
+    clearInterval(poll);
+    list.removeEventListener('scroll',onScroll);
+    list.removeEventListener('wheel',onWheel);
+    resizeObserver?.disconnect();
+    mutationObserver.disconnect();
+    snapshot('end',true);
+    window.__collageScrollDiagActive=false;
+    log('diagnostics-finished',{howToRead:'Filter console for [INGREDIENT-SCROLL-DIAG]. Data remains in window.__collageScrollDiag.'});
+  },7000);
+}
+
+function render(force=false){if(!force&&state.game?.phase===state.lastPhase)return;clearInterval(state.timerHandle);let html=state.screen==='home'?home():state.screen==='host'?host():state.screen==='join'?join():state.game?.phase==='LOBBY'?lobby():state.game?.phase==='IMAGE_SUBMISSION'?imageSubmit():state.game?.phase==='HOST_APPROVAL'?approval():state.game?.phase==='PROMPT_SUBMISSION'?prompts():state.game?.phase==='ROUND'?round():state.game?.phase==='FINAL_SHOWCASE'?finalShowcase():state.game?.phase==='FINAL'?final():`<div class="shell">Connecting…</div>`;const kind=state.screen==='host'?'host':state.screen==='join'?'join':state.screen==='home'?'home':'game';app.innerHTML=v16Frame(html,kind,state.game?.phase||state.screen||'');if(state.game?.phase==='FINAL')setTimeout(startFinalGalleryAutoScroll,100);state.lastPhase=state.game?.phase||null;bindPhase();startTimerIfNeeded();if(state.game?.phase==='ROUND'&&state.game.round===0)startIngredientScrollDiagnostics();if(state.game?.phase==='PROMPT_SUBMISSION'&&!state.promptSubmitted)setTimeout(()=>document.querySelector('#prompt')?.focus(),0)}
 function bindPhase(){document.onpaste=state.game?.phase==='IMAGE_SUBMISSION'?onPaste:null;const file=document.querySelector('#file');if(file)file.addEventListener('change',e=>files(e.target.files));}
 function startTimerIfNeeded(){clearInterval(state.timerHandle);state.timerHandle=null;if(!state.game?.timerEndsAt)return;const phase=state.game.phase;if(!['IMAGE_SUBMISSION','PROMPT_SUBMISSION','ROUND','FINAL_SHOWCASE'].includes(phase))return;state.timerHandle=setInterval(()=>{const remaining=Math.max(0,Math.ceil((state.game.timerEndsAt-(Date.now()+state.serverClockOffset))/1000));const el=document.querySelector('#timerValue');if(el)el.textContent=remaining;},250);}
 function pumpFinalAdvanceQueue(){if(state.game?.phase!=='FINAL_SHOWCASE'||state.game.finalStage!=='SLIDESHOW'||!state.finalAdvancePending)return;const current=state.game.finalSlideIndex||0;if(current===state.finalAdvanceLast)return;state.finalAdvanceLast=current;state.finalAdvanceQueue=Math.max(0,(state.finalAdvanceQueue||1)-1);if(state.finalAdvanceQueue>0){if(!send({type:'FINAL_NEXT_SLIDE'})){state.finalAdvancePending=false;state.finalAdvanceQueue=0;state.error='Connection unavailable — please wait.';render(true)}}else state.finalAdvancePending=false}
