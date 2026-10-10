@@ -1,4 +1,4 @@
-const VERSION=globalThis.COLLAGE_VERSION||'1.6.53';
+const VERSION=globalThis.COLLAGE_VERSION||'1.6.54';
 const MIN_PLAYERS=3;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
@@ -150,7 +150,7 @@ function final(){const g=state.game,rows=[...g.players].sort((a,b)=>(g.scores[b.
 let finalGalleryScrollTimer=null;
 function startFinalGalleryAutoScroll(){clearInterval(finalGalleryScrollTimer);finalGalleryScrollTimer=null;const el=document.querySelector("#finalGallery");if(!el||el.scrollHeight<=el.clientHeight)return;let dir=1;finalGalleryScrollTimer=setInterval(()=>{if(!document.body.contains(el)){clearInterval(finalGalleryScrollTimer);finalGalleryScrollTimer=null;return}const max=Math.max(0,el.scrollHeight-el.clientHeight);if(max<=0)return;if(dir>0&&el.scrollTop>=max-2)dir=-1;else if(dir<0&&el.scrollTop<=2)dir=1;el.scrollTop+=dir*2},50)}
 function render(force=false){if(!force&&state.game?.phase===state.lastPhase)return;clearInterval(state.timerHandle);let html=state.screen==='home'?home():state.screen==='host'?host():state.screen==='join'?join():state.game?.phase==='LOBBY'?lobby():state.game?.phase==='IMAGE_SUBMISSION'?imageSubmit():state.game?.phase==='HOST_APPROVAL'?approval():state.game?.phase==='PROMPT_SUBMISSION'?prompts():state.game?.phase==='ROUND'?round():state.game?.phase==='FINAL_SHOWCASE'?finalShowcase():state.game?.phase==='FINAL'?final():`<div class="shell">Connecting…</div>`;const kind=state.screen==='host'?'host':state.screen==='join'?'join':state.screen==='home'?'home':'game';app.innerHTML=v16Frame(html,kind,state.game?.phase||state.screen||'');if(state.game?.phase==='FINAL')setTimeout(startFinalGalleryAutoScroll,100);state.lastPhase=state.game?.phase||null;bindPhase();startTimerIfNeeded();if(state.game?.phase==='PROMPT_SUBMISSION'&&!state.promptSubmitted)setTimeout(()=>document.querySelector('#prompt')?.focus(),0)}
-function bindPhase(){document.onpaste=state.game?.phase==='IMAGE_SUBMISSION'?onPaste:null;const file=document.querySelector('#file');if(file)file.addEventListener('change',e=>files(e.target.files));const list=document.querySelector('.sourceList');if(list)list.addEventListener('wheel',e=>{if(list.scrollHeight<=list.clientHeight)return;e.preventDefault();const unit=e.deltaMode===1?16:e.deltaMode===2?list.clientHeight:1;list.scrollTop=Math.max(0,Math.min(list.scrollHeight-list.clientHeight,list.scrollTop+e.deltaY*unit));},{passive:false});}
+function bindPhase(){document.onpaste=state.game?.phase==='IMAGE_SUBMISSION'?onPaste:null;const file=document.querySelector('#file');if(file)file.addEventListener('change',e=>files(e.target.files));}
 function startTimerIfNeeded(){clearInterval(state.timerHandle);state.timerHandle=null;if(!state.game?.timerEndsAt)return;const phase=state.game.phase;if(!['IMAGE_SUBMISSION','PROMPT_SUBMISSION','ROUND','FINAL_SHOWCASE'].includes(phase))return;state.timerHandle=setInterval(()=>{const remaining=Math.max(0,Math.ceil((state.game.timerEndsAt-(Date.now()+state.serverClockOffset))/1000));const el=document.querySelector('#timerValue');if(el)el.textContent=remaining;},250);}
 function pumpFinalAdvanceQueue(){if(state.game?.phase!=='FINAL_SHOWCASE'||state.game.finalStage!=='SLIDESHOW'||!state.finalAdvancePending)return;const current=state.game.finalSlideIndex||0;if(current===state.finalAdvanceLast)return;state.finalAdvanceLast=current;state.finalAdvanceQueue=Math.max(0,(state.finalAdvanceQueue||1)-1);if(state.finalAdvanceQueue>0){if(!send({type:'FINAL_NEXT_SLIDE'})){state.finalAdvancePending=false;state.finalAdvanceQueue=0;state.error='Connection unavailable — please wait.';render(true)}}else state.finalAdvancePending=false}
 function updateLive(){pumpFinalAdvanceQueue();if(state.game?.phase==='HOST_APPROVAL'){const count=state.game.sources?.length||0;if(count!==state._lastApprovalCount){state._lastApprovalCount=count;render(true);return;}}if(state.game?.phase==='PROMPT_SUBMISSION'){const promptCount=state.game.prompts?.length||0;if(promptCount!==state._lastPromptCount){state._lastPromptCount=promptCount;render(true);return;}}if(state.game?.phase==='LOBBY'){const el=document.querySelector('.players');if(el){const g=state.game,me=g.players.find(p=>p.id===state.pid);el.innerHTML=g.players.map(p=>`<div class="player">${avatarSVG(p.avatar,'playerAvatar')}<div class="playerInfo"><b>${esc(p.name)}</b><span class="status">${p.isBot?'Bot':p.connected?(p.host?'Host':p.ready?'Ready':'Not ready'):'Offline'}</span></div>${me?.host&&!p.host?`<button class="playerKick" onclick="send({type:'KICK_PLAYER',targetId:'${p.id}'})" aria-label="Kick ${esc(p.name)}" title="Kick player">✕</button>`:''}</div>`).join('')};const g=state.game,me=g.players.find(p=>p.id===state.pid),connected=g.players.filter(p=>p.connected).length,minPlayers=g.minPlayers||MIN_PLAYERS;const row=document.querySelector('#v16LobbyControls');if(row&&me){row.innerHTML=me.host?`<button type="button" class="v16SideButton secondary botAddBtn" data-add-bot>+ Bot</button><button class="v16SideButton" ${connected>=minPlayers?'':'disabled'} onclick="send({type:'START'})">${connected>=minPlayers?'Start Game 🚀':`Waiting for ${minPlayers} players…`}</button><span class="v16LobbyCount">${connected}/${g.settings.capacity} players</span>`:`<button class="v16SideButton" onclick="send({type:'SET_READY',ready:${!me.ready}})">${me.ready?'✓ Ready — click to undo':'Ready up'}</button><span class="v16LobbyCount">${connected}/${g.settings.capacity} players • minimum ${minPlayers}</span>`;}}if(state.game?.phase==='IMAGE_SUBMISSION'){
@@ -160,12 +160,17 @@ function updateLive(){pumpFinalAdvanceQueue();if(state.game?.phase==='HOST_APPRO
   // just after a click and dismiss a newly opened image-search modal.
   if(state._lastImageCount<0||state._lastReadyCount<0){state._lastImageCount=count;state._lastReadyCount=readyCount;startTimerIfNeeded();return;}
   if(count!==state._lastImageCount){
-    const sourceList=document.querySelector('.sourceList');
-    const sourceScrollTop=sourceList?.scrollTop||0;
     state._lastImageCount=count;state._lastReadyCount=readyCount;
-    render(true);
-    const nextSourceList=document.querySelector('.sourceList');
-    if(nextSourceList)nextSourceList.scrollTop=sourceScrollTop;
+    // Update ingredient thumbnails in place instead of replacing the scroll container.
+    const list=document.querySelector('.sourceList');
+    if(list){
+      const previousTop=list.scrollTop;
+      const html=state.game.sources.map(s=>`<button class="sourceBtn ${state.sourceSelected===s.id?'active':''}" data-source-id="${esc(s.id)}" onclick="selectSource('${esc(s.id)}')"><img src="${s.data}" alt=""></button>`).join('')||'<div class="emptySources">No images yet.</div>';
+      list.innerHTML=html;
+      list.scrollTop=previousTop;
+    }
+    const countLabel=document.querySelector('.sourcePanel .sourceCount');
+    if(countLabel)countLabel.textContent=count+'/'+state.game.settings.imagesPerPlayer;
     startTimerIfNeeded();return;
   }
   if(readyCount!==state._lastReadyCount){
