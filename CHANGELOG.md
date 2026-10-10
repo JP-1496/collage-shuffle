@@ -1,3 +1,7 @@
+## V1.6.31
+- Simplified the read-only Server Settings modal spacing so all eight settings fit without a desktop scrollbar.
+- Restored ingredient thumbnails to their previous 62px desktop height while retaining an independent scrollable ingredient grid; removed the extra selected-image preview that was squeezing the grid.
+
 ## V1.6.30
 - Server Settings in the lobby are now read-only for everyone, displaying the host's configured values without editable controls or a Save Settings action.
 - Fixed Round 1 ingredient access by making the ingredient list independently scrollable while keeping editing and submission controls accessible.

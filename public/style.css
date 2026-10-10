@@ -1258,3 +1258,22 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 .v16Main .sourceList::-webkit-scrollbar-thumb{background:var(--ink);border-radius:8px;}
 .v16Main .sourcePreview{flex:0 0 auto;max-height:64px;object-fit:contain;}
 .v16Main .submitCollageBtn{display:block;box-sizing:border-box;border-radius:15px;box-shadow:none;overflow:hidden;}
+
+/* V1.6.31: simplify read-only settings and restore ingredient thumbnail size. */
+.v16ModalBox{width:min(900px,calc(100% - 32px));max-height:none;overflow:visible;padding:14px;}
+.v16ServerGrid{gap:8px;margin-top:10px;}
+.v16ServerCard{gap:8px;padding:7px 9px;box-shadow:2px 2px 0 var(--ink);}
+.v16ServerIcon{width:36px;height:36px;flex:0 0 36px;}
+.v16ServerBody{min-width:0;line-height:1.1;}
+.v16ServerBody b{font-size:13px;}
+.v16ServerBody small{font-size:10px;line-height:1.15;margin:2px 0;}
+.v16ServerBody strong{font-size:13px;}
+.v16ModalHead{align-items:center;}
+.v16ModalHead h2{font-size:24px;}
+.v16ModalHead p{font-size:12px;}
+.v16ModalActions{margin-top:8px;}
+@media(max-width:650px){.v16Modal{padding:10px;}.v16ModalBox{width:100%;max-height:94dvh;overflow:auto;padding:10px;}.v16ServerGrid{grid-template-columns:1fr;gap:6px;}}
+.v16Main .sourceList{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;overflow-x:hidden;align-content:start;gap:8px;padding:2px 8px 8px 2px;}
+.v16Main .sourceBtn{padding:5px;}
+.v16Main .sourceBtn img{height:62px;}
+.v16Main .sourcePreview{display:none!important;}
