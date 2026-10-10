@@ -1,3 +1,8 @@
+## V1.6.41
+- Limit the final voting grid to four masterpieces per row (two rows for eight players on desktop).
+- Scale each collage canvas into the space above its vote control so buttons remain visible without a voting-page scrollbar.
+- Keep voting cards and controls responsive on narrower screens.
+
 ## V1.6.40
 - Update the selected ingredient's highlight in place instead of rebuilding the editor DOM.
 - Route mouse-wheel scrolling directly to the ingredient list and contain scroll chaining; disable scroll anchoring on the list.
