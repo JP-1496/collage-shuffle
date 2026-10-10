@@ -1,3 +1,9 @@
+## V1.6.56
+- Reverted the V1.6.55 delegated image-selection handler and pointer-events override to the previous inline click behaviour.
+- Fixed the actual pool refresh: update the image-submission `.poolGrid` and count in place when the server confirms newly added images.
+- Keep image search open and show an error if image loading, sending, or server acceptance fails; close only after the server acknowledges accepted images.
+- Validate batch actions and acknowledge the number of images actually accepted by the server.
+
 ## V1.6.55
 - Fixed image-search selection with a delegated click handler on the results container.
 - Made thumbnail and checkmark decorations pass pointer events through to the result button.
