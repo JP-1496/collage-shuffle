@@ -1,4 +1,4 @@
-const VERSION=globalThis.COLLAGE_VERSION||'1.6.55';
+const VERSION=globalThis.COLLAGE_VERSION||'1.6.56';
 const MIN_PLAYERS=3;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
@@ -18,7 +18,7 @@ function stopConnectionWatch(){clearInterval(state.pingTimer);clearTimeout(state
 function startConnectionWatch(){stopConnectionWatch();state.pingTimer=setInterval(()=>{if(state.ws?.readyState!==1)return;try{state.ws.send(JSON.stringify({type:'ACTION',playerId:state.pid,action:{type:'CLIENT_PING'}}));clearTimeout(state.pongTimer);state.pongTimer=setTimeout(()=>{try{state.ws.close()}catch{}},8000)}catch{}},5000)}
 function scheduleReconnect(){if(state.intentionalClose||state.reconnectTimer||!state.pid||!state.code)return;state.reconnectTimer=setTimeout(()=>{state.reconnectTimer=null;connect(null,true)},1500)}
 
-function connect(first,resume=false){clearTimeout(state.reconnectTimer);state.reconnectTimer=null;state.intentionalClose=false;if(state.ws&&(state.ws.readyState===0||state.ws.readyState===1)){try{state.ws.close()}catch{}}stopConnectionWatch();const proto=location.protocol==='https:'?'wss':'ws';state.ws=new WebSocket(proto+'://'+location.host+'/ws');state.ws.onopen=()=>{startConnectionWatch();if(resume)state.ws.send(JSON.stringify({type:'RESUME',playerId:state.pid,code:state.code}));else first?.(state.ws)};state.ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==='CLIENT_PONG'){clearTimeout(state.pongTimer);state.pongTimer=null}else if(m.type==='JOINED'){state.pid=m.playerId;state.code=m.code;saveSession();state.screen='game';state.error='';render(true)}else if(m.type==='SUBMISSION_ACCEPTED'){if(state.game?.phase==='ROUND'&&m.round===state.game.round){state.game.submissionStatus={...(state.game.submissionStatus||{}),[state.pid]:true};render(true)}}else if(m.type==='STATE'){const promptEl=state.game?.phase==='PROMPT_SUBMISSION'&&!state.promptSubmitted?document.querySelector('#prompt'):null;const draftPrompt=promptEl?.value??null;const promptFocused=promptEl&&document.activeElement===promptEl;const promptSelectionStart=promptEl?.selectionStart??null;const promptSelectionEnd=promptEl?.selectionEnd??null;const old=state.game?.phase,oldRound=state.game?.round,oldTimerEnd=state.game?.timerEndsAt;const receivedAt=Date.now();if(m.state.serverNow&&m.state.timerEndsAt!==oldTimerEnd)state.serverClockOffset=m.state.serverNow-receivedAt;state.game=m.state;if(draftPrompt!==null)state.prompt=draftPrompt;if(state.game.phase==='PROMPT_SUBMISSION'){state.promptSubmitted=!!state.game.prompts?.some(p=>p.ownerId===state.pid);/* prompt count is handled by updateLive */}else if(state.game.phase!=='ROUND'){state.pieces=[];state.selected=null;state.drag=null}if(old!==state.game.phase||oldRound!==state.game.round){state.lastTimerEnd=state.game.timerEndsAt;if(old!==state.game.phase)state.error='';if(oldRound!==state.game.round)state.pieces=[];render(true)}else {updateLive();if(promptFocused&&!state.promptSubmitted){const next=document.querySelector('#prompt');if(next){next.focus();try{next.setSelectionRange(promptSelectionStart,promptSelectionEnd)}catch{}}}}}else if(m.type==='BOT_ADDED'){state.error=state.game?.phase==='LOBBY'?(m.bot?.name||'Bot')+' added — server confirmed it.':'';console.log('[BOT] server confirmed',m.bot);render(true)}else if(m.type==='ERROR'){if(m.message==='That game session is no longer available.'||m.message==='You were kicked from the lobby by the host.'){clearSession();state.intentionalClose=true;state.pid=null;state.code='';state.game=null;state.screen='home';}state.error=m.message;render(true)}};state.ws.onclose=()=>{stopConnectionWatch();if(!state.intentionalClose){state.error='Connection lost — reconnecting…';render(true);scheduleReconnect();}}}
+function connect(first,resume=false){clearTimeout(state.reconnectTimer);state.reconnectTimer=null;state.intentionalClose=false;if(state.ws&&(state.ws.readyState===0||state.ws.readyState===1)){try{state.ws.close()}catch{}}stopConnectionWatch();const proto=location.protocol==='https:'?'wss':'ws';state.ws=new WebSocket(proto+'://'+location.host+'/ws');state.ws.onopen=()=>{startConnectionWatch();if(resume)state.ws.send(JSON.stringify({type:'RESUME',playerId:state.pid,code:state.code}));else first?.(state.ws)};state.ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==='CLIENT_PONG'){clearTimeout(state.pongTimer);state.pongTimer=null}else if(m.type==='JOINED'){state.pid=m.playerId;state.code=m.code;saveSession();state.screen='game';state.error='';render(true)}else if(m.type==='SUBMISSION_ACCEPTED'){if(state.game?.phase==='ROUND'&&m.round===state.game.round){state.game.submissionStatus={...(state.game.submissionStatus||{}),[state.pid]:true};render(true)}}else if(m.type==='STATE'){const promptEl=state.game?.phase==='PROMPT_SUBMISSION'&&!state.promptSubmitted?document.querySelector('#prompt'):null;const draftPrompt=promptEl?.value??null;const promptFocused=promptEl&&document.activeElement===promptEl;const promptSelectionStart=promptEl?.selectionStart??null;const promptSelectionEnd=promptEl?.selectionEnd??null;const old=state.game?.phase,oldRound=state.game?.round,oldTimerEnd=state.game?.timerEndsAt;const receivedAt=Date.now();if(m.state.serverNow&&m.state.timerEndsAt!==oldTimerEnd)state.serverClockOffset=m.state.serverNow-receivedAt;state.game=m.state;if(draftPrompt!==null)state.prompt=draftPrompt;if(state.game.phase==='PROMPT_SUBMISSION'){state.promptSubmitted=!!state.game.prompts?.some(p=>p.ownerId===state.pid);/* prompt count is handled by updateLive */}else if(state.game.phase!=='ROUND'){state.pieces=[];state.selected=null;state.drag=null}if(old!==state.game.phase||oldRound!==state.game.round){state.lastTimerEnd=state.game.timerEndsAt;if(old!==state.game.phase)state.error='';if(oldRound!==state.game.round)state.pieces=[];render(true)}else {updateLive();if(promptFocused&&!state.promptSubmitted){const next=document.querySelector('#prompt');if(next){next.focus();try{next.setSelectionRange(promptSelectionStart,promptSelectionEnd)}catch{}}}}}else if(m.type==='SOURCES_ADDED'){state._pendingSourceAdd=null;if(m.added>0){document.querySelector('.searchModal')?.remove();state.searchSelected=[];state.error='';}else{const btn=document.querySelector('#addSearchBtn');if(btn){btn.disabled=false;btn.textContent='Try adding again';}const errorEl=document.querySelector('.searchError');if(errorEl){errorEl.hidden=false;errorEl.textContent=m.message||'The server did not add those images. Please try again.';}}}else if(m.type==='BOT_ADDED'){state.error=state.game?.phase==='LOBBY'?(m.bot?.name||'Bot')+' added — server confirmed it.':'';console.log('[BOT] server confirmed',m.bot);render(true)}else if(m.type==='ERROR'){if(m.message==='That game session is no longer available.'||m.message==='You were kicked from the lobby by the host.'){clearSession();state.intentionalClose=true;state.pid=null;state.code='';state.game=null;state.screen='home';}state.error=m.message;render(true)}};state.ws.onclose=()=>{stopConnectionWatch();if(!state.intentionalClose){state.error='Connection lost — reconnecting…';render(true);scheduleReconnect();}}}
 function finalNextSlide(){if(state.game?.phase!=='FINAL_SHOWCASE'||state.game.finalStage!=='SLIDESHOW')return;const me=state.game.players.find(p=>p.id===state.pid);if(!me?.host)return;if(!send({type:'FINAL_NEXT_SLIDE'})){state.error='Connection unavailable — please wait.';render(true)}}
 function lobbySidebarControls(g,me){
 const connected=g.players.filter(p=>p.connected).length,minPlayers=g.minPlayers||MIN_PLAYERS;
@@ -65,7 +65,7 @@ function lobby(){
 const g=state.game,me=g.players.find(p=>p.id===state.pid);
 return `<div class="shell lobbyShell"><div class="lobbyMainHead"><div class="brand">LOBBY</div><h2>${esc(g.name)}</h2><p class="lobbyHint">Send this code to your friends. Everyone joins from their own PC.</p></div><div class="lobbyLayout"><div class="players">${g.players.map(p=>`<div class="player">${avatarSVG(p.avatar,'playerAvatar')}<div class="playerInfo"><b>${esc(p.name)}</b><span class="status">${p.isBot?'Bot':p.connected?(p.host?'Host':p.ready?'Ready':'Not ready'):'Offline'}</span></div>${me?.host&&!p.host?`<button class="playerKick" onclick="send({type:'KICK_PLAYER',targetId:'${p.id}'})" aria-label="Kick ${esc(p.name)}" title="Kick player">✕</button>`:''}</div>`).join('')}</div></div>${state.error?`<p class="error lobbyError">${esc(state.error)}</p>`:''}</div>`}
 function imageSubmit(){const g=state.game,me=g.players.find(p=>p.id===state.pid),mine=g.sources.filter(s=>s.ownerId===state.pid),need=g.settings.imagesPerPlayer,ready=!!g.imageReady?.[state.pid],readyCount=Object.values(g.imageReady||{}).filter(Boolean).length,remaining=Math.max(0,Math.ceil((g.timerEndsAt-(Date.now()+state.serverClockOffset))/1000));return `<div class="shell imageShell"><div class="stageTop"><div><div class="brand">IMAGE POOL</div><h2>🖼️ Build your image pool</h2><p>Add <b>${need}</b> images.</p></div></div><div class="imageMethods"><button onclick="openImageSearch()">🔎 Find an image</button><button onclick="document.getElementById('file').click()">📁 Upload</button><button onclick="pasteHint()">📋 Paste</button><button class="secondary" onclick="surpriseMe()">🔀 Surprise me</button><input id="file" class="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/avif" multiple onchange="files(this.files)"></div><div class="poolHeader"><h3>Your images</h3><span>${mine.length} / ${need}</span></div><div class="poolGrid">${mine.map(s=>`<div class="poolCard"><img src="${s.data}"><button class="removeBtn" onclick="removeSource('${s.id}')">✕ Remove</button></div>`).join('')||'<div class="emptyPool">Your pool is empty — find something weird.</div>'}</div><div class="imageFooter"><div></div><button ${(!ready&&mine.length!==need)?'disabled':''} onclick="${ready?'imageUnready()':'imageReady()'}">${ready?`✓ Ready! ${readyCount}/${g.players.length}`:`Ready! ${readyCount}/${g.players.length}`}</button></div>${state.error?`<p class="error">${esc(state.error)}</p>`:''}</div>`}
-function openImageSearch(initialQuery=''){const modal=document.createElement('div');modal.className='searchModal';modal.innerHTML=`<div class="searchBox"><div class="searchHead"><div><h2>🔎 Find an image</h2><p>Select images, then add them to your pool.</p></div><button class="secondary" onclick="this.closest('.searchModal').remove()">✕</button></div><form class="searchForm" onsubmit="event.preventDefault();searchImages(this.q.value)"><input name="q" autofocus oninput="queueImageSearch(this.value)" placeholder="What are you looking for?"></form><p class="searchTip">💡 Add your selected image(s) to your pool before changing search terms — changing search terms clears your selection.</p><div id="searchResults" class="searchResults"><div class="searchEmpty">Search for anything</div></div><div class="searchFooter"><span id="searchSelected">0 selected</span><button id="addSearchBtn" disabled onclick="addSearchSelection()">Add images to pool</button></div></div>`;document.body.appendChild(modal);state.searchSelected=[];state.searchResults=[];if(initialQuery){const input=modal.querySelector('.searchForm input');if(input)input.value=initialQuery;searchImages(initialQuery)}}
+function openImageSearch(initialQuery=''){const modal=document.createElement('div');modal.className='searchModal';modal.innerHTML=`<div class="searchBox"><div class="searchHead"><div><h2>🔎 Find an image</h2><p>Select images, then add them to your pool.</p></div><button class="secondary" onclick="this.closest('.searchModal').remove()">✕</button></div><form class="searchForm" onsubmit="event.preventDefault();searchImages(this.q.value)"><input name="q" autofocus oninput="queueImageSearch(this.value)" placeholder="What are you looking for?"></form><p class="searchTip">💡 Add your selected image(s) to your pool before changing search terms — changing search terms clears your selection.</p><div id="searchResults" class="searchResults"><div class="searchEmpty">Search for anything</div></div><p class="searchError" role="status" hidden></p><div class="searchFooter"><span id="searchSelected">0 selected</span><button id="addSearchBtn" disabled onclick="addSearchSelection()">Add images to pool</button></div></div>`;document.body.appendChild(modal);state.searchSelected=[];state.searchResults=[];if(initialQuery){const input=modal.querySelector('.searchForm input');if(input)input.value=initialQuery;searchImages(initialQuery)}}
 let searchDebounce=null;let searchController=null;let searchRequestId=0;
 function queueImageSearch(q){
   clearTimeout(searchDebounce);
@@ -103,8 +103,7 @@ async function searchImages(q){
 function renderSearchResults(){
   const box=document.querySelector('#searchResults');
   if(!box)return;
-  box.onclick=e=>{const result=e.target.closest('.searchResult[data-search-index]');if(result)toggleSearchImage(Number(result.dataset.searchIndex))};
-  box.innerHTML=state.searchResults.map((x,i)=>`<button type="button" class="searchResult ${state.searchSelected.includes(i)?'selected':''}" data-search-index="${i}"><img src="${x.thumb}" loading="lazy" decoding="async" alt=""><span class="check">${state.searchSelected.includes(i)?'✓':''}</span></button>`).join('')||'<div class="searchEmpty">No images found.</div>';
+  box.innerHTML=state.searchResults.map((x,i)=>`<button class="searchResult ${state.searchSelected.includes(i)?'selected':''}" onclick="toggleSearchImage(${i})"><img src="${x.thumb}" loading="lazy" decoding="async" alt=""><span class="check">${state.searchSelected.includes(i)?'✓':''}</span></button>`).join('')||'<div class="searchEmpty">No images found.</div>';
   const count=state.searchSelected.length;
   const el=document.querySelector('#searchSelected');
   if(el)el.textContent=`${count} selected`;
@@ -119,26 +118,36 @@ function toggleSearchImage(i){
   renderSearchResults()
 }
 async function addSearchSelection(){
-  const selected=state.searchSelected.map(i=>state.searchResults[i]);
+  const selected=state.searchSelected.map(i=>state.searchResults[i]).filter(Boolean);
   const btn=document.querySelector('#addSearchBtn');
-  if(!selected.length||!btn||btn.disabled)return;
-  btn.disabled=true;btn.textContent='Adding…';
+  const errorEl=document.querySelector('.searchError');
+  if(!selected.length||!btn||btn.disabled||state._pendingSourceAdd)return;
+  btn.disabled=true;btn.textContent='Loading images…';
+  if(errorEl){errorEl.hidden=true;errorEl.textContent='';}
   const results=await Promise.all(selected.map(async x=>{
     for(const id of [x.fetchId,x.thumbFetchId]){
       if(!id)continue;
       try{
         const r=await fetch('/api/image-fetch?id='+encodeURIComponent(id));
         const data=await r.json();
-        if(r.ok&&data.data)return data.data
+        if(r.ok&&typeof data.data==='string'&&data.data.startsWith('data:image/'))return data.data;
       }catch{}
     }
     return null
   }));
   const images=results.filter(Boolean);
-  if(images.length)send({type:'ADD_SOURCES_BATCH',images});
-  if(images.length<selected.length)state.error='Added '+images.length+' of '+selected.length+' selected images — one or more could not be loaded.';
-  document.querySelector('.searchModal')?.remove();
-  state.searchSelected=[]
+  if(!images.length){
+    btn.disabled=false;btn.textContent='Try adding again';
+    if(errorEl){errorEl.hidden=false;errorEl.textContent='Could not load the selected images. They have not been added — please try another result.';}
+    return;
+  }
+  if(!send({type:'ADD_SOURCES_BATCH',images})){
+    btn.disabled=false;btn.textContent='Try adding again';
+    if(errorEl){errorEl.hidden=false;errorEl.textContent='Connection unavailable. Your images have not been submitted; please try again.';}
+    return;
+  }
+  state._pendingSourceAdd={requested:images.length,startedAt:Date.now()};
+  btn.textContent='Adding to pool…';
 }
 function surpriseMe(){const words=['angry','tiny','giant','sleepy','flying','evil','fancy','lost','happy','grumpy','disco','haunted','cursed','royal','mysterious','glowing','retro','ancient','invisible','chaotic','frozen','golden','lonely','dangerous','sparkly','confused','dramatic','secret','rich','poor','brave','suspicious','wet','burning','magical','robotic','alien','ridiculous','massive','upside-down','singing','dancing','hungry','sad','furious','famous','bald','purple','plastic','rubber','wooden','metal'],things=['cat','dog','pigeon','frog','goat','duck','horse','shark','bear','monkey','penguin','robot','alien','wizard','pirate','astronaut','cow','llama','octopus','dragon','knight','chef','superhero','grandma','businessman','banana','toaster','shoe','chair','sofa','car','bicycle','tractor','bus','rocket','spaceship','castle','volcano','dinosaur','crocodile','flamingo','giraffe','hamster','spider','snake','turtle','parrot','pizza','burger','cake','sandwich','umbrella','backpack','microphone','guitar','television','computer','phone','camera','football','bowling ball','traffic cone','wheelbarrow','shopping trolley','rubber duck'];const terms=new Set(['cat','dog','pizza','volcano','astronaut','toaster','dragon','pigeon','banana','spaceship','castle','shark','guitar','robot','flamingo','traffic cone','shopping trolley','rubber duck']);while(terms.size<500)terms.add(words[Math.floor(Math.random()*words.length)]+' '+things[Math.floor(Math.random()*things.length)]);const q=[...terms][Math.floor(Math.random()*terms.size)];openImageSearch(q)}
 function approval(){const host=state.game.players.find(p=>p.id===state.pid)?.host;const empty=!state.game.sources.length;return `<div class="shell"><div class="brand">HOST CHECK</div><h2>🕵️ Approve the image pool</h2>${empty?'<div class="notice" style="margin-top:18px">No images in the pool — At least 1 image is required to start the game.</div>':`<div class="thumbs">${state.game.sources.map(s=>`<div class="thumb"><img src="${s.data}"><button onclick="send({type:'DELETE_SOURCE',sourceId:'${s.id}'})">Delete</button></div>`).join('')}</div>`}${host?(empty?'<button style="margin-top:18px" disabled>Need at least 1 image</button>':`<button style="margin-top:18px" onclick="send({type:'APPROVAL_DONE'})">Looks good — continue →</button>`):'<p class="notice">Waiting for the host…</p>'}</div>`}
@@ -162,16 +171,14 @@ function updateLive(){pumpFinalAdvanceQueue();if(state.game?.phase==='HOST_APPRO
   if(state._lastImageCount<0||state._lastReadyCount<0){state._lastImageCount=count;state._lastReadyCount=readyCount;startTimerIfNeeded();return;}
   if(count!==state._lastImageCount){
     state._lastImageCount=count;state._lastReadyCount=readyCount;
-    // Update ingredient thumbnails in place instead of replacing the scroll container.
-    const list=document.querySelector('.sourceList');
-    if(list){
-      const previousTop=list.scrollTop;
-      const html=state.game.sources.map(s=>`<button class="sourceBtn ${state.sourceSelected===s.id?'active':''}" data-source-id="${esc(s.id)}" onclick="selectSource('${esc(s.id)}')"><img src="${s.data}" alt=""></button>`).join('')||'<div class="emptySources">No images yet.</div>';
-      list.innerHTML=html;
-      list.scrollTop=previousTop;
-    }
-    const countLabel=document.querySelector('.sourcePanel .sourceCount');
-    if(countLabel)countLabel.textContent=count+'/'+state.game.settings.imagesPerPlayer;
+    // Image submission uses .poolGrid, not the editor's .sourceList. Update the visible pool without redrawing the page.
+    const mine=state.game.sources.filter(s=>s.ownerId===state.pid);
+    const pool=document.querySelector('.poolGrid');
+    if(pool)pool.innerHTML=mine.map(s=>`<div class="poolCard"><img src="${s.data}" alt=""><button class="removeBtn" onclick="removeSource('${s.id}')">✕ Remove</button></div>`).join('')||'<div class="emptyPool">Your pool is empty — find something weird.</div>';
+    const poolCount=document.querySelector('.poolHeader span');
+    if(poolCount)poolCount.textContent=count+' / '+state.game.settings.imagesPerPlayer;
+    const readyButton=document.querySelector('.imageFooter button');
+    if(readyButton){const ready=!!state.game.imageReady?.[state.pid];readyButton.disabled=!ready&&count!==state.game.settings.imagesPerPlayer;readyButton.textContent=(ready?'✓ Ready! ':'Ready! ')+readyCount+'/'+state.game.players.length;readyButton.setAttribute('onclick',ready?'imageUnready()':'imageReady()');}
     startTimerIfNeeded();return;
   }
   if(readyCount!==state._lastReadyCount){
