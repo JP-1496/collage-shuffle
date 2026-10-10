@@ -1,3 +1,8 @@
+## V1.6.36
+- Use viewport-based small-screen rules for the editor rather than relying on a potentially misleading container width.
+- Fix ingredient cards at 76px with 62px thumbnails and an independently scrolling list.
+- Restore rounded panel borders and inset shadows with sufficient surrounding space to avoid clipping.
+
 ## V1.6.35
 - Restore full-size 62px ingredient thumbnails and independent scrolling in the narrow editor.
 - Replace conflicting responsive CSS blocks with one authoritative three-row layout.
