@@ -1,3 +1,8 @@
+## V1.6.46
+- Apply the fixed 4x2 voting grid directly to the rendered voting grid to avoid conflicting legacy layout rules.
+- Add unprefixed fallback CSS to keep four columns, two rows, square canvases, and no grid scrollbar.
+- Update runtime and cache-busting versions.
+
 ## V1.6.45
 - Restore the fixed four-column, two-row final voting layout.
 - Disable voting-grid overflow so the voting page does not require a scrollbar.
