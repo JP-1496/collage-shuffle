@@ -1277,3 +1277,67 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 .v16Main .sourceBtn{padding:5px;}
 .v16Main .sourceBtn img{height:62px;}
 .v16Main .sourcePreview{display:none!important;}
+
+/* V1.6.32 — responsive editor and one-screen Final Showcase corrections.
+   Keep the ingredient list scrollable while preserving a visible canvas on narrow screens. */
+@media(max-width:800px){
+  .v16Main .editorGrid{
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:minmax(150px,38%) minmax(0,1fr)!important;
+    gap:8px!important;
+    height:calc(100% - 52px)!important;
+    overflow:hidden;
+  }
+  .v16Main .editorGrid>aside{
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:minmax(0,1fr) auto;
+    gap:6px;
+    overflow:hidden;
+  }
+  .v16Main .sourcePanel{
+    min-height:0!important;
+    max-height:none!important;
+    padding:8px!important;
+    overflow:hidden!important;
+  }
+  .v16Main .sourceList{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    min-height:0!important;
+    max-height:none!important;
+    overflow-y:auto!important;
+    gap:6px!important;
+  }
+  .v16Main .sourceBtn img{height:48px!important}
+  .v16Main .toolPanel{margin-top:0!important;padding:7px!important}
+  .v16Main .toolbar{margin-bottom:6px!important;gap:5px!important}
+  .v16Main .toolbar button{padding:6px 7px!important;font-size:11px}
+  .v16Main .submitCollageBtn{padding:9px 10px!important}
+  .v16Main .editorGrid>.canvas{
+    width:min(100%,calc(100dvh - 300px))!important;
+    height:min(100%,calc(100dvh - 300px))!important;
+    justify-self:center;
+    align-self:center;
+  }
+}
+.v16Main .finalShowcaseShell{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px;
+  height:100%!important;
+  min-height:0!important;
+  padding-top:0!important;
+  overflow:hidden!important;
+}
+.v16Main .finalShowcaseShell>.brand{flex:0 0 auto}
+.v16Main .finalShowcaseShell .promptBanner{flex:0 0 auto;margin:0 0 2px!important}
+.v16Main .finalShowcaseShell .showcaseSlideCounter{flex:0 0 auto;margin:2px 0}
+.v16Main .finalShowcaseShell .showcaseStage{
+  width:min( min(720px, 100%), calc(100dvh - 250px))!important;
+  height:min( min(720px, 100%), calc(100dvh - 250px))!important;
+  max-height:100%!important;
+  flex:1 1 auto;
+  min-height:0;
+}
+.v16Main .finalShowcaseShell .showcaseControls{flex:0 0 auto;min-height:0;margin:4px 0 0}
+
