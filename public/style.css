@@ -1556,80 +1556,38 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
   scroll-behavior:auto!important;
 }
 
-/* V1.6.43 — preserve square collage canvases in final voting.
-   Cards remain in the compact 4x2 grid; the square canvas uses the smaller
-   available width/height, while vote controls remain outside the canvas. */
-.finalShowcaseShell{
-  display:flex!important;
-  flex-direction:column!important;
-  height:100dvh!important;
-  min-height:0!important;
-  overflow:hidden!important;
-}
-.finalShowcaseShell .showcaseVoteIntro{flex:0 0 auto!important}
-.finalShowcaseShell .voteGrid{
-  display:grid!important;
-  grid-template-columns:repeat(4,minmax(0,1fr))!important;
-  grid-template-rows:repeat(2,minmax(0,1fr))!important;
-  grid-auto-rows:minmax(0,1fr)!important;
-  align-content:stretch!important;
-  align-items:stretch!important;
-  gap:8px!important;
-  flex:1 1 0!important;
-  height:0!important;
-  max-height:none!important;
-  min-height:0!important;
-  overflow:hidden!important;
-  padding:0 4px 4px 0!important;
-}
-.finalShowcaseShell .voteCard{
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:stretch!important;
-  justify-content:center!important;
-  gap:5px!important;
-  min-width:0!important;
-  min-height:0!important;
-  height:100%!important;
-  padding:5px!important;
-  overflow:hidden!important;
-}
-.finalShowcaseShell .voteCard>.canvas,
-.finalShowcaseShell .voteCard>.voteCanvas{
+/* V1.6.44 — override the earlier high-specificity canvas sizing rule.
+   Use a bounded square canvas centered inside each voting card; keep vote controls
+   in their own row beneath it. */
+.v16Main .finalShowcaseShell .voteCard>.canvas,
+.v16Main .finalShowcaseShell .voteCard>.voteCanvas{
   display:block!important;
   position:relative!important;
   flex:0 0 auto!important;
-  width:100%!important;
+  align-self:center!important;
+  width:min(100%,24dvh)!important;
   height:auto!important;
   aspect-ratio:1 / 1!important;
   min-width:0!important;
   min-height:0!important;
-  max-width:none!important;
-  max-height:calc(100% - 34px)!important;
+  max-width:100%!important;
+  max-height:none!important;
   overflow:hidden!important;
   border-radius:10px!important;
 }
-.finalShowcaseShell .voteCard button,
-.finalShowcaseShell .voteCard .notice{
-  position:relative!important;
+.v16Main .finalShowcaseShell .voteCard{
+  justify-content:center!important;
+  gap:5px!important;
+}
+.v16Main .finalShowcaseShell .voteCard button,
+.v16Main .finalShowcaseShell .voteCard .notice{
   flex:0 0 auto!important;
   width:100%!important;
-  min-height:0!important;
   margin-top:0!important;
-  padding:6px 4px!important;
-  font-size:clamp(10px,1vw,14px)!important;
-  line-height:1.05!important;
-  white-space:normal!important;
 }
 @media(max-width:600px){
-  .finalShowcaseShell .voteGrid{
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    grid-template-rows:repeat(4,minmax(0,1fr))!important;
+  .v16Main .finalShowcaseShell .voteCard>.canvas,
+  .v16Main .finalShowcaseShell .voteCard>.voteCanvas{
+    width:min(100%,20dvh)!important;
   }
-  .finalShowcaseShell .voteCard>.canvas,
-  .finalShowcaseShell .voteCard>.voteCanvas{
-    max-height:calc(100% - 32px)!important;
-  }
-  .finalShowcaseShell .voteCard button,
-  .finalShowcaseShell .voteCard .notice{font-size:12px!important}
 }
