@@ -1,3 +1,6 @@
+## V1.6.25
+- Fixed cut restoration capture: save the currently visible source pixels inside the cut polygon before erasing them, so deleting a cut restores those pixels without resurrecting earlier overlapping cuts.
+
 ## V1.6.24
 - Fixed overlapping Round 1 cuts: each piece stores only pixels that were actually present and removed at cut time.
 - Deleting a later overlapping piece restores only those pixels, keeping earlier cut-outs transparent and preventing duplication.
