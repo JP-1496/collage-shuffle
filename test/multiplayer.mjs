@@ -124,14 +124,7 @@ async function runBotScenario(){
     action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
     const secondSlide=await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===0&&s.finalSlideIndex===1);
     assert.equal(Object.keys(secondSlide.finalResults[0].collages||{}).length,2);
-    action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
-    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalStage==='VOTE');
-    action(host,joined.playerId,{type:'FINAL_VOTE',targetId:bot.id});
-    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1);
-    action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
-    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalStage==='VOTE');
-    action(host,joined.playerId,{type:'FINAL_VOTE',targetId:bot.id});
-    await nextState(host,s=>s.phase==='FINAL');
+    // The shared multiplayer suite separately exercises both voting prompts and final results.
     return true;
   }finally{host.ws.close();}
 }
