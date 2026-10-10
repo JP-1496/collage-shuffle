@@ -1341,70 +1341,93 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 }
 .v16Main .finalShowcaseShell .showcaseControls{flex:0 0 auto;min-height:0;margin:4px 0 0}
 
-/* V1.6.35 — final narrow editor layout: full-sized ingredient cards, internal scroll,
-   and unclipped rounded panel shadows. */
-.v16Main{container-type:inline-size;container-name:v16main;}
-@container v16main (max-width: 620px){
+/* V1.6.36 — authoritative small-screen ingredient sizing and rounded panel shadows.
+   Use viewport media queries: the app panel's container width can be larger than its visible area. */
+@media (max-width: 650px){
+  .v16Main{overflow:hidden!important;}
+  .v16Main>.shell{overflow-y:auto!important;overflow-x:hidden!important;}
   .v16Main .editorGrid{
     display:grid!important;
     grid-template-columns:minmax(0,1fr)!important;
-    grid-template-rows:minmax(245px,34%) auto minmax(110px,1fr)!important;
-    gap:7px!important;
-    height:calc(100% - 78px)!important;
-    max-height:calc(100% - 78px)!important;
+    grid-template-rows:260px auto minmax(110px,1fr)!important;
+    gap:8px!important;
+    height:auto!important;
     min-height:0!important;
+    max-height:none!important;
     overflow:visible!important;
-    padding:0 4px 5px 0!important;
+    padding:0 7px 8px 0!important;
+    box-sizing:border-box!important;
   }
-  .v16Main .editorGrid>aside{display:contents!important}
+  .v16Main .editorGrid>aside{display:contents!important;}
   .v16Main .editorGrid .sourcePanel{
     grid-row:1!important;
     display:flex!important;
     flex-direction:column!important;
-    box-sizing:border-box!important;
     width:100%!important;
-    height:100%!important;
+    height:260px!important;
     min-width:0!important;
     min-height:0!important;
     max-height:none!important;
+    box-sizing:border-box!important;
     padding:8px!important;
-    margin:0 3px 3px 0!important;
+    margin:0 4px 4px 0!important;
+    border:3px solid var(--ink)!important;
     border-radius:18px!important;
     overflow:hidden!important;
     box-shadow:3px 3px 0 var(--ink)!important;
   }
-  .v16Main .editorGrid .sourcePanel h3{flex:0 0 auto;font-size:16px!important;line-height:1.15;margin:0 0 5px!important}
-  .v16Main .editorGrid .sourcePanel p{flex:0 0 auto;font-size:11px!important;line-height:1.2;margin:0 0 6px!important}
+  .v16Main .editorGrid .sourcePanel h3{
+    flex:0 0 auto!important;
+    margin:0 0 5px!important;
+    font-size:16px!important;
+    line-height:1.15!important;
+  }
+  .v16Main .editorGrid .sourcePanel p{
+    flex:0 0 auto!important;
+    margin:0 0 6px!important;
+    font-size:11px!important;
+    line-height:1.2!important;
+  }
   .v16Main .editorGrid .sourceList{
     display:grid!important;
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    grid-auto-rows:min-content!important;
+    grid-auto-rows:76px!important;
+    align-content:start!important;
+    align-items:start!important;
     flex:1 1 0!important;
     width:100%!important;
-    height:auto!important;
+    height:100%!important;
     min-height:0!important;
     max-height:none!important;
+    gap:7px!important;
+    padding:2px 8px 8px 2px!important;
     overflow-y:auto!important;
     overflow-x:hidden!important;
-    align-content:start!important;
-    gap:7px!important;
-    padding:2px 7px 7px 2px!important;
+    box-sizing:border-box!important;
     scrollbar-width:auto!important;
   }
-  .v16Main .editorGrid .sourceList::-webkit-scrollbar{width:9px}
-  .v16Main .editorGrid .sourceList::-webkit-scrollbar-thumb{background:var(--ink);border-radius:9px}
-  .v16Main .editorGrid .sourceList::-webkit-scrollbar-track{background:rgba(23,19,33,.1);border-radius:9px}
+  .v16Main .editorGrid .sourceList::-webkit-scrollbar{width:9px!important;}
+  .v16Main .editorGrid .sourceList::-webkit-scrollbar-thumb{background:var(--ink)!important;border-radius:9px!important;}
+  .v16Main .editorGrid .sourceList::-webkit-scrollbar-track{background:rgba(23,19,33,.12)!important;border-radius:9px!important;}
   .v16Main .editorGrid .sourceBtn{
-    display:block!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
     width:100%!important;
-    min-width:0!important;
+    height:76px!important;
     min-height:76px!important;
+    max-height:76px!important;
+    min-width:0!important;
     padding:4px!important;
+    margin:0!important;
+    box-sizing:border-box!important;
     border-radius:13px!important;
     overflow:hidden!important;
+    box-shadow:3px 3px 0 var(--ink)!important;
   }
   .v16Main .editorGrid .sourceBtn img{
     display:block!important;
+    flex:0 0 62px!important;
     width:100%!important;
     height:62px!important;
     min-height:62px!important;
@@ -1414,40 +1437,29 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
   .v16Main .editorGrid .toolPanel{
     grid-row:2!important;
     display:block!important;
-    box-sizing:border-box!important;
     width:100%!important;
     min-width:0!important;
     min-height:0!important;
+    box-sizing:border-box!important;
     padding:7px!important;
-    margin:0 3px 3px 0!important;
+    margin:0 4px 4px 0!important;
+    border:3px solid var(--ink)!important;
     border-radius:18px!important;
     overflow:visible!important;
     box-shadow:3px 3px 0 var(--ink)!important;
   }
-  .v16Main .editorGrid .toolbar{display:flex!important;flex-wrap:wrap!important;gap:5px!important;margin:0 0 5px!important}
-  .v16Main .editorGrid .toolbar button{flex:1 1 auto;min-width:0;padding:6px 7px!important;font-size:11px!important;line-height:1.05}
-  .v16Main .editorGrid .roundNote{font-size:10px!important;line-height:1.1!important;margin:4px 0!important}
+  .v16Main .editorGrid .toolbar{display:flex!important;flex-wrap:wrap!important;gap:5px!important;margin:0 0 5px!important;}
+  .v16Main .editorGrid .toolbar button{flex:1 1 auto!important;min-width:0!important;padding:6px 7px!important;font-size:11px!important;line-height:1.05!important;}
+  .v16Main .editorGrid .roundNote{font-size:10px!important;line-height:1.1!important;margin:4px 0!important;}
   .v16Main .editorGrid .submitCollageBtn{
-    display:block!important;
-    box-sizing:border-box!important;
-    width:100%!important;
-    padding:8px!important;
-    border-radius:15px!important;
-    font-size:13px!important;
-    line-height:1.05!important;
-    box-shadow:none!important;
+    display:block!important;width:100%!important;box-sizing:border-box!important;
+    padding:8px!important;border-radius:15px!important;font-size:13px!important;
+    line-height:1.05!important;box-shadow:none!important;
   }
   .v16Main .editorGrid>.canvas{
-    grid-row:3!important;
-    display:block!important;
-    width:min(100%,42cqw)!important;
-    height:100%!important;
-    max-width:100%!important;
-    max-height:100%!important;
-    min-height:0!important;
-    aspect-ratio:1/1!important;
-    justify-self:center!important;
-    align-self:center!important;
-    margin:0 auto!important;
+    grid-row:3!important;display:block!important;
+    width:min(100%,42vw)!important;height:auto!important;aspect-ratio:1/1!important;
+    max-width:100%!important;max-height:none!important;min-height:110px!important;
+    justify-self:center!important;align-self:start!important;margin:0 auto!important;
   }
 }
