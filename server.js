@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.26';
+const VERSION = '1.6.27';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 3;
 const app = express();
@@ -294,7 +294,12 @@ function finishPromptSubmission(g){
 }
 function assignRound1Sources(g){
   const pool=g.sources.filter(s=>s.approved!==false);
-  for(const p of g.players){ const wanted=g.settings.round1Images==='all'?pool.length:Math.min(g.settings.round1Images,pool.length); g.roundSources[p.id]=shuffle(pool).slice(0,wanted).map(x=>x.id); }
+  for(const p of g.players){
+    // Bots only use their own submitted images in Round 1; later rounds still shuffle inherited collages normally.
+    const available=p.isBot?pool.filter(s=>s.ownerId===p.id):pool;
+    const wanted=g.settings.round1Images==='all'?available.length:Math.min(g.settings.round1Images,available.length);
+    g.roundSources[p.id]=shuffle(available).slice(0,wanted).map(x=>x.id);
+  }
 }
 function scatter(pieces){ return pieces.map((p,i)=>({...clone(p),id:id(),x:15+((i*37)%70),y:15+((i*53)%70),z:i})); }
 function beginRound(g){

@@ -1,3 +1,6 @@
+## V1.6.27
+- Bots only receive their own submitted images in Round 1; human Round 1 assignments and the normal cross-player shuffle in later rounds are unchanged.
+
 ## V1.6.26
 - Bots are now named sequentially Bot 1, Bot 2, Bot 3, etc.
 - Each bot submits a generated image labelled with its bot number, making images and downstream cuts easy to trace.
