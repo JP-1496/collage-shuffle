@@ -76,8 +76,8 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     await p1.getByRole('button', { name: /Host Game/ }).click();
     await p1.getByRole('button', { name: /Create Lobby/ }).click();
 
-    await expect(p1.locator('.code')).toBeVisible();
-    const lobbyCode = await p1.locator('.code').innerText();
+    await expect(p1.locator('.v16Code b')).toBeVisible();
+    const lobbyCode = await p1.locator('.v16Code b').innerText();
 
     await p2.getByRole('button', { name: /Join Game/ }).click();
     await p2.locator('#joinCode').fill(lobbyCode);
