@@ -1,6 +1,7 @@
 ## V1.6.63
 - Submit a prompt by pressing Enter on the prompt-entry screen.
 - Keep Shift+Enter available for adding a new line; ignore Enter while an input method editor is composing text.
+- Add browser-test coverage for Enter submission and Shift+Enter newlines.
 - Update runtime, server, and package versions.
 
 ## V1.6.62
