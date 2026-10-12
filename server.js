@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.59';
+const VERSION = '1.6.60';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 3;
 const app = express();
@@ -187,25 +187,84 @@ const BOT_PROMPTS=[
 const BOT_NAMES=[
   'Jeffrey','Alakazam','Gizmo','Biscuit','Waffle','Pickle','Nigel','Kevin','Marmalade','Baz','Terry','Professor Noodle','Bongo','Derek','Beans','Sir Fluffington','Reginald','Gary','Toast','Barry','Zippy','Colin','Mochi','Trevor','Winston','Pudding','Keith','Banjo','Dave','Crumpet'
 ];
-function botImage(number){const n=Number(number)||1;const svg='<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><rect width="600" height="400" rx="24" fill="#172033"/><rect x="14" y="14" width="572" height="372" rx="18" fill="none" stroke="#48d7c4" stroke-width="8"/><text x="300" y="155" font-family="Arial,sans-serif" font-size="48" font-weight="700" text-anchor="middle" fill="#48d7c4">COLLAGE TEST</text><text x="300" y="275" font-family="Arial,sans-serif" font-size="112" font-weight="900" text-anchor="middle" fill="#ffffff">BOT '+n+'</text></svg>';return 'data:image/svg+xml;base64,'+Buffer.from(svg).toString('base64')}
+const BOT_SURPRISE_WORDS=['angry','tiny','giant','sleepy','flying','evil','fancy','lost','happy','grumpy','disco','haunted','cursed','royal','mysterious','glowing','retro','ancient','invisible','chaotic','frozen','golden','lonely','dangerous','sparkly','confused','dramatic','secret','rich','poor','brave','suspicious','wet','burning','magical','robotic','alien','ridiculous','massive','upside-down','singing','dancing','hungry','sad','furious','famous','bald','purple','plastic','rubber','wooden','metal'];
+const BOT_SURPRISE_THINGS=['cat','dog','pigeon','frog','goat','duck','horse','shark','bear','monkey','penguin','robot','alien','wizard','pirate','astronaut','cow','llama','octopus','dragon','knight','chef','superhero','grandma','businessman','banana','toaster','shoe','chair','sofa','car','bicycle','tractor','bus','rocket','spaceship','castle','volcano','dinosaur','crocodile','flamingo','giraffe','hamster','spider','snake','turtle','parrot','pizza','burger','cake','sandwich','umbrella','backpack','microphone','guitar','television','computer','phone','camera','football','bowling ball','traffic cone','wheelbarrow','shopping trolley','rubber duck'];
+function botSurpriseQuery(){return BOT_SURPRISE_WORDS[Math.floor(Math.random()*BOT_SURPRISE_WORDS.length)]+' '+BOT_SURPRISE_THINGS[Math.floor(Math.random()*BOT_SURPRISE_THINGS.length)]}
+async function fetchBotSurpriseImage(){
+  for(let attempt=0;attempt<4;attempt++){
+    try{
+      const q=botSurpriseQuery();
+      const html=await fetchBingPage(q,1);
+      const results=parseBingImageResults(html).filter(x=>/^https:\/\//i.test(x.url)&&!/^image\/gif(?:$|;)/i.test(String(x.mime||''))&&(!x.mime||/^image\/(?:jpeg|png|webp)$/i.test(x.mime)||/^(?:jpg|jpeg|png|webp)$/i.test(x.mime)));
+      if(!results.length)continue;
+      for(const item of shuffle(results).slice(0,8)){
+        try{
+          const response=await fetch(item.thumb||item.url,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'image/jpeg,image/png,image/webp'}});
+          if(!response.ok)continue;
+          const type=(response.headers.get('content-type')||'').split(';')[0].toLowerCase();
+          if(!['image/jpeg','image/png','image/webp'].includes(type))continue;
+          const bytes=Buffer.from(await response.arrayBuffer());
+          if(!bytes.length||bytes.length>1200000)continue;
+          return {data:'data:'+type+';base64,'+bytes.toString('base64'),width:Math.max(1,Math.min(5000,Number(item.width)||600)),height:Math.max(1,Math.min(5000,Number(item.height)||400))};
+        }catch{}
+      }
+    }catch(e){console.warn('[BOT] Surprise Me image search failed:',String(e?.message||e))}
+  }
+  return null;
+}
+function randomBotCut(source,shapeIndex){
+  const width=Math.max(1,Math.min(5000,Number(source.width)||600)),height=Math.max(1,Math.min(5000,Number(source.height)||400));
+  const cx=width*(0.18+Math.random()*0.64),cy=height*(0.18+Math.random()*0.64);
+  const radius=Math.min(width,height)*(0.12+Math.random()*0.16);
+  const sides=shapeIndex%3===0?24:Math.floor(5+Math.random()*5);
+  const points=[];
+  for(let i=0;i<sides;i++){
+    const angle=(Math.PI*2*i/sides)+(Math.random()-0.5)*0.25;
+    const r=radius*(shapeIndex%3===0?1:0.55+Math.random()*0.65);
+    points.push([Math.max(0,Math.min(width,cx+Math.cos(angle)*r)),Math.max(0,Math.min(height,cy+Math.sin(angle)*r))]);
+  }
+  const minX=Math.max(0,Math.floor(Math.min(...points.map(p=>p[0])))),maxX=Math.min(width,Math.ceil(Math.max(...points.map(p=>p[0]))));
+  const minY=Math.max(0,Math.floor(Math.min(...points.map(p=>p[1])))),maxY=Math.min(height,Math.ceil(Math.max(...points.map(p=>p[1]))));
+  if(maxX-minX<8||maxY-minY<8)return null;
+  const polygon=points.map(([x,y])=>(x-minX).toFixed(1)+','+(y-minY).toFixed(1)).join(' ');
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+(maxX-minX)+'" height="'+(maxY-minY)+'" viewBox="0 0 '+(maxX-minX)+' '+(maxY-minY)+'"><defs><clipPath id="c"><polygon points="'+polygon+'"/></clipPath></defs><image href="'+source.data+'" x="'+(-minX)+'" y="'+(-minY)+'" width="'+width+'" height="'+height+'" preserveAspectRatio="none" clip-path="url(#c)"/></svg>';
+  return {id:id(),src:'data:image/svg+xml;base64,'+Buffer.from(svg).toString('base64'),x:8+Math.random()*84,y:8+Math.random()*84,w:Math.max(8,Math.min(34,(maxX-minX)/width*100)),h:Math.max(8,Math.min(42,(maxY-minY)/height*100)),ratio:(maxY-minY)/(maxX-minX),rotation:Math.round(Math.random()*360-180),flipX:Math.random()<0.5,flipY:Math.random()<0.35,z:shapeIndex};
+}
 
 function botPieces(g,pid){
   if(g.round===0){
     const sourceIds=g.roundSources[pid]||[];
-    let sources=sourceIds.map(x=>g.sources.find(s=>s.id===x)).filter(Boolean);
-    // Bots can see the full Round 1 pool, but deliberately choose only their own submitted image.
-    const player=g.players.find(p=>p.id===pid);
-    if(player?.isBot)sources=sources.filter(s=>s.ownerId===pid).slice(0,1);
-    return sources.map((s,i)=>({id:id(),src:s.data,x:25+i*45,y:30+i*32,w:28+i*5,rotation:(i%2?12:-9),flipX:i%3===0,flipY:false,z:i}));
+    const sources=sourceIds.map(x=>g.sources.find(s=>s.id===x)).filter(Boolean);
+    if(!sources.length)return [];
+    // Each bot makes one collage from 3–8 cuts, randomly sampled across its own image pool.
+    const targetCount=3+Math.floor(Math.random()*6),pieces=[];
+    for(let i=0;i<targetCount;i++){
+      const source=sources[Math.floor(Math.random()*sources.length)];
+      const piece=randomBotCut(source,i);
+      if(piece)pieces.push(piece);
+    }
+    return pieces;
   }
   const pieces=clone(g.collages[pid]?.pieces||[]);
-  return pieces.map((p,i)=>({...p,x:Math.max(5,Math.min(95,(p.x||50)+((i%3)-1)*9)),y:Math.max(5,Math.min(95,(p.y||50)+((i%2)?8:-6))),rotation:(p.rotation||0)+(i%2?15:-10),flipX:i%3===0?!p.flipX:p.flipX,w:Math.max(5,Math.min(80,(p.w||24)+(i%2?5:-3))),z:i}));
+  return pieces.map((p,i)=>{
+    const scaleX=0.55+Math.random()*1.35,scaleY=0.55+Math.random()*1.35;
+    return {...p,
+      x:5+Math.random()*90,y:5+Math.random()*90,
+      rotation:Math.round(Math.random()*360-180),
+      flipX:Math.random()<0.5,flipY:Math.random()<0.5,
+      w:Math.max(5,Math.min(55,(p.w||24)*scaleX)),
+      h:Math.max(5,Math.min(55,(p.h||((p.w||24)*(p.ratio||0.75)))*scaleY)),
+      z:i
+    };
+  });
 }
 function runBotsForImageSubmission(g){
   botList(g).forEach((p,bi)=>{
-    const numberedImage=botImage(p.botNumber);
-    for(let i=0;i<g.settings.imagesPerPlayer;i++)botDelay(g,()=>botAction(g,p.id,{type:'ADD_SOURCE',data:numberedImage}),350+bi*180+i*220);
-    botDelay(g,()=>botAction(g,p.id,{type:'IMAGE_READY'}),350+bi*180+g.settings.imagesPerPlayer*220+180);
+    botDelay(g,async()=>{
+      const found=await Promise.all(Array.from({length:g.settings.imagesPerPlayer},()=>fetchBotSurpriseImage()));
+      for(const result of found.filter(Boolean))botAction(g,p.id,{type:'ADD_SOURCE',...result});
+      botAction(g,p.id,{type:'IMAGE_READY'});
+    },350+bi*220);
   });
 }
 function runBotsForPrompts(g){
@@ -444,7 +503,7 @@ function handle(g,pid,a){
     case 'SET_READY': if(g.phase==='LOBBY'&&!p.host)p.ready=!!a.ready; break;
     case 'UPDATE_SETTINGS': { if(g.phase==='LOBBY'&&p.host&&a.settings){const st=a.settings,capacity=Math.max(2,Math.min(16,Number(st.capacity)||g.settings.capacity));if(capacity<g.players.length){send(pid,{type:'ERROR',message:'Player limit cannot be lower than the players already in the lobby.'});break;}g.settings.capacity=capacity;g.settings.imagesPerPlayer=Math.max(1,Math.min(20,Number(st.imagesPerPlayer)||g.settings.imagesPerPlayer));g.settings.round1Images=st.round1Images==='all'?'all':Math.max(1,Math.min(g.settings.capacity*g.settings.imagesPerPlayer,Number(st.round1Images)||g.settings.round1Images));g.settings.imageSeconds=Math.max(30,Math.min(600,Number(st.imageSeconds)||g.settings.imageSeconds));g.settings.creationSeconds=Math.max(30,Math.min(600,Number(st.creationSeconds)||g.settings.creationSeconds));g.settings.promptSeconds=Math.max(15,Math.min(300,Number(st.promptSeconds)||g.settings.promptSeconds));g.settings.votingSeconds=Math.max(15,Math.min(300,Number(st.votingSeconds)||g.settings.votingSeconds));g.settings.hostApproval=!!st.hostApproval;} break; }
     case 'START': if(g.phase==='LOBBY'&&p.host&&g.players.filter(x=>x.connected).length>=MIN_PLAYERS)startGame(g); break;
-    case 'ADD_SOURCE': if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid]&&g.sources.filter(s=>s.ownerId===pid).length<g.settings.imagesPerPlayer&&typeof a.data==='string'&&a.data.startsWith('data:image/')&&!/^data:image\/gif(?:;|,)/i.test(a.data))g.sources.push({id:id(),data:a.data,ownerId:pid,approved:true}); break;
+    case 'ADD_SOURCE': if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid]&&g.sources.filter(s=>s.ownerId===pid).length<g.settings.imagesPerPlayer&&typeof a.data==='string'&&a.data.startsWith('data:image/')&&!/^data:image\/gif(?:;|,)/i.test(a.data))g.sources.push({id:id(),data:a.data,ownerId:pid,approved:true,...(Number(a.width)>0?{width:Number(a.width)}:{}),...(Number(a.height)>0?{height:Number(a.height)}:{})}); break;
     case 'ADD_SOURCES_BATCH': {
       let added=0;
       if(g.phase==='IMAGE_SUBMISSION'&&!g.imageReady?.[pid]&&Array.isArray(a.images)){
