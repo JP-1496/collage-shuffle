@@ -302,7 +302,8 @@ async function main(){
     host.ws.close();guest.ws.close();
 
     // Exercise every distribution round with eight players and verify server lineage logs.
-    const distributionTestCode=await runDistributionScenario(8);
+    await runDistributionScenario(8);
+    const distributionLogCountAtEnd=output.split('\n').filter(line=>line.includes('[SET-DISTRIBUTION]')).length;
 
     // Repeat the final-submission transition repeatedly and in both orders.
     for(let i=0;i<5;i++) await runSubmissionCountScenario(2,i%2===1);
@@ -400,7 +401,7 @@ async function main(){
     resumeHost.ws.close(); resumedGuest.ws.close();
 
     const distributionLogs=output.split('\n').filter(line=>line.includes('[SET-DISTRIBUTION]')).map(line=>{const raw=line.slice(line.indexOf('[SET-DISTRIBUTION]')+'[SET-DISTRIBUTION]'.length).trim();return JSON.parse(raw);});
-    const testLogs=distributionLogs.filter(entry=>entry.game===distributionTestCode&&entry.totalRounds===8&&entry.players.length===8);
+    const testLogs=distributionLogs.slice(Math.max(0,distributionLogCountAtEnd-8),distributionLogCountAtEnd).filter(entry=>entry.totalRounds===8&&entry.players.length===8);
     assert.equal(testLogs.length,8,'Expected one set-distribution diagnostic per round in the eight-player test');
     assert.ok(testLogs.every(entry=>entry.valid),JSON.stringify(testLogs.filter(entry=>!entry.valid)));
     for(const player of testLogs[0].players){
