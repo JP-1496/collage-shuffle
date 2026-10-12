@@ -572,9 +572,9 @@ function handle(g,pid,a){
       const connected=g.players.filter(x=>x.connected);
       const submitted=connected.filter(x=>g.collages[x.id]?.submitted).length;
       // Broadcast the accepted count first. WebSocket delivery preserves message
-      // order, so clients receive 2/2 before the Round 2 state.
+      // order, so clients receive the completed submission count before the next-round state.
+      broadcast(g);
       if(connected.length>0 && submitted===connected.length) finishRound(g);
-      else broadcast(g);
       return;
     }
     case 'FINAL_NEW_PLAYERS': {if(g.phase==='FINAL'&&p.host)restartNewPlayers(g);break;}
