@@ -1,3 +1,9 @@
+## V1.6.63
+- Submit a prompt by pressing Enter on the prompt-entry screen.
+- Keep Shift+Enter available for adding a new line; ignore Enter while an input method editor is composing text.
+- Add browser-test coverage for Enter submission and Shift+Enter newlines.
+- Update runtime, server, and package versions.
+
 ## V1.6.62
 - Preserve piece z-order during live collage sync and final submission so Front/Back controls carry through to the final showcase.
 - Give the selected piece's resize/rotate handles priority during pointer hit-testing, even when another piece overlaps those handles.
