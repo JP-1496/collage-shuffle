@@ -334,7 +334,30 @@ function stateFor(g,pid){
   }
   return s;
 }
-function newGame(name,settings,host){ const g={code:code(),name,phase:'LOBBY',minPlayers:MIN_PLAYERS,settings,players:[host],sources:[],submittedSources:{},prompts:[],promptOrder:[],round:0,currentPromptId:null,roundSources:{},roundPlayerSets:{},collages:{},travelingSets:{},votes:{},scores:{},lastTally:{},finalResults:[],finalIndex:0,finalStage:null,finalSlideIndex:0,finalVotes:{},bestCollages:{},timerEndsAt:null}; games.set(g.code,g); return g; }
+function newGame(name,settings,host){ const g={code:code(),name,phase:'LOBBY',minPlayers:MIN_PLAYERS,settings,players:[host],sources:[],submittedSources:{},prompts:[],promptOrder:[],round:0,currentPromptId:null,roundSources:{},roundPlayerSets:{},collages:{},travelingSets:{},travelingSetOrigins:{},setDistributionHistory:[],receivedSetHistory:{},votes:{},scores:{},lastTally:{},finalResults:[],finalIndex:0,finalStage:null,finalSlideIndex:0,finalVotes:{},bestCollages:{},timerEndsAt:null}; games.set(g.code,g); return g; }
+function playerLabel(g,pid){const p=g.players.find(x=>x.id===pid);return p?`${p.name} (${pid.slice(0,6)})`:String(pid).slice(0,6);}
+function logSetDistribution(g,assignments){
+  const roundNumber=g.round+1,seenThisRound=new Map(),duplicateWithinRound=[],duplicateForRecipient=[],rows=[];
+  for(const a of assignments){
+    const origin=a.setOriginId||a.sourcePlayerId;
+    if(seenThisRound.has(origin))duplicateWithinRound.push({setOrigin:playerLabel(g,origin),recipients:[playerLabel(g,seenThisRound.get(origin)),playerLabel(g,a.recipientId)]});
+    else seenThisRound.set(origin,a.recipientId);
+    const history=g.receivedSetHistory[a.recipientId]||(g.receivedSetHistory[a.recipientId]=[]);
+    if(history.some(x=>x.setOriginId===origin))duplicateForRecipient.push({recipient:playerLabel(g,a.recipientId),setOrigin:playerLabel(g,origin),previousRounds:history.filter(x=>x.setOriginId===origin).map(x=>x.round),round:roundNumber});
+    history.push({round:roundNumber,setOriginId:origin,sourcePlayerId:a.sourcePlayerId});
+    rows.push({recipient:playerLabel(g,a.recipientId),setOrigin:playerLabel(g,origin),from:playerLabel(g,a.sourcePlayerId)});
+  }
+  const expected=new Set(g.players.map(p=>p.id)),actual=new Set(assignments.map(a=>a.setOriginId||a.sourcePlayerId));
+  const missing=[...expected].filter(pid=>!actual.has(pid)).map(pid=>playerLabel(g,pid));
+  const report={game:g.code,round:roundNumber,players:g.players.length,assignments:rows,duplicateWithinRound,duplicateForRecipient,missingOrigins:missing};
+  g.setDistributionHistory.push(report);
+  console.info('[SET-DISTRIBUTION]',JSON.stringify(report));
+  if(duplicateWithinRound.length||duplicateForRecipient.length||missing.length)console.warn('[SET-DISTRIBUTION-ANOMALY]',JSON.stringify(report));
+  if(roundNumber===g.players.length){
+    const finalSummary=g.players.map(p=>{const received=g.receivedSetHistory[p.id]||[];const origins=received.map(x=>x.setOriginId);return {player:playerLabel(g,p.id),roundsSeen:received.length,uniqueSets:new Set(origins).size,missingSets:[...expected].filter(id=>!origins.includes(id)).map(id=>playerLabel(g,id)),duplicates:received.filter((x,i)=>origins.indexOf(x.setOriginId)!==i).map(x=>({set:playerLabel(g,x.setOriginId),round:x.round}))};});
+    console.info('[SET-DISTRIBUTION-FINAL]',JSON.stringify({game:g.code,summary:finalSummary}));
+  }
+}
 function cancelTimer(g){ const t=timers.get(g.code); if(t) clearTimeout(t); timers.delete(g.code); }
 function schedule(g,ms,fn){ cancelTimer(g); const marker=Date.now()+':'+g.phase+':'+g.round; g.timerMarker=marker; timers.set(g.code,setTimeout(()=>{timers.delete(g.code);if(g.timerMarker===marker)fn();},ms)); }
 function transition(g,phase){cancelTimer(g);g.phase=phase;g.timerEndsAt=null;broadcast(g);}
@@ -391,8 +414,10 @@ function beginRound(g){
     }
   }
   g.votes={};g.collages={};
-  if(g.round===0){assignRound1Sources(g);for(const p of g.players)g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:[],submitted:false};}
-  else {for(const p of g.players){const owner=Object.keys(g.roundPlayerSets).find(sourceId=>g.roundPlayerSets[sourceId]===p.id);g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:scatter(g.travelingSets[owner]||[]),submitted:false};}}
+  const distribution=[];
+  if(g.round===0){assignRound1Sources(g);for(const p of g.players){g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:[],submitted:false,setOriginId:p.id};distribution.push({recipientId:p.id,sourcePlayerId:p.id,setOriginId:p.id});}}
+  else {for(const p of g.players){const owner=Object.keys(g.roundPlayerSets).find(sourceId=>g.roundPlayerSets[sourceId]===p.id);const setOriginId=g.travelingSetOrigins[owner]||owner;g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:scatter(g.travelingSets[owner]||[]),submitted:false,setOriginId};distribution.push({recipientId:p.id,sourcePlayerId:owner,setOriginId});}}
+  logSetDistribution(g,distribution);
   if(!g.finalResults[g.round])g.finalResults[g.round]={promptId:g.currentPromptId,collages:{}};
   g.phase='ROUND';g.timerEndsAt=Date.now()+g.settings.creationSeconds*1000;broadcast(g);runBotsForRound(g);
   schedule(g,g.settings.creationSeconds*1000,()=>finishRound(g));
@@ -409,6 +434,7 @@ function finishRound(g){
       c.submitted=true;
       if(g.round===0)c.pieces=(c.pieces||[]).filter(pieceIntersectsCanvas);
       g.travelingSets[pid]=clone(c.pieces||[]);
+      g.travelingSetOrigins[pid]=c.setOriginId||pid;
       g.finalResults[g.round].collages[pid]=clone(c);
     }
   }
@@ -478,7 +504,7 @@ function finishFinalGame(g){
   clearBotJobs(g);
   broadcast(g);
 }
-function resetGameState(g){g.sources=[];g.submittedSources={};g.imageReady={};g.prompts=[];g.promptOrder=[];g.round=0;g.currentPromptId=null;g.roundSources={};g.roundPlayerSets={};g.rotationSlots=null;g.collages={};g.travelingSets={};g.votes={};g.scores={};g.lastTally={};g.finalResults=[];g.finalIndex=0;g.finalStage=null;g.finalSlideIndex=0;g.finalVotes={};g.bestCollages={};g.timerEndsAt=null;}
+function resetGameState(g){g.sources=[];g.submittedSources={};g.imageReady={};g.prompts=[];g.promptOrder=[];g.round=0;g.currentPromptId=null;g.roundSources={};g.roundPlayerSets={};g.rotationSlots=null;g.collages={};g.travelingSets={};g.travelingSetOrigins={};g.setDistributionHistory=[];g.receivedSetHistory={};g.votes={};g.scores={};g.lastTally={};g.finalResults=[];g.finalIndex=0;g.finalStage=null;g.finalSlideIndex=0;g.finalVotes={};g.bestCollages={};g.timerEndsAt=null;}
 function restartSamePlayers(g){clearBotJobs(g);resetGameState(g);g.phase='IMAGE_SUBMISSION';g.timerEndsAt=Date.now()+g.settings.imageSeconds*1000;broadcast(g);runBotsForImageSubmission(g);schedule(g,g.settings.imageSeconds*1000,()=>finishImageSubmission(g));}
 function restartNewPlayers(g){clearBotJobs(g);const host=g.players.find(p=>p.host);for(const p of g.players){if(p===host)continue;const ws=sockets.get(p.id);if(ws){try{ws.send(JSON.stringify({type:'ERROR',message:'The host started a new lobby for new players.'}));ws.close(4004,'New players');}catch{}}sockets.delete(p.id);}g.players=host?[host]:[];if(host)host.connected=true;resetGameState(g);g.phase='LOBBY';if(host)host.ready=true;broadcast(g);}
 function handle(g,pid,a){
