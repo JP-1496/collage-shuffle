@@ -10,7 +10,7 @@ const packageJson=JSON.parse(await fs.readFile(new URL('../package.json',import.
 const serverSource=await fs.readFile(new URL('../server.js',import.meta.url),'utf8');
 const appSource=await fs.readFile(new URL('../public/app.js',import.meta.url),'utf8');
 assert.match(packageJson.version,/^\d+\.\d+\.\d+$/);
-assert.match(serverSource,/readFileSync\(new URL\('\.\/package\.json'/);
+assert.ok(serverSource.includes(`const VERSION = '${packageJson.version}';`),'Server version must match package.json');
 assert.match(serverSource,/app\.get\('\/build\.js'/);
 assert.match(appSource,/globalThis\.COLLAGE_VERSION/);
 assert.match(serverSource,/MAX_SEARCH_RESULTS=100/);
