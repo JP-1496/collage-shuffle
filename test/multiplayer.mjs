@@ -97,6 +97,51 @@ async function runSubmissionCountScenario(playerCount, reverseOrder=false){
   }
 }
 
+async function runLineageDistributionScenario(playerCount=8){
+  const clients=[];
+  try{
+    const host=await connect(); clients.push(host);
+    host.ws.send(JSON.stringify({type:'HOST_CREATE',name:'LineageHost',lobbyName:'Lineage Distribution Test',settings:{capacity:playerCount,imagesPerPlayer:1,round1Images:1,hostApproval:false,creationSeconds:30}}));
+    const hj=await waitFor(()=>host.messages.find(m=>m.type==='JOINED'));
+    const players=[{client:host,playerId:hj.playerId}];
+    for(let i=1;i<playerCount;i++){
+      const client=await connect(); clients.push(client);
+      client.ws.send(JSON.stringify({type:'JOIN',name:'Lineage'+i,code:hj.code}));
+      const joined=await waitFor(()=>client.messages.find(m=>m.type==='JOINED'));
+      players.push({client,playerId:joined.playerId});
+    }
+    await nextState(host,s=>s.phase==='LOBBY'&&s.players.length===playerCount);
+    for(const p of players.slice(1))action(p.client,p.playerId,{type:'SET_READY',ready:true});
+    action(host,hj.playerId,{type:'START'});
+    await nextState(host,s=>s.phase==='IMAGE_SUBMISSION');
+    for(const p of players)action(p.client,p.playerId,{type:'ADD_SOURCE',data:PNG});
+    for(const p of players)action(p.client,p.playerId,{type:'IMAGE_READY'});
+    await nextState(host,s=>s.phase==='PROMPT_SUBMISSION');
+    for(let i=0;i<players.length;i++)action(players[i].client,players[i].playerId,{type:'ADD_PROMPT',text:'Lineage prompt '+i});
+    const seen=new Map(players.map(p=>[p.playerId,[]]));
+    for(let round=0;round<playerCount;round++){
+      const states=await Promise.all(players.map(p=>nextState(p.client,s=>s.phase==='ROUND'&&s.round===round&&s.currentSetLineageId)));
+      const lineages=states.map(s=>s.currentSetLineageId);
+      assert.equal(new Set(lineages).size,playerCount,'Every round must distribute unique set lineages');
+      states.forEach((state,i)=>seen.get(players[i].playerId).push(state.currentSetLineageId));
+      for(const p of players){
+        const state=states[players.findIndex(x=>x.playerId===p.playerId)];
+        action(p.client,p.playerId,{type:'SUBMIT_COLLAGE',pieces:[{src:PNG,x:50,y:50,w:25,rotation:0,flipX:false,flipY:false,z:0}]});
+      }
+      if(round<playerCount-1) await Promise.all(players.map(p=>nextState(p.client,s=>s.phase==='ROUND'&&s.round===round+1)));
+      else await nextState(host,s=>s.phase==='FINAL_SHOWCASE');
+    }
+    for(const p of players){
+      const lineages=seen.get(p.playerId);
+      assert.equal(lineages.length,playerCount);
+      assert.equal(new Set(lineages).size,playerCount,'A player must never receive the same set lineage twice');
+      assert.ok(lineages.includes(p.playerId),'Round 1 must contain the player’s own set');
+      assert.deepEqual(new Set(lineages.filter(x=>x!==p.playerId)),new Set(players.map(x=>x.playerId).filter(x=>x!==p.playerId)),'Each player must see every other set exactly once');
+    }
+    console.log('PASS: 8-player set lineage distribution has no duplicates or missing sets');
+  }finally{for(const client of clients)client.ws.close();}
+}
+
 async function runBotScenario(){
   const host=await connect();
   try{
@@ -254,7 +299,7 @@ async function main(){
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
 
-    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version     ,'1.4.82');
+    assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version     ,packageJson.version);
     host.ws.close();guest.ws.close();
 
     // Repeat the final-submission transition repeatedly and in both orders.
@@ -263,6 +308,7 @@ async function main(){
     await runSubmissionCountScenario(4,false);
     await runSubmissionCountScenario(4,true);
     await runSubmissionCountScenario(8,false);
+    await runLineageDistributionScenario(8);
     await runSubmissionCountScenario(8,true);
 
     const expiryHost=await connect();
