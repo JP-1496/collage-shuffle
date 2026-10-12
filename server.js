@@ -502,7 +502,7 @@ function finishFinalGame(g){
   clearBotJobs(g);
   broadcast(g);
 }
-function resetGameState(g){g.sources=[];g.submittedSources={};g.imageReady={};g.prompts=[];g.promptOrder=[];g.round=0;g.currentPromptId=null;g.roundSources={};g.roundPlayerSets={};g.rotationSlots=null;g.collages={};g.travelingSets={};g.setLineage={};g.seenSetLineages={};g.votes={}g.scores={};g.lastTally={};g.finalResults=[];g.finalIndex=0;g.finalStage=null;g.finalSlideIndex=0;g.finalVotes={};g.bestCollages={};g.timerEndsAt=null;}
+function resetGameState(g){g.sources=[];g.submittedSources={};g.imageReady={};g.prompts=[];g.promptOrder=[];g.round=0;g.currentPromptId=null;g.roundSources={};g.roundPlayerSets={};g.rotationSlots=null;g.collages={};g.travelingSets={};g.setLineage={};g.seenSetLineages={};g.votes={};g.scores={};;g.lastTally={};g.finalResults=[];g.finalIndex=0;g.finalStage=null;g.finalSlideIndex=0;g.finalVotes={};g.bestCollages={};g.timerEndsAt=null;}
 function restartSamePlayers(g){clearBotJobs(g);resetGameState(g);g.phase='IMAGE_SUBMISSION';g.timerEndsAt=Date.now()+g.settings.imageSeconds*1000;broadcast(g);runBotsForImageSubmission(g);schedule(g,g.settings.imageSeconds*1000,()=>finishImageSubmission(g));}
 function restartNewPlayers(g){clearBotJobs(g);const host=g.players.find(p=>p.host);for(const p of g.players){if(p===host)continue;const ws=sockets.get(p.id);if(ws){try{ws.send(JSON.stringify({type:'ERROR',message:'The host started a new lobby for new players.'}));ws.close(4004,'New players');}catch{}}sockets.delete(p.id);}g.players=host?[host]:[];if(host)host.connected=true;resetGameState(g);g.phase='LOBBY';if(host)host.ready=true;broadcast(g);}
 function handle(g,pid,a){
