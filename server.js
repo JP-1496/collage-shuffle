@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.60';
+const VERSION = '1.6.61';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = 3;
 const app = express();
@@ -318,6 +318,7 @@ function stateFor(g,pid){
   }
   if(g.phase==='ROUND'){
     s.currentPieces=clone(g.collages[pid]?.pieces||[]);
+    s.currentSetLineageId=g.collages[pid]?.lineageId||null;
     s.roundPlayerSets[pid]=g.roundPlayerSets[pid]||null;
     s.submissionStatus=Object.fromEntries(Object.entries(g.collages).map(([k,c])=>[k,!!c.submitted]));
   }
@@ -391,8 +392,11 @@ function beginRound(g){
     }
   }
   g.votes={};g.collages={};
-  if(g.round===0){assignRound1Sources(g);for(const p of g.players)g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:[],submitted:false};}
-  else {for(const p of g.players){const owner=Object.keys(g.roundPlayerSets).find(sourceId=>g.roundPlayerSets[sourceId]===p.id);g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:scatter(g.travelingSets[owner]||[]),submitted:false};}}
+  if(g.round===0){assignRound1Sources(g);for(const p of g.players)g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,lineageId:p.id,pieces:[],submitted:false};}
+  else {for(const p of g.players){const lineageId=Object.keys(g.roundPlayerSets).find(sourceId=>g.roundPlayerSets[sourceId]===p.id);if(!lineageId)throw new Error('Missing set lineage for recipient '+p.id+' in round '+g.round);g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,lineageId,pieces:scatter(g.travelingSets[lineageId]||[]),submitted:false};}}
+  const lineages=Object.values(g.collages).map(c=>c.lineageId);
+  if(new Set(lineages).size!==g.players.length||lineages.some(x=>!x))throw new Error('Duplicate or missing set lineage in round '+g.round);
+  if(TEST_MODE)console.log('[SET_DISTRIBUTION]',JSON.stringify({round:g.round,assignments:Object.fromEntries(Object.entries(g.collages).map(([recipient,c])=>[recipient,c.lineageId]))}));
   if(!g.finalResults[g.round])g.finalResults[g.round]={promptId:g.currentPromptId,collages:{}};
   g.phase='ROUND';g.timerEndsAt=Date.now()+g.settings.creationSeconds*1000;broadcast(g);runBotsForRound(g);
   schedule(g,g.settings.creationSeconds*1000,()=>finishRound(g));
@@ -408,7 +412,7 @@ function finishRound(g){
     if(!c.submitted){
       c.submitted=true;
       if(g.round===0)c.pieces=(c.pieces||[]).filter(pieceIntersectsCanvas);
-      g.travelingSets[pid]=clone(c.pieces||[]);
+      g.travelingSets[c.lineageId||pid]=clone(c.pieces||[]);
       g.finalResults[g.round].collages[pid]=clone(c);
     }
   }
@@ -537,7 +541,7 @@ function handle(g,pid,a){
       c.submitted=true;
       const submittedPieces=clone(c.pieces||[]).map(piece=>piece.createdBy?piece:{...piece,createdBy:pid});
       c.pieces=submittedPieces;
-      g.travelingSets[pid]=clone(submittedPieces);
+      g.travelingSets[c.lineageId||pid]=clone(submittedPieces);
       g.finalResults[g.round].collages[pid]=clone(c);
       sockets.get(pid)?.send(JSON.stringify({type:'SUBMISSION_ACCEPTED',round:g.round}));
       const connected=g.players.filter(x=>x.connected);
