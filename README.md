@@ -1,4 +1,9 @@
-# Collage — Shuffle V1.4.98
+# Collage — Shuffle V1.6.60
+
+### V1.6.60
+- Bots now fetch real images through Surprise Me-style random image searches.
+- Bots cut several random shapes from their images and scatter pieces with random size, rotation and flips.
+
 
 ### V1.4.68
 - Uses the 20 final cleaned avatar images in a 5×4 profile picker.
