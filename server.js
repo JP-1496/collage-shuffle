@@ -564,6 +564,7 @@ function handle(g,pid,a){
       const submittedPieces=clone(c.pieces||[]).map(piece=>piece.createdBy?piece:{...piece,createdBy:pid});
       c.pieces=submittedPieces;
       g.travelingSets[pid]=clone(submittedPieces);
+      g.travelingSetOrigins[pid]=c.setOriginId||pid;
       g.finalResults[g.round].collages[pid]=clone(c);
       sockets.get(pid)?.send(JSON.stringify({type:'SUBMISSION_ACCEPTED',round:g.round}));
       const connected=g.players.filter(x=>x.connected);
