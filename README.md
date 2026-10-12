@@ -1,8 +1,10 @@
-# Collage — Shuffle V1.6.60
+# Collage — Shuffle V1.6.61
 
-### V1.6.60
-- Bots now fetch real images through Surprise Me-style random image searches.
-- Bots cut several random shapes from their images and scatter pieces with random size, rotation and flips.
+### V1.6.61
+- Fixed set-lineage routing so each original collage travels by its stable identity, not the player who last edited it.
+- Added server-side duplicate/missing lineage guards and test-mode round assignment logs.
+- Added an eight-player end-to-end regression test for complete, duplicate-free set distribution.
+- Bots fetch real images through Surprise Me-style random image searches and make varied multi-piece collages.
 
 
 ### V1.4.68
