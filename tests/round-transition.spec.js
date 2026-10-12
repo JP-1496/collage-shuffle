@@ -74,6 +74,7 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     }
 
     await p1.getByRole('button', { name: /Host Game/ }).click();
+    await p1.locator('.hostSettingsGrid select').nth(1).selectOption('2');
     await p1.getByRole('button', { name: /Create Lobby/ }).click();
 
     await expect(p1.locator('.v16Code b')).toBeVisible();
