@@ -30,7 +30,7 @@ async function createPlayer(browser, nickname, label) {
     await expect(icon).toHaveCSS('background-image', /data:image\/webp/);
     await expect(icon).toHaveCSS('background-size', '600% 400%');
   }
-  await expect.poll(async () => page.locator('.avatars').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(/\\s+/).length)).toBe(6);
+  await expect.poll(async () => page.locator('.avatars').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(/\s+/).length)).toBe(6);
   await expect(page.locator('.profileNameRow .profileAvatar')).toHaveAttribute('data-avatar', avatar);
   const selectedAvatar = page.locator('.avatars button.selected');
   await expect(selectedAvatar).toHaveAttribute('data-avatar', avatar);
