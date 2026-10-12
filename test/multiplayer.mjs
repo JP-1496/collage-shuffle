@@ -97,6 +97,39 @@ async function runSubmissionCountScenario(playerCount, reverseOrder=false){
   }
 }
 
+async function runDistributionScenario(playerCount=8){
+  const clients=[];
+  try{
+    const host=await connect();clients.push(host);
+    host.ws.send(JSON.stringify({type:'HOST_CREATE',name:'DistributionHost',lobbyName:'Set Distribution Test',settings:{capacity:playerCount,imagesPerPlayer:1,round1Images:1,hostApproval:false,creationSeconds:30}}));
+    const hj=await waitFor(()=>host.messages.find(m=>m.type==='JOINED'));
+    const players=[{client:host,playerId:hj.playerId}];
+    for(let i=1;i<playerCount;i++){
+      const guest=await connect();clients.push(guest);
+      guest.ws.send(JSON.stringify({type:'JOIN',name:`DistGuest${i}`,code:hj.code}));
+      const gj=await waitFor(()=>guest.messages.find(m=>m.type==='JOINED'));
+      players.push({client:guest,playerId:gj.playerId});
+    }
+    await nextState(host,s=>s.phase==='LOBBY'&&s.players.length===playerCount);
+    for(const p of players.slice(1))action(p.client,p.playerId,{type:'SET_READY',ready:true});
+    action(host,hj.playerId,{type:'START'});
+    await nextState(host,s=>s.phase==='IMAGE_SUBMISSION');
+    for(const p of players)action(p.client,p.playerId,{type:'ADD_SOURCE',data:PNG});
+    for(const p of players)action(p.client,p.playerId,{type:'IMAGE_READY'});
+    await nextState(host,s=>s.phase==='PROMPT_SUBMISSION');
+    for(let i=0;i<players.length;i++)action(players[i].client,players[i].playerId,{type:'ADD_PROMPT',text:`Distribution prompt ${i+1}`});
+    for(let round=0;round<playerCount;round++){
+      const states=await Promise.all(players.map(p=>nextState(p.client,s=>s.phase==='ROUND'&&s.round===round)));
+      for(let i=0;i<players.length;i++){
+        const pieces=round===0?[{src:PNG,x:50,y:50,w:25,rotation:0,flipX:false,flipY:false,z:0}]:states[i].currentPieces;
+        action(players[i].client,players[i].playerId,{type:'SUBMIT_COLLAGE',pieces});
+      }
+      if(round<playerCount-1)await Promise.all(players.map(p=>nextState(p.client,s=>s.phase==='ROUND'&&s.round===round+1)));
+      else await nextState(host,s=>s.phase==='FINAL_SHOWCASE');
+    }
+  }finally{for(const c of clients)c.ws.close();}
+}
+
 async function runBotScenario(){
   const host=await connect();
   try{
@@ -257,7 +290,7 @@ async function main(){
     assert.equal((await fetch(BASE+'/health').then(r=>r.json())).version     ,'1.4.82');
     host.ws.close();guest.ws.close();
 
-    // Repeat the final-submission transition repeatedly and in both orders.
+    // Exercise every distribution round with eight players and verify server lineage logs.\n    await runDistributionScenario(8);\n\n    // Repeat the final-submission transition repeatedly and in both orders.
     for(let i=0;i<5;i++) await runSubmissionCountScenario(2,i%2===1);
     for(let i=0;i<3;i++) await runSubmissionCountScenario(3,i%2===1);
     await runSubmissionCountScenario(4,false);
@@ -352,7 +385,16 @@ async function main(){
     await Promise.all([nextState(resumeHost,s=>s.phase==='ROUND'&&s.round===1),nextState(resumedGuest,s=>s.phase==='ROUND'&&s.round===1)]);
     resumeHost.ws.close(); resumedGuest.ws.close();
 
-    console.log('PASS: multiplayer flow, privacy filtering, rotation, vote locking, disconnect handling and version endpoint');
+    const distributionLogs=output.split('\\n').filter(line=>line.includes('[SET-DISTRIBUTION]')).map(line=>{const raw=line.slice(line.indexOf('[SET-DISTRIBUTION]')+'[SET-DISTRIBUTION]'.length).trim();return JSON.parse(raw);});
+    const testLogs=distributionLogs.filter(entry=>entry.totalRounds===8&&entry.players.length===8);
+    assert.equal(testLogs.length,8,'Expected one set-distribution diagnostic per round in the eight-player test');
+    assert.ok(testLogs.every(entry=>entry.valid),JSON.stringify(testLogs.filter(entry=>!entry.valid)));
+    for(const player of testLogs[0].players){
+      const lineages=testLogs.map(entry=>entry.players.find(p=>p.player===player.player)?.lineage);
+      assert.equal(lineages.length,8);
+      assert.equal(new Set(lineages).size,8,`Player ${player.player} should see all eight original sets exactly once`);
+    }
+    console.log('PASS: multiplayer flow, set-lineage distribution, privacy filtering, rotation, vote locking, disconnect handling and version endpoint');
   }finally{
     server.kill();
     await sleep(100);
