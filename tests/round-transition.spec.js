@@ -102,8 +102,8 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     await addTwoImages(p1);
     await addTwoImages(p2);
 
-    await expect(p1.getByText(/Give everyone something ridiculous to make/)).toBeVisible();
-    await expect(p2.getByText(/Give everyone something ridiculous to make/)).toBeVisible();
+    await expect(p1.getByText(/Write a prompt for the other players/)).toBeVisible();
+    await expect(p2.getByText(/Write a prompt for the other players/)).toBeVisible();
 
     await p1.locator('#prompt').fill('A tiny dinosaur running a karting track');
     await p2.locator('#prompt').fill('A penguin who thinks it is a racing driver');
