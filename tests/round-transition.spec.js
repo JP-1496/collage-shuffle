@@ -109,7 +109,7 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     await p2.locator('#prompt').fill('A penguin who thinks it is a racing driver');
     await p2.locator('#prompt').press('Shift+Enter');
     await p2.locator('#prompt').pressSequentially('Across the finish line');
-    await expect(p2.locator('#prompt')).toHaveValue('A penguin who thinks it is a racing driver\\nAcross the finish line');
+    await expect(p2.locator('#prompt')).toHaveValue(['A penguin who thinks it is a racing driver', 'Across the finish line'].join(String.fromCharCode(10)));
     await p1.locator('#prompt').press('Enter');
     await p2.getByRole('button', { name: /Submit Prompt/ }).click();
 
