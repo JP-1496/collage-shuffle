@@ -1,3 +1,8 @@
+## V1.6.64
+- Keep selected piece editing controls above overlapping pieces during editing.
+- Stop capping cut pieces at 60% of canvas width; preserve the selected cut's proportional width even when it extends beyond the canvas.
+- Refresh frontend asset cache-busting versions and runtime version.
+
 ## V1.6.63
 - Submit a prompt by pressing Enter on the prompt-entry screen.
 - Keep Shift+Enter available for adding a new line; ignore Enter while an input method editor is composing text.
