@@ -154,10 +154,14 @@ async function runBotScenario(){
     const finalState=await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===0&&s.finalStage==='SLIDESHOW');
     assert.equal(Object.keys(finalState.finalResults[0].collages||{}).length,2);
     action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
+    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===0&&s.finalStage==='SLIDESHOW'&&s.finalSlideIndex===1);
+    action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
     await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===0&&s.finalStage==='VOTE');
     action(host,joined.playerId,{type:'FINAL_VOTE',targetId:bot.id});
     const secondFinalState=await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1&&s.finalStage==='SLIDESHOW');
     assert.equal(Object.keys(secondFinalState.finalResults[1].collages||{}).length,2);
+    action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
+    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1&&s.finalStage==='SLIDESHOW'&&s.finalSlideIndex===1);
     action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
     await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1&&s.finalStage==='VOTE');
     action(host,joined.playerId,{type:'FINAL_VOTE',targetId:bot.id});
