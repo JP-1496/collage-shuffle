@@ -1,3 +1,8 @@
+## V1.6.62
+- Preserve piece z-order during live collage sync and final submission so Front/Back controls carry through to the final showcase.
+- Give the selected piece's resize/rotate handles priority during pointer hit-testing, even when another piece overlaps those handles.
+- Keep edge handles independently stretchable; selected-handle priority also fixes cases where overlapping bot-created pieces intercepted resize gestures.
+
 ## V1.6.58
 - Prevent the initial ROUND state from triggering a second full render just to initialise the submitted-collage counter; this redraw could reset the ingredient list scroll position shortly after entering the editor.
 - Reset the submitted counter when the round changes, then seed it on the first live update of that round to preserve later submission-status updates.

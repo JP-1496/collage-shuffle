@@ -252,8 +252,14 @@ async function main(){
     assert.ok(!('travelingSets' in r1h));
     assert.ok(r1h.finalResults.every(r=>!r.collages));
 
-    const p1=[{src:PNG,x:50,y:50,w:25,rotation:0,flipX:false,flipY:false,z:0}];
-    const p2=[{src:PNG,x:60,y:40,w:30,rotation:15,flipX:true,flipY:false,z:0}];
+    const p1=[
+      {src:PNG,x:50,y:50,w:25,rotation:0,flipX:false,flipY:false,z:8},
+      {src:PNG,x:52,y:52,w:20,rotation:5,flipX:false,flipY:false,z:2}
+    ];
+    const p2=[
+      {src:PNG,x:60,y:40,w:30,rotation:15,flipX:true,flipY:false,z:6},
+      {src:PNG,x:45,y:65,w:18,rotation:-10,flipX:false,flipY:true,z:3}
+    ];
     action(host,hj.playerId,{type:'SYNC_COLLAGE',pieces:p1});
     action(guest,gj.playerId,{type:'SYNC_COLLAGE',pieces:p2});
     action(host,hj.playerId,{type:'SUBMIT_COLLAGE',pieces:p1});
@@ -275,8 +281,8 @@ async function main(){
     const r2g=await nextState(guest,s=>s.phase==='ROUND'&&s.round===1);
     assert.equal(r2h.roundPlayerSets[hj.playerId],gj.playerId);
     assert.equal(r2g.roundPlayerSets[gj.playerId],hj.playerId);
-    assert.equal(r2h.currentPieces.length,1);
-    assert.equal(r2g.currentPieces.length,1);
+    assert.equal(r2h.currentPieces.length,2);
+    assert.equal(r2g.currentPieces.length,2);
     assert.ok(!('travelingSets' in r2h));
 
     action(host,hj.playerId,{type:'SUBMIT_COLLAGE',pieces:r2h.currentPieces});
@@ -285,6 +291,7 @@ async function main(){
     const show=await nextState(host,s=>s.phase==='FINAL_SHOWCASE');
     assert.ok(show.finalResults[0].collages);
     assert.ok(show.finalResults[0].collages[hj.playerId]);
+    assert.deepEqual(show.finalResults[0].collages[hj.playerId].pieces.map(p=>p.z),[8,2],'front/back z-order must survive sync and final submission');
     assert.ok(!show.finalResults[1].collages);
 
     action(host,hj.playerId,{type:'FINAL_VOTE',targetId:gj.playerId});

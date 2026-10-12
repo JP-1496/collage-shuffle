@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.61';
+const VERSION = '1.6.62';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = process.env.COLLAGE_TEST_MODE === '1' ? 2 : 3;
 const app = express();
@@ -556,12 +556,12 @@ function handle(g,pid,a){
     case 'DELETE_SOURCE': if(g.phase==='HOST_APPROVAL'&&p.host)g.sources=g.sources.filter(x=>x.id!==a.sourceId); break;
     case 'APPROVAL_DONE': if(g.phase==='HOST_APPROVAL'&&p.host){g.sources=g.sources.filter(x=>x.approved!==false);if(g.sources.length)beginPrompts(g);} break;
     case 'ADD_PROMPT': if(g.phase==='PROMPT_SUBMISSION'&&!g.prompts.some(x=>x.ownerId===pid)&&String(a.text||'').trim()){g.prompts.push({id:id(),text:String(a.text).trim().slice(0,500),ownerId:pid});if(g.prompts.length===g.players.length){g.promptOrder=shuffle(g.prompts.map(x=>x.id));g.round=0;beginRound(g);}} break;
-    case 'SYNC_COLLAGE': { if(g.phase==='ROUND'){const c=g.collages[pid];if(c&&!c.submitted)c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));} return; }
+    case 'SYNC_COLLAGE': { if(g.phase==='ROUND'){const c=g.collages[pid];if(c&&!c.submitted)c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:Number.isFinite(Number(x.z))?Number(x.z):i}));} return; }
     case 'SUBMIT_COLLAGE': {
       if(g.phase!=='ROUND')break;
       const c=g.collages[pid];
       if(!c || c.submitted)break;
-      c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));
+      c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:Number.isFinite(Number(x.z))?Number(x.z):i}));
       if(g.round===0)c.pieces=c.pieces.filter(pieceIntersectsCanvas).map(piece=>({...piece,sourceSetId:pid}));
       c.submitted=true;
       const submittedPieces=clone(c.pieces||[]).map(piece=>piece.createdBy?piece:{...piece,createdBy:pid});
