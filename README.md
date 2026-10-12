@@ -1,4 +1,8 @@
-# Collage — Shuffle V1.6.60
+# Collage — Shuffle V1.6.61
+
+### V1.6.61
+- Fixed set rotation to move each set forward one slot per round, so every set visits every other player exactly once for any player count.
+- Added server-side set-lineage diagnostics that flag repeated or duplicate sets by round.
 
 ### V1.6.60
 - Bots now fetch real images through Surprise Me-style random image searches.

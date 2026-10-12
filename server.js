@@ -4,9 +4,9 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.6.60';
+const VERSION = '1.6.61';
 const HEARTBEAT_MS = 10000;
-const MIN_PLAYERS = 3;
+const MIN_PLAYERS = process.env.COLLAGE_TEST_MODE === '1' ? 2 : 3;
 const app = express();
 const http = createServer(app);
 const wss = new WebSocketServer({ server: http, path: '/ws' });
@@ -334,7 +334,7 @@ function stateFor(g,pid){
   }
   return s;
 }
-function newGame(name,settings,host){ const g={code:code(),name,phase:'LOBBY',minPlayers:MIN_PLAYERS,settings,players:[host],sources:[],submittedSources:{},prompts:[],promptOrder:[],round:0,currentPromptId:null,roundSources:{},roundPlayerSets:{},collages:{},travelingSets:{},votes:{},scores:{},lastTally:{},finalResults:[],finalIndex:0,finalStage:null,finalSlideIndex:0,finalVotes:{},bestCollages:{},timerEndsAt:null}; games.set(g.code,g); return g; }
+function newGame(name,settings,host){ const g={code:code(),name,phase:'LOBBY',minPlayers:MIN_PLAYERS,settings,players:[host],sources:[],submittedSources:{},prompts:[],promptOrder:[],round:0,currentPromptId:null,roundSources:{},roundPlayerSets:{},collages:{},travelingSets:{},setLineage:{},seenSetLineages:{},votes:{},scores:{},lastTally:{},finalResults:[],finalIndex:0,finalStage:null,finalSlideIndex:0,finalVotes:{},bestCollages:{},timerEndsAt:null}; games.set(g.code,g); return g; }
 function cancelTimer(g){ const t=timers.get(g.code); if(t) clearTimeout(t); timers.delete(g.code); }
 function schedule(g,ms,fn){ cancelTimer(g); const marker=Date.now()+':'+g.phase+':'+g.round; g.timerMarker=marker; timers.set(g.code,setTimeout(()=>{timers.delete(g.code);if(g.timerMarker===marker)fn();},ms)); }
 function transition(g,phase){cancelTimer(g);g.phase=phase;g.timerEndsAt=null;broadcast(g);}
@@ -379,12 +379,15 @@ function beginRound(g){
   }
   if(g.round===0){
     for(const pid of ids)g.roundPlayerSets[pid]=pid;
+    g.setLineage=Object.fromEntries(ids.map(pid=>[pid,pid]));
+    g.seenSetLineages=Object.fromEntries(ids.map(pid=>[pid,[]]));
   }else{
-    // Each set moves one position per round. Across n-1 shuffle rounds, each player
-    // receives every other player's set exactly once and never their own.
+    // Move every current set forward exactly one slot each round. Using a constant
+    // one-slot shift (rather than shifting by the round number) guarantees that
+    // every set visits every other player exactly once for any player count.
     for(const sourceId of ids){
       const sourceSlot=g.rotationSlots[sourceId];
-      const recipientSlot=(sourceSlot+g.round)%n;
+      const recipientSlot=(sourceSlot+1)%n;
       const recipient=ids.find(pid=>g.rotationSlots[pid]===recipientSlot);
       if(!recipient||recipient===sourceId)throw new Error('Invalid cyclic round assignment');
       g.roundPlayerSets[sourceId]=recipient;
@@ -392,7 +395,33 @@ function beginRound(g){
   }
   g.votes={};g.collages={};
   if(g.round===0){assignRound1Sources(g);for(const p of g.players)g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:[],submitted:false};}
-  else {for(const p of g.players){const owner=Object.keys(g.roundPlayerSets).find(sourceId=>g.roundPlayerSets[sourceId]===p.id);g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:scatter(g.travelingSets[owner]||[]),submitted:false};}}
+  else {
+    const nextLineage={};
+    for(const p of g.players){
+      const owner=Object.keys(g.roundPlayerSets).find(sourceId=>g.roundPlayerSets[sourceId]===p.id);
+      nextLineage[p.id]=g.setLineage[owner]||owner;
+      g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:scatter(g.travelingSets[owner]||[]),submitted:false};
+    }
+    g.setLineage=nextLineage;
+  }
+  // Diagnostic trace: identifies the original set each player currently holds,
+  // and flags any repeat or missing set without sending debug data to clients.
+  const distribution=ids.map(pid=>{
+    const expectedLineage=g.setLineage[pid]||pid;
+    const pieces=g.collages[pid]?.pieces||[];
+    const actualLineages=[...new Set(pieces.map(piece=>piece.sourceSetId).filter(Boolean))];
+    const metadataMissing=g.round>0&&pieces.some(piece=>!piece.sourceSetId);
+    const lineage=actualLineages.length===1?actualLineages[0]:expectedLineage;
+    const seen=g.seenSetLineages[pid]||[];
+    const repeated=seen.includes(lineage);
+    if(!repeated)seen.push(lineage);
+    g.seenSetLineages[pid]=seen;
+    return {player:g.players.find(p=>p.id===pid)?.name||pid,lineage,expectedLineage,actualLineages,metadataMissing,repeated,uniqueSeen:seen.length,expected:n};
+  });
+  const lineages=distribution.map(x=>x.lineage);
+  const duplicateLineages=lineages.filter((value,index)=>lineages.indexOf(value)!==index);
+  const valid=new Set(lineages).size===n&&distribution.every(x=>!x.repeated&&!x.metadataMissing&&x.actualLineages.length<=1);
+  console.info('[SET-DISTRIBUTION]',JSON.stringify({code:g.code,round:g.round+1,totalRounds:n,players:distribution,duplicateLineages:[...new Set(duplicateLineages)],valid}));
   if(!g.finalResults[g.round])g.finalResults[g.round]={promptId:g.currentPromptId,collages:{}};
   g.phase='ROUND';g.timerEndsAt=Date.now()+g.settings.creationSeconds*1000;broadcast(g);runBotsForRound(g);
   schedule(g,g.settings.creationSeconds*1000,()=>finishRound(g));
@@ -478,7 +507,7 @@ function finishFinalGame(g){
   clearBotJobs(g);
   broadcast(g);
 }
-function resetGameState(g){g.sources=[];g.submittedSources={};g.imageReady={};g.prompts=[];g.promptOrder=[];g.round=0;g.currentPromptId=null;g.roundSources={};g.roundPlayerSets={};g.rotationSlots=null;g.collages={};g.travelingSets={};g.votes={};g.scores={};g.lastTally={};g.finalResults=[];g.finalIndex=0;g.finalStage=null;g.finalSlideIndex=0;g.finalVotes={};g.bestCollages={};g.timerEndsAt=null;}
+function resetGameState(g){g.sources=[];g.submittedSources={};g.imageReady={};g.prompts=[];g.promptOrder=[];g.round=0;g.currentPromptId=null;g.roundSources={};g.roundPlayerSets={};g.rotationSlots=null;g.collages={};g.travelingSets={};g.setLineage={};g.seenSetLineages={};g.votes={};g.scores={};g.lastTally={};g.finalResults=[];g.finalIndex=0;g.finalStage=null;g.finalSlideIndex=0;g.finalVotes={};g.bestCollages={};g.timerEndsAt=null;}
 function restartSamePlayers(g){clearBotJobs(g);resetGameState(g);g.phase='IMAGE_SUBMISSION';g.timerEndsAt=Date.now()+g.settings.imageSeconds*1000;broadcast(g);runBotsForImageSubmission(g);schedule(g,g.settings.imageSeconds*1000,()=>finishImageSubmission(g));}
 function restartNewPlayers(g){clearBotJobs(g);const host=g.players.find(p=>p.host);for(const p of g.players){if(p===host)continue;const ws=sockets.get(p.id);if(ws){try{ws.send(JSON.stringify({type:'ERROR',message:'The host started a new lobby for new players.'}));ws.close(4004,'New players');}catch{}}sockets.delete(p.id);}g.players=host?[host]:[];if(host)host.connected=true;resetGameState(g);g.phase='LOBBY';if(host)host.ready=true;broadcast(g);}
 function handle(g,pid,a){
@@ -533,7 +562,7 @@ function handle(g,pid,a){
       const c=g.collages[pid];
       if(!c || c.submitted)break;
       c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));
-      if(g.round===0)c.pieces=c.pieces.filter(pieceIntersectsCanvas);
+      if(g.round===0)c.pieces=c.pieces.filter(pieceIntersectsCanvas).map(piece=>({...piece,sourceSetId:pid}));
       c.submitted=true;
       const submittedPieces=clone(c.pieces||[]).map(piece=>piece.createdBy?piece:{...piece,createdBy:pid});
       c.pieces=submittedPieces;
@@ -543,9 +572,9 @@ function handle(g,pid,a){
       const connected=g.players.filter(x=>x.connected);
       const submitted=connected.filter(x=>g.collages[x.id]?.submitted).length;
       // Broadcast the accepted count first. WebSocket delivery preserves message
-      // order, so clients receive 2/2 before the Round 2 state.
+      // order, so clients receive the completed submission count before the next-round state.
+      broadcast(g);
       if(connected.length>0 && submitted===connected.length) finishRound(g);
-      else broadcast(g);
       return;
     }
     case 'FINAL_NEW_PLAYERS': {if(g.phase==='FINAL'&&p.host)restartNewPlayers(g);break;}

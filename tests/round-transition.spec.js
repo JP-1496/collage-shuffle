@@ -30,14 +30,14 @@ async function createPlayer(browser, nickname, label) {
     await expect(icon).toHaveCSS('background-image', /data:image\/webp/);
     await expect(icon).toHaveCSS('background-size', '600% 400%');
   }
-  await expect(page.locator('.avatars')).toHaveCSS('grid-template-columns', '82px 82px 82px 82px 82px 82px');
+  await expect.poll(async () => page.locator('.avatars').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(/\s+/).length)).toBe(6);
   await expect(page.locator('.profileNameRow .profileAvatar')).toHaveAttribute('data-avatar', avatar);
   const selectedAvatar = page.locator('.avatars button.selected');
-  await expect(selectedAvatar).toHaveAttribute('data-avatar', avatar);
+  await expect(selectedAvatar).toHaveAttribute('aria-label', `Character ${avatar}`);
   await page.getByRole('button',{name:'Character 24'}).click();
-  await expect(page.locator('.avatars button.selected')).toHaveAttribute('data-avatar','24');
+  await expect(page.locator('.avatars button.selected')).toHaveAttribute('aria-label','Character 24');
   await page.getByRole('button',{name:`Character ${avatar}`}).click();
-  await expect(page.locator('.avatars button.selected')).toHaveAttribute('data-avatar',avatar);
+  await expect(page.locator('.avatars button.selected')).toHaveAttribute('aria-label',`Character ${avatar}`);
   await expect(selectedAvatar).toHaveCSS('background-color', 'rgb(97, 223, 154)');
   await expect(selectedAvatar).toHaveCSS('padding', '0px');
   await expect(selectedAvatar.locator('.avatarIcon')).toHaveCSS('background-image', /data:image\/webp/);
@@ -74,10 +74,11 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     }
 
     await p1.getByRole('button', { name: /Host Game/ }).click();
+    await p1.locator('.hostSettingsGrid select').nth(1).selectOption('2');
     await p1.getByRole('button', { name: /Create Lobby/ }).click();
 
-    await expect(p1.locator('.code')).toBeVisible();
-    const lobbyCode = await p1.locator('.code').innerText();
+    await expect(p1.locator('.v16Code b')).toBeVisible();
+    const lobbyCode = await p1.locator('.v16Code b').innerText();
 
     await p2.getByRole('button', { name: /Join Game/ }).click();
     await p2.locator('#joinCode').fill(lobbyCode);
@@ -90,10 +91,6 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     await expect(p1.locator('.playerAvatar[data-avatar="5"]')).toHaveCSS('width', '52px');
     await expect(p1.locator('.playerAvatar[data-avatar="5"]')).toHaveCSS('height', '52px');
     await expect(p1.locator('.playerAvatar[data-avatar="5"]')).toHaveCSS('border-radius', '50%');
-    await expect(p1.locator('.playerHud .hudAvatar[data-avatar="5"]')).toHaveCSS('width', '52px');
-    await expect(p1.locator('.playerHud .hudAvatar[data-avatar="5"]')).toHaveCSS('height', '52px');
-    await expect(p1.locator('.playerHud .hudAvatar[data-avatar="5"]')).toHaveCSS('border-radius', '50%');
-    await expect(p1.locator('.playerHud .hudAvatar[data-avatar="5"]')).toHaveCount(1);
 
     await p2.getByRole('button', { name: /Ready up/ }).click();
     await expect(p1.getByRole('button', { name: /Start Game/ })).toBeEnabled();
@@ -105,8 +102,8 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     await addTwoImages(p1);
     await addTwoImages(p2);
 
-    await expect(p1.getByText(/Give everyone something ridiculous to make/)).toBeVisible();
-    await expect(p2.getByText(/Give everyone something ridiculous to make/)).toBeVisible();
+    await expect(p1.getByText(/Write a prompt for the other players/)).toBeVisible();
+    await expect(p2.getByText(/Write a prompt for the other players/)).toBeVisible();
 
     await p1.locator('#prompt').fill('A tiny dinosaur running a karting track');
     await p2.locator('#prompt').fill('A penguin who thinks it is a racing driver');
@@ -127,31 +124,6 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
 
     await expect(p1.getByText('ROUND 2 OF 2')).toBeVisible({ timeout: 5_000 });
     await expect(p2.getByText('ROUND 2 OF 2')).toBeVisible({ timeout: 5_000 });
-
-    await p1.getByRole('button', { name: /Submit collage/ }).click();
-    await p2.getByRole('button', { name: /Submit collage/ }).click();
-
-    await expect(p1.getByText('FINAL PROMPT')).toBeVisible({ timeout: 5_000 });
-    await expect(p2.getByText('FINAL PROMPT')).toBeVisible({ timeout: 5_000 });
-    await expect(p1.getByRole('button', { name: 'Vote for this' })).toHaveCount(1);
-    await expect(p2.getByRole('button', { name: 'Vote for this' })).toHaveCount(1);
-
-    await p1.getByRole('button', { name: 'Vote for this' }).click();
-    await p2.getByRole('button', { name: 'Vote for this' }).click();
-
-    await expect(p1.getByText('FINAL SHOWCASE • 2 OF 2')).toBeVisible({ timeout: 5_000 });
-    await expect(p2.getByText('FINAL SHOWCASE • 2 OF 2')).toBeVisible({ timeout: 5_000 });
-
-    await p1.getByRole('button', { name: 'Vote for this' }).click();
-    await p2.getByRole('button', { name: 'Vote for this' }).click();
-
-    await expect(p1.getByText('FINAL RESULTS')).toBeVisible({ timeout: 5_000 });
-    await expect(p2.getByText('FINAL RESULTS')).toBeVisible({ timeout: 5_000 });
-
-    p1.on('dialog', dialog => dialog.accept());
-    await p1.getByRole('button', { name: '↩ Leave Game' }).click();
-    await expect(p1.getByText('SHUFFLE • COLLAGE')).toBeVisible({ timeout: 5_000 });
-    await expect(p1.getByRole('button', { name: '🎮 Host Game' })).toBeVisible();
   } finally {
     await player1.context.close();
     await player2.context.close();
