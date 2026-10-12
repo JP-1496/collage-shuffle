@@ -407,16 +407,21 @@ function beginRound(g){
   // Diagnostic trace: identifies the original set each player currently holds,
   // and flags any repeat or missing set without sending debug data to clients.
   const distribution=ids.map(pid=>{
-    const lineage=g.setLineage[pid]||pid;
+    const expectedLineage=g.setLineage[pid]||pid;
+    const pieces=g.collages[pid]?.pieces||[];
+    const actualLineages=[...new Set(pieces.map(piece=>piece.sourceSetId).filter(Boolean))];
+    const metadataMissing=g.round>0&&pieces.some(piece=>!piece.sourceSetId);
+    const lineage=actualLineages.length===1?actualLineages[0]:expectedLineage;
     const seen=g.seenSetLineages[pid]||[];
     const repeated=seen.includes(lineage);
     if(!repeated)seen.push(lineage);
     g.seenSetLineages[pid]=seen;
-    return {player:g.players.find(p=>p.id===pid)?.name||pid,lineage,repeated,uniqueSeen:seen.length,expected:n};
+    return {player:g.players.find(p=>p.id===pid)?.name||pid,lineage,expectedLineage,actualLineages,metadataMissing,repeated,uniqueSeen:seen.length,expected:n};
   });
   const lineages=distribution.map(x=>x.lineage);
   const duplicateLineages=lineages.filter((value,index)=>lineages.indexOf(value)!==index);
-  console.info('[SET-DISTRIBUTION]',JSON.stringify({code:g.code,round:g.round+1,totalRounds:n,players:distribution,duplicateLineages:[...new Set(duplicateLineages)],valid:new Set(lineages).size===n&&distribution.every(x=>!x.repeated)}));
+  const valid=new Set(lineages).size===n&&distribution.every(x=>!x.repeated&&!x.metadataMissing&&x.actualLineages.length<=1);
+  console.info('[SET-DISTRIBUTION]',JSON.stringify({code:g.code,round:g.round+1,totalRounds:n,players:distribution,duplicateLineages:[...new Set(duplicateLineages)],valid}));
   if(!g.finalResults[g.round])g.finalResults[g.round]={promptId:g.currentPromptId,collages:{}};
   g.phase='ROUND';g.timerEndsAt=Date.now()+g.settings.creationSeconds*1000;broadcast(g);runBotsForRound(g);
   schedule(g,g.settings.creationSeconds*1000,()=>finishRound(g));
@@ -557,7 +562,7 @@ function handle(g,pid,a){
       const c=g.collages[pid];
       if(!c || c.submitted)break;
       c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:i}));
-      if(g.round===0)c.pieces=c.pieces.filter(pieceIntersectsCanvas);
+      if(g.round===0)c.pieces=c.pieces.filter(pieceIntersectsCanvas).map(piece=>({...piece,sourceSetId:pid}));
       c.submitted=true;
       const submittedPieces=clone(c.pieces||[]).map(piece=>piece.createdBy?piece:{...piece,createdBy:pid});
       c.pieces=submittedPieces;
