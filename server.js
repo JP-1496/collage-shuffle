@@ -199,7 +199,7 @@ async function fetchBotSurpriseImage(){
       if(!results.length)continue;
       for(const item of shuffle(results).slice(0,8)){
         try{
-          const response=await fetch(item.url,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'image/jpeg,image/png,image/webp'}});
+          const response=await fetch(item.thumb||item.url,{headers:{'User-Agent':SEARCH_USER_AGENT,'Accept':'image/jpeg,image/png,image/webp'}});
           if(!response.ok)continue;
           const type=(response.headers.get('content-type')||'').split(';')[0].toLowerCase();
           if(!['image/jpeg','image/png','image/webp'].includes(type))continue;
