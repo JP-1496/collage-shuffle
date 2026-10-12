@@ -1,3 +1,10 @@
+## V1.6.65
+- Keep selected cutouts in their existing layer order instead of raising the entire image when selected.
+- Keep the cutting modal above canvas content.
+- Close the cutting editor when the game phase or round changes, discarding unfinished cuts.
+- Reject attempts to finish a cut if its original round has ended or changed.
+- Update runtime, package, and asset cache versions.
+
 ## V1.6.64
 - Keep selected piece editing controls above overlapping pieces during editing.
 - Stop capping cut pieces at 60% of canvas width; preserve the selected cut's proportional width even when it extends beyond the canvas.
