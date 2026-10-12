@@ -235,15 +235,28 @@ function botPieces(g,pid){
   if(g.round===0){
     const sourceIds=g.roundSources[pid]||[];
     const sources=sourceIds.map(x=>g.sources.find(s=>s.id===x)).filter(Boolean);
-    const pieces=[];
-    for(const source of sources){
-      const count=2+Math.floor(Math.random()*4);
-      for(let i=0;i<count;i++){const piece=randomBotCut(source,pieces.length);if(piece)pieces.push(piece);}
+    if(!sources.length)return [];
+    // Each bot makes one collage from 3–8 cuts, randomly sampled across its own image pool.
+    const targetCount=3+Math.floor(Math.random()*6),pieces=[];
+    for(let i=0;i<targetCount;i++){
+      const source=sources[Math.floor(Math.random()*sources.length)];
+      const piece=randomBotCut(source,i);
+      if(piece)pieces.push(piece);
     }
     return pieces;
   }
   const pieces=clone(g.collages[pid]?.pieces||[]);
-  return pieces.map((p,i)=>({...p,x:5+Math.random()*90,y:5+Math.random()*90,rotation:Math.round(Math.random()*360-180),flipX:Math.random()<0.5,flipY:Math.random()<0.5,w:Math.max(5,Math.min(45,(p.w||24)*(0.65+Math.random()*0.9))),z:i}));
+  return pieces.map((p,i)=>{
+    const scaleX=0.55+Math.random()*1.35,scaleY=0.55+Math.random()*1.35;
+    return {...p,
+      x:5+Math.random()*90,y:5+Math.random()*90,
+      rotation:Math.round(Math.random()*360-180),
+      flipX:Math.random()<0.5,flipY:Math.random()<0.5,
+      w:Math.max(5,Math.min(55,(p.w||24)*scaleX)),
+      h:Math.max(5,Math.min(55,(p.h||((p.w||24)*(p.ratio||0.75)))*scaleY)),
+      z:i
+    };
+  });
 }
 function runBotsForImageSubmission(g){
   botList(g).forEach((p,bi)=>{
