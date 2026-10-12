@@ -1616,3 +1616,7 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
     font-size:11px;
   }
 }
+
+/* V1.6.64 — keep selected editing controls above overlapping pieces. */
+.pieceWrap.selected{z-index:2147483000!important;}
+.pieceWrap.selected .pieceHandle,.pieceWrap.selected .pieceRotate{z-index:2147483647!important;}
