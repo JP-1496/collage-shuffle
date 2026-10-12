@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 
 const VERSION = '1.6.61';
 const HEARTBEAT_MS = 10000;
-const MIN_PLAYERS = 3;
+const MIN_PLAYERS = process.env.COLLAGE_TEST_MODE === '1' ? 2 : 3;
 const app = express();
 const http = createServer(app);
 const wss = new WebSocketServer({ server: http, path: '/ws' });
