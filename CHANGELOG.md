@@ -1,3 +1,6 @@
+## V1.6.71
+- Clear the canvas selection overlay immediately when submitting a collage, preventing bounding boxes and handles from carrying into the next stage.
+
 ## V1.6.70
 - Fixed the selected cut's bounding box remaining visible after deleting the cut.
 
