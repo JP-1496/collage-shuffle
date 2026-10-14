@@ -272,7 +272,7 @@ function pieceOpaqueAt(p,clientX,clientY,canvasRect){
 function pieceAtPoint(clientX,clientY,rect){return [...state.pieces].sort((a,b)=>(Number(b.z)||0)-(Number(a.z)||0)).find(p=>pieceOpaqueAt(p,clientX,clientY,rect))||null;}
 function pieceDown(e,id,mode='move'){
   e.preventDefault();e.stopPropagation();
-  const p=state.pieces.find(x=>x.id===id);
+  let p=state.pieces.find(x=>x.id===id);
   if(!p||state.game?.submissionStatus?.[state.pid])return;
   const canvas=document.querySelector('#canvas');
   if(!canvas)return;
