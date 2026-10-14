@@ -1,3 +1,6 @@
+## V1.6.70
+- Fixed the selected cut's bounding box remaining visible after deleting the cut.
+
 ## V1.6.69
 - Added a right-side, independently scrollable ingredient list showing Cut 1, Cut 2, etc. in creation order.
 - Selecting a list entry selects the matching canvas piece; dragging rows reorders the layer stack (top row is frontmost).
