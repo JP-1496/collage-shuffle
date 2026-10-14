@@ -1,3 +1,7 @@
+## V1.6.76
+- Added alpha-aware canvas hit-testing for piece selection and dragging: transparent pixels click through to the topmost visible piece underneath.
+- Preserved selection overlay handle hit-testing and existing layer order.
+
 ## V1.6.75
 - Fixed voting cards so square masterpiece canvases no longer consume the entire card height and hide Vote/Your collage controls.
 - Preserved the V1.6.74 square canvas rendering rules.

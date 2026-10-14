@@ -255,13 +255,31 @@ function positionSelectionOverlay(p){const overlay=document.querySelector('[data
 function clearSelection(){state.selected=null;document.querySelector('[data-selection-overlay]')?.remove()}
 function pieceHTML(p){const w=p.w||24,h=p.h||w*(p.ratio||.75);return `<div class="pieceWrap" data-piece="${p.id}" style="left:${p.x}%;top:${p.y}%;width:${w}%;height:${h}%;transform:translate(-50%,-50%) rotate(${p.rotation||0}deg);z-index:${p.z||0}" onpointerdown="pieceDown(event,'${p.id}','move')"><img class="pieceImage" draggable="false" src="${p.src}" onload="pieceLoaded(event,'${p.id}')" style="transform:scaleX(${p.flipX?-1:1}) scaleY(${p.flipY?-1:1})"></div>`}
 function pieceLoaded(e,id){const p=state.pieces.find(x=>x.id===id),wrap=e.currentTarget.parentElement;if(!p||!wrap)return;if(!p.ratio&&e.currentTarget.naturalWidth&&e.currentTarget.naturalHeight)p.ratio=e.currentTarget.naturalHeight/e.currentTarget.naturalWidth;if(!p.h)p.h=(p.w||24)*(p.ratio||.75);wrap.style.height=p.h+'%'}
+const pieceAlphaCache=new WeakMap();
+function pieceOpaqueAt(p,clientX,clientY,canvasRect){
+  const wrap=document.querySelector('[data-piece="'+p.id+'"]'),img=wrap?.querySelector('img');
+  if(!wrap||!img||!img.complete||!img.naturalWidth||!img.naturalHeight)return false;
+  const w=(Number(p.w)||24)/100*canvasRect.width,h=(Number(p.h)||((Number(p.w)||24)*(Number(p.ratio)||.75)))/100*canvasRect.height;
+  if(w<=0||h<=0)return false;
+  const cx=canvasRect.left+(Number(p.x)||0)/100*canvasRect.width,cy=canvasRect.top+(Number(p.y)||0)/100*canvasRect.height;
+  const angle=-(Number(p.rotation)||0)*Math.PI/180,dx=clientX-cx,dy=clientY-cy;
+  const lx=dx*Math.cos(angle)-dy*Math.sin(angle),ly=dx*Math.sin(angle)+dy*Math.cos(angle);
+  let u=lx/w+.5,v=ly/h+.5;
+  if(u<0||u>1||v<0||v>1)return false;
+  if(p.flipX)u=1-u;if(p.flipY)v=1-v;
+  try{let data=pieceAlphaCache.get(img);if(!data){const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);data={w:c.width,h:c.height,pixels:ctx.getImageData(0,0,c.width,c.height).data};pieceAlphaCache.set(img,data);}const x=Math.min(data.w-1,Math.max(0,Math.floor(u*data.w))),y=Math.min(data.h-1,Math.max(0,Math.floor(v*data.h)));return data.pixels[(y*data.w+x)*4+3]>8;}catch(_){return true}
+}
+function pieceAtPoint(clientX,clientY,rect){return [...state.pieces].sort((a,b)=>(Number(b.z)||0)-(Number(a.z)||0)).find(p=>pieceOpaqueAt(p,clientX,clientY,rect))||null;}
 function pieceDown(e,id,mode='move'){
   e.preventDefault();e.stopPropagation();
-  const p=state.pieces.find(x=>x.id===id);
+  let p=state.pieces.find(x=>x.id===id);
   if(!p||state.game?.submissionStatus?.[state.pid])return;
-  const wrap=document.querySelector('[data-piece="'+id+'"]'),canvas=document.querySelector('#canvas');
-  if(!wrap||!canvas)return;
-  const rect=canvas.getBoundingClientRect(),img=wrap.querySelector('img');
+  const canvas=document.querySelector('#canvas');
+  if(!canvas)return;
+  const rect=canvas.getBoundingClientRect();
+  if(mode==='move'){const hit=pieceAtPoint(e.clientX,e.clientY,rect);if(hit){id=hit.id;p=hit;}}
+  const wrap=document.querySelector('[data-piece="'+id+'"]'),img=wrap?.querySelector('img');
+  if(!wrap)return;
   if(!p.ratio&&img?.naturalWidth&&img?.naturalHeight)p.ratio=img.naturalHeight/img.naturalWidth;
   if(!p.h)p.h=(p.w||24)*(p.ratio||.75);
   const first=state.selected!==id;state.selected=id;
