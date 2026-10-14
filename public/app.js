@@ -303,7 +303,7 @@ function resizePiece(d){const p=state.pieces.find(x=>x.id===state.selected);if(p
   if(state.game?.phase!=='ROUND'||state.game?.submissionStatus?.[state.pid])return;
   clearTimeout(state.syncTimer);state.syncTimer=null;
   const pieces=(state.game.round===0?state.pieces.filter(pieceIntersectsCanvas):state.pieces).map(p=>({...p}));
-  state.pieces=pieces;state.selected=null;
+  state.pieces=pieces;clearSelection();
   if(!send({type:'SUBMIT_COLLAGE',pieces})){
     state.error='Could not submit — connection to the game server was lost.';
     render(true);
