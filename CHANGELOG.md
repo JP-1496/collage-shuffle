@@ -1,3 +1,7 @@
+## V1.6.75
+- Fixed voting cards so square masterpiece canvases no longer consume the entire card height and hide Vote/Your collage controls.
+- Preserved the V1.6.74 square canvas rendering rules.
+
 ## V1.6.74
 - Standardised final masterpiece rendering to a square canvas coordinate space across slideshow, voting cards, and results gallery so submitted positions and dimensions map consistently.
 - Kept the original submitted piece data intact; off-canvas pieces are clipped naturally by the square canvas.
