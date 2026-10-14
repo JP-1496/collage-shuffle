@@ -1,3 +1,7 @@
+## V1.6.74
+- Standardised final masterpiece rendering to a square canvas coordinate space across slideshow, voting cards, and results gallery so submitted positions and dimensions map consistently.
+- Kept the original submitted piece data intact; off-canvas pieces are clipped naturally by the square canvas.
+
 ## V1.6.73
 - Adjusted the editing toolbar layout so Cut, Flip, Back, Front and Delete labels fit neatly in narrow panels without clipping or overflowing.
 
