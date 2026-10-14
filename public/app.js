@@ -259,17 +259,42 @@ const pieceAlphaCache=new WeakMap();
 function pieceOpaqueAt(p,clientX,clientY,canvasRect){
   const wrap=document.querySelector('[data-piece="'+p.id+'"]'),img=wrap?.querySelector('img');
   if(!wrap||!img||!img.complete||!img.naturalWidth||!img.naturalHeight)return false;
-  const w=(Number(p.w)||24)/100*canvasRect.width,h=(Number(p.h)||((Number(p.w)||24)*(Number(p.ratio)||.75)))/100*canvasRect.height;
+  // Use the element's real layout dimensions and inverse its CSS rotation, rather than
+  // reconstructing its bounds from the model. This keeps hit-testing aligned with the
+  // rendered piece after responsive canvas sizing, resizing, rotation and flips.
+  const w=wrap.offsetWidth,h=wrap.offsetHeight;
   if(w<=0||h<=0)return false;
-  const cx=canvasRect.left+(Number(p.x)||0)/100*canvasRect.width,cy=canvasRect.top+(Number(p.y)||0)/100*canvasRect.height;
-  const angle=-(Number(p.rotation)||0)*Math.PI/180,dx=clientX-cx,dy=clientY-cy;
-  const lx=dx*Math.cos(angle)-dy*Math.sin(angle),ly=dx*Math.sin(angle)+dy*Math.cos(angle);
+  const style=getComputedStyle(wrap),angle=(Number(p.rotation)||0)*Math.PI/180;
+  const rect=wrap.getBoundingClientRect();
+  const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+  const dx=clientX-cx,dy=clientY-cy;
+  // CSS rotation uses screen coordinates (positive angles turn clockwise).
+  const lx=dx*Math.cos(angle)+dy*Math.sin(angle);
+  const ly=-dx*Math.sin(angle)+dy*Math.cos(angle);
   let u=lx/w+.5,v=ly/h+.5;
-  if(u<0||u>1||v<0||v>1)return false;
+  if(u<0||u>=1||v<0||v>=1)return false;
   if(p.flipX)u=1-u;if(p.flipY)v=1-v;
-  try{let data=pieceAlphaCache.get(img);if(!data){const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);data={w:c.width,h:c.height,pixels:ctx.getImageData(0,0,c.width,c.height).data};pieceAlphaCache.set(img,data);}const x=Math.min(data.w-1,Math.max(0,Math.floor(u*data.w))),y=Math.min(data.h-1,Math.max(0,Math.floor(v*data.h)));return data.pixels[(y*data.w+x)*4+3]>8;}catch(_){return true}
+  try{
+    let data=pieceAlphaCache.get(img);
+    if(!data){
+      const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;
+      const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);
+      data={w:c.width,h:c.height,pixels:ctx.getImageData(0,0,c.width,c.height).data};
+      pieceAlphaCache.set(img,data);
+    }
+    const x=Math.min(data.w-1,Math.max(0,Math.floor(u*data.w)));
+    const y=Math.min(data.h-1,Math.max(0,Math.floor(v*data.h)));
+    return data.pixels[(y*data.w+x)*4+3]>8;
+  }catch(_){
+    // If pixel data cannot be read, do not pretend transparent pixels are opaque.
+    // Collage cut pieces are generated as local PNG data URLs, so this should be rare.
+    return false;
+  }
 }
-function pieceAtPoint(clientX,clientY,rect){return [...state.pieces].sort((a,b)=>(Number(b.z)||0)-(Number(a.z)||0)).find(p=>pieceOpaqueAt(p,clientX,clientY,rect))||null;}
+function pieceAtPoint(clientX,clientY,rect){
+  return [...state.pieces].sort((a,b)=>(Number(b.z)||0)-(Number(a.z)||0))
+    .find(p=>pieceOpaqueAt(p,clientX,clientY,rect))||null;
+}
 function pieceDown(e,id,mode='move'){
   e.preventDefault();e.stopPropagation();
   let p=state.pieces.find(x=>x.id===id);
@@ -277,7 +302,7 @@ function pieceDown(e,id,mode='move'){
   const canvas=document.querySelector('#canvas');
   if(!canvas)return;
   const rect=canvas.getBoundingClientRect();
-  if(mode==='move'){const hit=pieceAtPoint(e.clientX,e.clientY,rect);if(hit){id=hit.id;p=hit;}}
+  if(mode==='move'){const hit=pieceAtPoint(e.clientX,e.clientY,rect);if(!hit)return;id=hit.id;p=hit;}
   const wrap=document.querySelector('[data-piece="'+id+'"]'),img=wrap?.querySelector('img');
   if(!wrap)return;
   if(!p.ratio&&img?.naturalWidth&&img?.naturalHeight)p.ratio=img.naturalHeight/img.naturalWidth;
