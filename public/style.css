@@ -1623,3 +1623,13 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 
 /* V1.6.66 — canvas-level selection controls stay above overlapping pieces. */
 .selectionOverlay{position:fixed;z-index:2147483647;outline:2px dashed var(--pink);outline-offset:1px;pointer-events:none;transform-origin:center;touch-action:none}.selectionOverlay .pieceHandle,.selectionOverlay .pieceRotate{pointer-events:auto}
+
+/* V1.6.69 — right-hand ingredient stack and reorder controls */
+.v16Main .editorGrid{grid-template-columns:260px minmax(220px,1fr) 150px!important;gap:10px!important}
+.v16Main .ingredientPanel{display:flex;flex-direction:column;min-height:0;max-height:100%;background:rgba(255,255,255,.86);border:3px solid var(--ink);border-radius:16px;padding:9px;box-shadow:3px 3px 0 var(--ink);overflow:hidden}
+.v16Main .ingredientPanel h3{font-size:15px;margin:0 0 4px}.v16Main .ingredientPanel p{font-size:10px;line-height:1.2;font-weight:700;margin:0 0 8px;color:#514b5e}
+.v16Main .ingredientList{display:flex;flex-direction:column;gap:6px;min-height:0;flex:1 1 auto;overflow-y:auto;overflow-x:hidden;padding:3px 4px 8px 2px;scrollbar-width:thin}
+.v16Main .ingredientRow{flex:0 0 auto;background:white;border:2px solid var(--ink);border-radius:9px;padding:8px 7px;font-size:12px;font-weight:900;line-height:1.1;cursor:grab;user-select:none;box-shadow:2px 2px 0 var(--ink)}
+.v16Main .ingredientRow.active{background:var(--blue);outline:2px solid var(--pink);outline-offset:1px}.v16Main .ingredientRow.dragging{opacity:.35}.v16Main .ingredientRow.dropTarget{border-top:5px solid var(--pink);padding-top:5px;background:#fff0f5}.v16Main .ingredientRow[draggable="false"]{cursor:default}
+@media(max-width:900px){.v16Main .editorGrid{grid-template-columns:210px minmax(180px,1fr) 120px!important;gap:6px!important}.v16Main .ingredientPanel{padding:6px}.v16Main .ingredientRow{padding:7px 5px;font-size:11px}}
+@media(max-width:650px){.v16Main .editorGrid{grid-template-columns:minmax(0,1fr) 110px!important;grid-template-rows:minmax(0,1fr) auto!important}.v16Main .editorGrid>aside{grid-column:1/-1}.v16Main .editorGrid>.canvas{grid-column:1;grid-row:2}.v16Main .ingredientPanel{grid-column:2;grid-row:2;min-height:0}.v16Main .editorGrid .sourcePanel{max-height:100px!important}}
