@@ -1,3 +1,6 @@
+## V1.6.68
+- Set a cutout's aspect ratio and height from its generated pixel dimensions immediately, so its first selection bounding box matches the image before it is clicked again.
+
 ## V1.6.66
 - Render the selected piece outline and editing handles in a canvas-level overlay above all collage pieces, without changing the selected image's layer order.
 
