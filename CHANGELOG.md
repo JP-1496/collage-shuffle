@@ -1,3 +1,6 @@
+## V1.6.73
+- Adjusted the editing toolbar layout so Cut, Flip, Back, Front and Delete labels fit neatly in narrow panels without clipping or overflowing.
+
 ## V1.6.72
 - Added a Center button beside each cut in the ingredient list; it moves the piece to the canvas midpoint, preserves its transform and layer order, and selects it.
 - Clear selection controls when the round timer expires and whenever the app leaves the ROUND phase.
