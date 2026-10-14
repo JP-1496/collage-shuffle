@@ -1,3 +1,7 @@
+## V1.6.72
+- Added a Center button beside each cut in the ingredient list; it moves the piece to the canvas midpoint, preserves its transform and layer order, and selects it.
+- Clear selection controls when the round timer expires and whenever the app leaves the ROUND phase.
+
 ## V1.6.71
 - Clear the canvas selection overlay immediately when submitting a collage, preventing bounding boxes and handles from carrying into the next stage.
 
