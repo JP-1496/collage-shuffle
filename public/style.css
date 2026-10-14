@@ -1620,3 +1620,6 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 /* V1.6.64 — keep selected editing controls above overlapping pieces. */
 
 .pieceWrap.selected .pieceHandle,.pieceWrap.selected .pieceRotate{z-index:2147483647!important;}
+
+/* V1.6.66 — canvas-level selection controls stay above overlapping pieces. */
+.selectionOverlay{position:absolute;z-index:2147483647;outline:2px dashed var(--pink);outline-offset:1px;pointer-events:none;transform-origin:center;touch-action:none}.selectionOverlay .pieceHandle,.selectionOverlay .pieceRotate{pointer-events:auto}

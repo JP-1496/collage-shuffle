@@ -1,3 +1,6 @@
+## V1.6.66
+- Render the selected piece outline and editing handles in a canvas-level overlay above all collage pieces, without changing the selected image's layer order.
+
 ## V1.6.65
 - Keep selected cutouts in their existing layer order instead of raising the entire image when selected.
 - Keep the cutting modal above canvas content.
