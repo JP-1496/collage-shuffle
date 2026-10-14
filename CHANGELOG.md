@@ -1,3 +1,8 @@
+## V1.6.69
+- Added a right-side, independently scrollable ingredient list showing Cut 1, Cut 2, etc. in creation order.
+- Selecting a list entry selects the matching canvas piece; dragging rows reorders the layer stack (top row is frontmost).
+- The Delete key deletes the selected cut when not typing in a field.
+
 ## V1.6.68
 - Set a cutout's aspect ratio and height from its generated pixel dimensions immediately, so its first selection bounding box matches the image before it is clicked again.
 
