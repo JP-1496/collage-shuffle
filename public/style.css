@@ -1882,3 +1882,9 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
   .v16Main .editorGrid{overflow:visible!important;padding-right:8px!important}
   .v16Main .editorGrid .toolPanel{width:calc(100% - 8px)!important;max-width:calc(100% - 8px)!important;margin-right:8px!important}
 }
+
+
+/* V1.6.89 — Match hover cursor to transparent-pixel click-through hit testing */
+.v16Main #canvas{cursor:default}
+.v16Main #canvas .pieceWrap,
+.v16Main #canvas .pieceImage{cursor:inherit!important}
