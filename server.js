@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.7.10';
+const VERSION = '1.7.11';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = process.env.COLLAGE_TEST_MODE === '1' ? 2 : 3;
 const app = express();
