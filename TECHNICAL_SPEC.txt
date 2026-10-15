@@ -2,7 +2,7 @@ CUT OUTTA HERE! — TECHNICAL SPECIFICATION AND AI HANDOVER LOG
 ====================================================
 
 Document type: Reference only (.txt)
-Current code baseline audit: V1.8.0
+Current code baseline audit: V1.7.10
 Repository: JP-1496/collage-shuffle
 Default branch: main
 Last prepared: 2026-10-15
@@ -13,7 +13,7 @@ This is a plain-text reference file. The game does not import, execute, serve, o
 
 Keep this document useful, but never treat it as more authoritative than the current source code. When code and this document disagree, inspect the code and tests, determine the intended behaviour, then update this document.
 
-AUDIO SETTINGS — V1.8.0
+AUDIO SETTINGS — V1.7.10
 -----------------------
 - The main menu and in-game sidebar expose independent Music and SFX volume sliders.
 - Music means looping/background audio. SFX means one-shot event sounds such as round endings and winner announcements.
