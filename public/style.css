@@ -1760,3 +1760,23 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 .hostFooter{flex:0 0 auto;min-height:0;margin-top:8px;padding-bottom:4px}
 .hostError{margin:6px 0 0}
 @media(max-height:850px) and (min-width:651px){.v16Main{overflow-y:auto}.v16Main .hostShell{height:auto!important;min-height:100%!important;overflow:visible!important;padding-top:4px!important;padding-bottom:8px!important}.v16Main .hostSettingsGrid{gap:6px}.v16Main .settingCard{min-height:65px;padding:6px 8px}.v16Main .settingCard .cardIcon{width:32px;height:32px;flex-basis:32px}.v16Main .settingCard small{margin:2px 0 3px}.v16Main .hostFooter{margin-top:6px}}
+
+/* V1.6.82 — Host Game options/timers split into aligned columns */
+.hostSettingsLayout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
+.hostOptionsGroup,.hostTimerGroup{min-width:0}
+.hostOptionsGroup>h3,.hostTimerGroup>h3{font-size:13px;margin:0 0 7px 2px;letter-spacing:.03em}
+.hostOptionsGrid,.hostTimerGrid{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;align-content:start}
+.hostSettingsLayout .settingCard{min-width:0;min-height:78px;box-sizing:border-box}
+.hostSettingsLayout .cardBody{min-width:0}
+.hostSettingsLayout .cardBody>b,.hostSettingsLayout .cardBody>small{display:block}
+.hostSettingsLayout .numberStepper,.hostSettingsLayout .hostTimerInput{width:100%;min-width:0;box-sizing:border-box}
+.hostSettingsLayout .numberStepper input{min-width:0;width:100%;box-sizing:border-box}
+.hostSettingsLayout .hostTimerInput{display:flex;align-items:center;gap:7px}
+.hostSettingsLayout .hostTimerInput>span:first-child{flex:0 0 auto}
+.hostSettingsLayout .hostTimerInput .numberStepper{flex:1}
+.round1Setting{display:flex;align-items:center;gap:6px;min-width:0}
+.round1Setting>select{flex:0 0 116px;max-width:42%;min-width:0}
+.round1Setting>span{flex:1;min-width:0}
+.round1Setting>span[hidden]{display:none}
+@media(max-width:900px){.hostSettingsLayout{grid-template-columns:minmax(0,1fr)}.hostOptionsGrid,.hostTimerGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.hostOptionsGrid,.hostTimerGrid{grid-template-columns:minmax(0,1fr)}}
