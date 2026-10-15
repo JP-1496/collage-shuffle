@@ -363,3 +363,6 @@ After a change:
 
 2026-10-15 — V1.7.11: Developer Mode gained per-section Chill/Cool/Dark music style preferences and generated Web Audio preview tones while final user-provided tracks are pending. The change was merged to main. These preview tones were not yet connected to gameplay background music.
 2026-10-15 — V1.7.12 implementation branch: connected generated Web Audio patterns to menu/lobby, creation, final showcase/voting, and results; added section transitions/fades and live Music volume control. Source syntax checks passed. Browser playback and multiplayer regression tests still need to be run; the change has not been merged or deployed.
+
+
+2026-10-15 — V1.7.13: Added a Developer Mode Default Music Volume slider. The local default is used only when no explicit Music volume is saved in cutOuttaHereAudioSettings; existing in-game volume preferences take precedence.

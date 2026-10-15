@@ -1,3 +1,9 @@
+## V1.7.13 — Developer default music volume
+- Added a Default Music Volume slider to Developer Mode, saved locally alongside other developer preferences.
+- Uses the configured default only when no Music volume preference has been saved; an existing in-game Music slider preference remains in control.
+- Kept the existing Music/SFX controls and generated background music playback behaviour unchanged.
+- Updated client, server, package and cache-busting versions to V1.7.13.
+
 ## V1.7.12 — Automatic background music
 - Added generated placeholder background music that starts after the browser's first user interaction and loops continuously while the game is open.
 - Automatically switches between the selected Chill, Cool or Dark style for the main menu/lobby, creation phases, final showcase/voting, and final results.
