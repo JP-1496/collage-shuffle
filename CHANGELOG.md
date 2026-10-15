@@ -1,3 +1,6 @@
+## V1.6.82 — Auto-update trigger
+- No gameplay changes. This commit is a small documentation-only update to trigger the GitHub sync/build workflow.
+
 ## V1.6.82
 - Restored an explicit All option for Round 1 starting images while retaining the numeric 1–40 control for specific counts.
 - Reorganised Host Game into separate Game Options and Timers columns, with responsive layouts and consistent card/control sizing.
