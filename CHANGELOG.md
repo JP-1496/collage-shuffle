@@ -1,3 +1,7 @@
+## V1.7.9 — Remove lobby hint
+- Removed the explanatory sentence beneath the lobby title, leaving the lobby header cleaner.
+- Updated client, server, package and cache-busting versions to V1.7.9.
+
 ## V1.7.8 — Lobby name default
 - Changed the default lobby name from “My Collage” to “My Lobby”.
 - Updated client, server, package and cache-busting versions to V1.7.8.
