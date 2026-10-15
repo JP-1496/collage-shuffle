@@ -2,7 +2,7 @@ CUT OUTTA HERE! — TECHNICAL SPECIFICATION AND AI HANDOVER LOG
 ====================================================
 
 Document type: Reference only (.txt)
-Current code baseline audit: V1.7.9
+Current code baseline audit: V1.8.0
 Repository: JP-1496/collage-shuffle
 Default branch: main
 Last prepared: 2026-10-15
@@ -12,6 +12,14 @@ IMPORTANT: THIS FILE IS DOCUMENTATION ONLY
 This is a plain-text reference file. The game does not import, execute, serve, or read it as configuration. Adding or editing this file alone cannot change gameplay, UI, networking, or runtime behaviour. It is intended for developers and future AI coding assistants.
 
 Keep this document useful, but never treat it as more authoritative than the current source code. When code and this document disagree, inspect the code and tests, determine the intended behaviour, then update this document.
+
+AUDIO SETTINGS — V1.8.0
+-----------------------
+- The main menu and in-game sidebar expose independent Music and SFX volume sliders.
+- Music means looping/background audio. SFX means one-shot event sounds such as round endings and winner announcements.
+- Values are saved in localStorage under cutOuttaHereAudioSettings and synchronised between both slider locations.
+- Audio elements should identify their category with data-audio-type="music" or data-audio-type="sfx" so the shared volume settings can be applied. Future sound playback should use these categories consistently.
+- Volume controls and persistence are implemented; this change does not add music tracks or sound-effect assets.
 
 1. PROJECT PURPOSE AND DEVELOPMENT PRINCIPLES
 ---------------------------------------------
