@@ -1795,3 +1795,13 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 .allToggle input:checked+.switch{background:var(--purple)}
 .allToggle input:checked+.switch:after{transform:translateX(14px)}
 .allToggle input:focus-visible+.switch{outline:2px solid var(--ink);outline-offset:2px}
+
+
+/* V1.6.84 — Fix disabled All control and toggle alignment */
+.round1Setting{align-items:center}
+.allToggle{display:inline-flex;align-items:center;justify-content:center;gap:5px;line-height:20px;min-height:24px;white-space:nowrap}
+.allToggle .switch{display:block;align-self:center;flex:0 0 34px;margin:0;box-sizing:border-box}
+.allToggle .switch:after{top:3px;left:3px}
+#hostRound1Number.all-mode .numberStepper input{pointer-events:none;user-select:none}
+#hostRound1Number.all-mode .numberStepper .stepButton,#hostRound1Number.all-mode .numberStepper input{opacity:.65}
+#hostRound1Number.all-mode .numberStepper button:disabled{pointer-events:none;cursor:not-allowed}
