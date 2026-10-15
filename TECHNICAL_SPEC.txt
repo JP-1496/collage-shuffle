@@ -1,0 +1,344 @@
+COLLAGE — TECHNICAL SPECIFICATION AND AI HANDOVER LOG
+====================================================
+
+Document type: Reference only (.txt)
+Current code baseline audited: V1.6.94
+Repository: JP-1496/collage-shuffle
+Default branch: main
+Last prepared: 2026-10-15
+
+IMPORTANT: THIS FILE IS DOCUMENTATION ONLY
+------------------------------------------
+This is a plain-text reference file. The game does not import, execute, serve, or read it as configuration. Adding or editing this file alone cannot change gameplay, UI, networking, or runtime behaviour. It is intended for developers and future AI coding assistants.
+
+Keep this document useful, but never treat it as more authoritative than the current source code. When code and this document disagree, inspect the code and tests, determine the intended behaviour, then update this document.
+
+1. PROJECT PURPOSE AND DEVELOPMENT PRINCIPLES
+---------------------------------------------
+Collage is a browser-first multiplayer party game. Shuffle is the current established mode and should be treated as the working technical baseline for future modes.
+
+Long-term goal: build additional game modes on top of proven technical foundations rather than copy/paste the whole game or repeatedly rewrite multiplayer and round handling.
+
+Architecture principle:
+- Shared/core systems should own transport, identity, lobby membership, synchronised state, timers, reconnection, reusable image/canvas editing, common UI conventions and test infrastructure.
+- A game mode should own its specific rules, phases, scoring and progression.
+- Do not prematurely rewrite the application into a new architecture. First preserve and test existing behaviour, then refactor in small, reversible steps.
+- A new mode must not break Shuffle. Keep regression coverage for Shuffle as the reference implementation.
+- Make narrow, evidence-based changes. Avoid unrelated cleanup during bug fixes.
+- Preserve current working layout and interactions unless the requested change requires otherwise.
+- Inspect the current main branch before editing; version numbers and file structure may have changed since this document was written.
+- Do not claim a test, browser check, or visual check was performed unless it actually was.
+
+2. CURRENT REPOSITORY AND RUNTIME
+---------------------------------
+Audited files:
+- server.js — Node.js/Express HTTP server, WebSocket server, authoritative game state, game progression, image search/fetch endpoints and bot behaviour.
+- public/index.html — minimal HTML shell. Loads style.css, build.js and app.js with cache-busting query versions.
+- public/build.js — generated dynamically by server.js at GET /build.js. It sets globalThis.COLLAGE_VERSION. It is not a checked-in source file.
+- public/app.js — browser application, UI rendering, connection/reconnect handling, image search UI, cutting/editor interactions, collage manipulation and final screens.
+- public/style.css — visual system and responsive screen/editor layouts.
+- package.json — package metadata, version, dependencies and test scripts.
+- test/multiplayer.mjs — automated Node/WebSocket integration test harness.
+- CHANGELOG.md — detailed version-by-version historical change log.
+- README.md — older project notes; some deployment/history information may be stale. Check the current workflow before following it.
+- TECHNICAL_SPEC.txt — this document; reference only.
+
+Current audited package:
+- package version: 1.6.94
+- server.js VERSION: 1.6.94
+- public/index.html cache query strings: 1.6.94
+- Node engine: >=18
+- Runtime dependencies: express and ws
+- Test commands: npm test; npm run test:e2e
+- Local launch: npm install, then npm start; open http://localhost:10000
+- Server binds to 0.0.0.0 and uses PORT environment variable, default 10000.
+- GET /health returns health/version information.
+- GET /build.js returns the runtime version JavaScript.
+- WebSocket endpoint: /ws.
+- Static files are served from public with Cache-Control: no-store.
+- Image search is implemented server-side using Bing HTML parsing and ranking. It is not a formal Bing API integration; page structure changes may break it.
+- Search constants in the audited server include a 100-result cap, 600px thumbnail width, 35-result pages and up to 3 pages. The parser deliberately restricts results to Bing's dgControl_list / iusc image-result structure to avoid unrelated metadata tiles.
+- Image fetching uses short-lived URL tokens stored server-side. Inspect the current implementation before changing URL handling, validation or caching.
+
+3. ARCHITECTURE AND AUTHORITY BOUNDARIES
+----------------------------------------
+SERVER AUTHORITY
+The server owns the canonical multiplayer game state. It maintains in-memory Maps for games, player sockets, phase timers and bot jobs. State is broadcast to players through WebSockets. Do not move round progression or scoring into independent client-side decisions.
+
+Key server concepts include:
+- Game/lobby record: phase, code, name, settings, players, source images, prompts, round state, collage submissions, travelling sets, lineage diagnostics, votes, scores and final results.
+- Player identity: server-generated IDs; each player has a host flag, connection/readiness state and avatar. Bots are represented as players with bot metadata.
+- Per-player state projection: stateFor(game, playerId) builds a client-facing state. It intentionally filters some information according to phase/player.
+- broadcast(game): sends each player their own projected state.
+- handle(game, playerId, action): validates and processes client actions.
+- schedule/cancelTimer: owns phase timer callbacks and uses a marker to avoid stale callbacks progressing an obsolete phase/round.
+- finishRound: guarded against duplicate completion. It locks completion, cancels the timer, records missing submissions, stores travelling sets and advances to the next round or final showcase.
+- Image search/fetch routes: server-side external image lookup and image-fetch mediation.
+- Bot helpers: schedule simulated image, prompt, collage and voting actions through the same server-side action handling where applicable.
+
+CLIENT RESPONSIBILITIES
+public/app.js owns presentation and immediate interaction:
+- Screen rendering and phase-specific UI.
+- WebSocket connection, heartbeat, reconnect and resume.
+- Host/join form and saved local preferences.
+- Image upload, drag/drop and clipboard paste handling.
+- Image-search UI and selection.
+- Cutting UI, piece selection, dragging, resizing, rotation, flipping, layering and editor gestures.
+- Live timer presentation based on server timerEndsAt and estimated server clock offset.
+- Submission UI and final slideshow/voting/results controls.
+
+The client sends actions; it must not assume an action succeeded merely because it was clicked. The server's resulting state/acknowledgement is authoritative. Be careful with forced full renders: they can close modals, reset scroll positions, interrupt pointer gestures or disturb editor selection. Prefer small in-place UI updates where appropriate, but preserve a clear, tested source of truth.
+
+WEBSOCKET PATTERN
+- Client sends JSON messages such as HOST_CREATE, JOIN, RESUME and ACTION.
+- ACTION messages contain playerId and an action object.
+- Server emits STATE snapshots, JOINED and action-specific responses/errors as applicable.
+- The browser sends connection heartbeat messages and attempts resume after unexpected disconnection.
+- WebSocket message order is relied upon in places where the server broadcasts a submission count before sending the next phase state. Preserve this sequencing unless tests prove a safe alternative.
+
+4. GAME FLOW AND CURRENT SHUFFLE RULES
+--------------------------------------
+The phase names in the audited code include:
+LOBBY -> IMAGE_SUBMISSION -> optional HOST_APPROVAL -> PROMPT_SUBMISSION -> ROUND (repeated) -> FINAL_SHOWCASE (slideshow and voting stages) -> FINAL.
+
+LOBBY
+- A four-character lobby code is generated from a restricted alphabet that avoids visually ambiguous characters such as O/0 and I/1.
+- The host creates the lobby and owns settings, start, bot management and player-kick controls.
+- Other human players can toggle Ready / Not Ready.
+- The host can add/remove bots and kick non-host players while in the lobby.
+- Lobby capacity is clamped to 2–16 by server settings validation.
+- Standard minimum players is 3. Setting COLLAGE_TEST_MODE=1 lowers the server minimum to 2 for testing. Do not confuse this with changing the default production rule.
+- The UI's MIN_PLAYERS constant and server's MIN_PLAYERS constant should be checked together whenever minimum-player rules change.
+
+SETTINGS
+The current server/client settings include:
+- capacity
+- imagesPerPlayer
+- round1Images (number or 'all')
+- imageSeconds
+- hostApproval
+- creationSeconds
+- votingSeconds
+- promptSeconds
+
+The server clamps settings; inspect server.js for exact current bounds before modifying them. Current settings are only changed by the host in the lobby. Server Settings in the lobby is intended as a read-only view for players, rather than a second settings editor.
+
+IMAGE_SUBMISSION
+- Each player contributes the configured number of static images.
+- Images may be uploaded, dragged/dropped, pasted or selected from image search.
+- GIFs are intentionally rejected by the UI/server safeguards.
+- A player must have the required number of images before marking Ready.
+- Ready can be toggled off again before the image phase ends.
+- Image additions are restricted once that player is marked ready.
+- The phase advances when connected players are ready or the timer expires.
+- Server-side validation remains necessary even when the client prevents invalid actions.
+
+HOST_APPROVAL
+- Optional phase controlled by hostApproval.
+- Host can remove unwanted images and confirm the remaining pool before prompts begin.
+- State filtering intentionally gives the host the approval pool.
+
+PROMPT_SUBMISSION
+- Each player submits one non-empty prompt.
+- Prompt text is trimmed and capped at 500 characters in the audited server.
+- Enter submits; Shift+Enter should remain available for a newline, and composition/IME input must not be accidentally submitted.
+- If the phase expires or a player disconnects without a prompt, the server inserts a placeholder prompt identifying the timeout/disconnection.
+- Prompt order is shuffled.
+
+ROUND / COLLAGE EDITOR
+- Number of creation rounds equals the number of players.
+- Round 1 gives each player an initial collage for their assigned prompt and a subset of the approved image pool.
+- Round 1 image count is either all available images or a configured cap. The cap limits the pool; it does not guarantee that many images exist.
+- Bots are intentionally restricted to their own submitted images during Round 1; humans can use the pool according to the configured rules.
+- Images are cut into pieces using Freehand, Circle or Square selection tools.
+- The editor supports moving pieces, resizing (including independent edge stretching), rotation, horizontal/vertical flips, layer ordering (Front/Back), and selecting pieces from an ingredient list. Piece selection is alpha-aware: transparent pixels should click through to the topmost visible piece underneath.
+- The selection overlay/handles must remain usable above overlapping pieces without changing the piece's layer order.
+- Deleting a cut and restoring its original pixels is a Round 1-only behaviour. Overlapping cut restoration must restore only pixels actually removed by that cut; otherwise overlapping cuts can resurrect pixels or duplicate content.
+- Round 1 submission filters out pieces that do not intersect the canvas, using rotated bounds. In later rounds, pieces moved fully off-canvas are intentionally preserved rather than removed by this Round 1 rule.
+- A player can submit once per round. The server is authoritative for submission and progression; duplicate submissions must be harmless.
+- Pieces preserve position, dimensions, rotation, flips and z-order through live sync and submission.
+- Maximum accepted piece count per collage is currently capped server-side at 100.
+- Submitted sets travel to the next player according to a fixed cyclic rotation over randomly assigned player slots. Every set should visit every other player exactly once, never return to its creator, and the number of rounds equals the player count.
+- The server logs [SET-DISTRIBUTION] diagnostics including expected/actual lineage and duplicate/missing metadata checks. Preserve and extend this diagnostic coverage if changing assignment logic.
+- A round ends when all connected players submit or when the timer expires. Timer expiry completes missing submissions via the same guarded finish path.
+- On disconnect, the game can continue with placeholder content where necessary; a player may resume their identity if the server still retains the game/player state.
+
+FINAL_SHOWCASE / VOTING
+- The server stores each round's collages as final results.
+- The slideshow and voting use a shared randomised collage order per prompt so the displayed lineup and vote targets agree across clients.
+- Host advances the slideshow. Voting has a configured timer and is server-authoritative.
+- A player cannot vote for their own collage and should only vote once per prompt.
+- Votes are tallied into player scores; final results include scores and a gallery of finished collages.
+- Final Results has a Copy button per masterpiece. It exports the entire collage as a PNG on a white background, retaining piece placement, rotation and flips. Clipboard image writing falls back to a PNG download if unavailable. Preserve the browser's native right-click context menu.
+- Host can restart with the same players or start a new lobby for new players from the final screen.
+- Same Players resets game state and begins image submission with the existing roster. New Players keeps the host and returns to the lobby.
+
+5. DEVELOPER MODE AND LOCAL SETTINGS
+------------------------------------
+Developer Mode is entered by clicking the homepage build badge seven times within the entry window and entering PIN 3256.
+- This is a convenience gate, NOT a security boundary. Do not put secrets behind it or treat it as authentication.
+- Developer settings are stored in localStorage under collageDeveloperSettings and affect that browser's local host defaults.
+- The local “show bot button” option only hides/shows the button in the UI. It does not disable the server's bot functionality.
+- Local saved nickname, avatar, developer settings and session information are browser-specific.
+- Developer Mode changes do not themselves change the game version.
+- Standard player avatar IDs are strings 1–24 in the audited client/server validation.
+
+6. VERSIONING AND RELEASE HYGIENE
+---------------------------------
+For a code release, keep these version references aligned:
+1. package.json version
+2. server.js VERSION constant
+3. public/index.html cache-busting query values for style.css, build.js and app.js
+4. CHANGELOG.md entry
+
+The server dynamically generates public/build.js, setting globalThis.COLLAGE_VERSION. public/app.js contains a fallback version string, but the runtime version should normally come from the generated build.js. Inspect current load order and test assertions before changing this mechanism.
+
+A version mismatch has occurred in the past; do not update only one location. The multiplayer test explicitly checks package/server version agreement and the dynamic build endpoint.
+
+For a documentation-only change, do not bump the game version unless the project workflow explicitly requires it. A .txt file has no runtime role unless someone deliberately adds code to read it.
+
+CHANGELOG.md is the detailed historical source. Keep it current with code changes. This technical spec summarises major known issues and architecture; it is not a replacement for the full changelog.
+
+7. KNOWN BUGS AND FIXES RECORDED IN PROJECT HISTORY
+---------------------------------------------------
+These are historical issues recorded in CHANGELOG.md, not a claim that every issue is currently reproducible. Check the cited fix in the current code before changing related behaviour.
+
+MULTIPLAYER, ROUND PROGRESSION AND DISTRIBUTION
+- Recursive/incorrect set rotation could repeat or omit a player's set. Replaced with randomised player slots plus a fixed one-slot cyclic shift per round (V1.6.29). Added lineage diagnostics and automated distribution checks. For eight players, tests expect eight valid round logs and each player to see all eight lineages exactly once.
+- Round completion could be missed when the final player submitted, or could be triggered twice by submission and timer expiry. The server-authoritative finish path, accepted submission state, broadcast-before-transition ordering and a roundFinishing guard were introduced/refined. Preserve these protections.
+- Clients could remain in a stale “Submitting…” state or miss the final submission count. Submission acknowledgement/state flow was tightened; broadcasts must arrive in order before next-round state.
+- Disconnects during prompt submission could stall or leave missing prompts. Server inserts placeholders for missing/disconnected players.
+- WebSocket heartbeat and reconnect/resume were added so a transient refresh/disconnection can restore the same player identity instead of duplicating a player.
+- Timers need to be guarded against stale callbacks after phase/round changes. schedule() uses a marker; cancel/transition paths should stay coordinated.
+
+IMAGE POOL AND SEARCH
+- Image search results could be unrelated because the parser read metadata outside the actual result grid. Parsing was restricted to Bing's dgControl_list / iusc result structure.
+- Search used to return too few results; current code requests multiple pages and caps results at 100.
+- Search result clicks sometimes failed due to thumbnail/checkmark overlays intercepting pointer events. A delegated click/pointer-events attempt was reverted; the durable fix restored direct behaviour and fixed actual image-pool acknowledgement/update logic.
+- Selecting images from search could appear to do nothing or close before acceptance. Batch actions now validate on the server, acknowledge the number accepted and refresh the pool in place; failures keep the search UI available and show an error.
+- GIFs are intentionally filtered/rejected.
+- Late avatar loading and live image/ready updates previously caused full redraws that dismissed modals or reset scroll. The code was adjusted to update existing elements/counts in place where possible.
+- External image search is based on parsing a third-party page and may break if that page's markup changes.
+
+CUTTING AND PIECE RESTORATION
+- Overlapping Round 1 cuts could restore pixels belonging to earlier cuts or duplicate pixels. Each cut now records the actual visible pixels removed at cut time and its own mask; deleting it restores only those pixels (V1.6.23–V1.6.25).
+- Finishing a cut after the round ended could leak unfinished work into a new phase. The cutting modal closes on phase/round change and rejects stale finish attempts.
+- Piece z-order could be lost during live sync/submission. Explicit z-order preservation was added.
+- Selection outlines/handles could disappear behind overlapping pieces or accidentally change layer order. A canvas-level selection overlay and handle-priority hit-testing were added.
+- Transparent areas initially blocked clicks on visible pieces beneath them. Alpha-aware hit-testing now selects/drags the topmost visible piece through transparent pixels and aligns the hover cursor with that hit testing (V1.6.76–V1.6.89). Any changes must preserve transformed geometry and topmost-visible selection.
+- Round 1 off-canvas pieces are filtered by rotated bounds; later rounds intentionally preserve fully off-canvas pieces. Do not unify these behaviours without an explicit rules decision.
+
+LAYOUT AND LIVE RENDERING
+- Editor ingredient list scroll could jump/reset when selecting a piece, when counts changed, or when avatar sprites loaded late. Native overflow scrolling and in-place updates replaced fragile custom wheel/redraw behaviour.
+- Narrow editor layouts repeatedly clipped the canvas, shrank thumbnails, or cut off panel borders/shadows. Multiple fixes established independent ingredient scrolling, responsive rows and reserved edge clearance.
+- Voting canvases/buttons were repeatedly clipped by fixed-height/overflow rules. Current design targets four columns by two rows on desktop, with two columns/four rows on narrow screens; canvases remain square and vote controls visible.
+- Toolbar buttons/panels overflowed or labels clipped. CSS has accumulated historical responsive and specificity fixes; inspect computed rules and actual markup before adding another override. Prefer changing the authoritative rule rather than stacking contradictory CSS.
+- Selected piece overlays could persist after delete, submit or phase transition. Clear selection/overlay when relevant state changes.
+- A forced full render can be disruptive. When debugging missing updates, determine whether the problem is state delivery, render conditions, a stale DOM query or CSS clipping before rewriting the interaction.
+
+FINAL RESULTS COPY
+- Right-click was initially repurposed to copy; this was removed so the browser's native context menu remains available.
+- Earlier PNG export attempts had white-square output or copied individual pieces instead of the complete collage. The export was corrected to draw all pieces into one PNG with position/rotation/flips on a white background.
+- Copy controls were moved to the final-results gallery only.
+- The Copy button then remained invisible because a parent result card enforced square aspect ratio plus overflow:hidden. V1.6.94 allows the card to grow, clips only the artwork viewport and resolves the correct canvas through .masterpieceResultWrap.
+- This flow was confirmed by the user as working: the copied result could be pasted into Paint. Treat it as a regression-sensitive feature.
+
+8. AUTOMATED TESTING AND REGRESSION EXPECTATIONS
+------------------------------------------------
+Run:
+- npm test — runs test/multiplayer.mjs.
+- npm run test:e2e — Playwright test command; inspect package scripts and test files for current availability/configuration.
+
+The multiplayer test is a Node/WebSocket integration harness. The audited test includes checks for:
+- package/server version agreement and generated build version endpoint
+- image search parsing/limits and image dimension constants
+- bot support
+- round/submission progression, including different submission orders
+- set distribution and lineage for an eight-player game
+- state privacy filtering
+- vote locking
+- timer/disconnect handling
+- player resume/reconnection
+- prompt Enter/Shift+Enter behaviour in related browser test coverage
+
+Before finishing any code change:
+1. Inspect git diff / the exact changed files.
+2. Run relevant tests, especially npm test for multiplayer/server changes.
+3. Run syntax checks or targeted tests if appropriate.
+4. If browser/visual testing was not possible, say so explicitly.
+5. Do not mark a bug fixed just because the code was edited; verify the behaviour or state the verification limitation.
+6. Add a clear CHANGELOG.md entry for behaviour/code changes. Keep documentation-only edits separate from gameplay changes where possible.
+
+9. CURRENT DESIGN/MAINTENANCE RISKS TO TRACK
+-------------------------------------------
+These are engineering cautions, not assertions of currently failing behaviour:
+- server.js and public/app.js contain large amounts of logic in a relatively monolithic structure. This makes shared-mode expansion and regression isolation harder.
+- server state is held in memory. A process restart can lose active games; do not assume persistence across restarts.
+- The client is DOM-string/render driven and has many interdependent event handlers. Broad rerenders can interrupt interactions and scrolling.
+- public/style.css is large and has accumulated iterative fixes. Inspect selector specificity and the actual DOM before changing layout.
+- The image search parser depends on third-party HTML and may need maintenance if the page structure changes.
+- Test coverage is strongest around multiplayer/server flow; visual layout and detailed pointer/canvas interactions still need browser/manual regression checks.
+- Developer PIN is not a security feature.
+- Verify client/server MIN_PLAYERS agreement and test-mode behaviour whenever changing minimum player rules.
+- Confirm final collage export in an actual browser after touching canvas, transforms, clipping, image loading or clipboard logic.
+
+10. FUTURE MULTI-MODE ARCHITECTURE — DIRECTION, NOT IMPLEMENTED
+-------------------------------------------------------------
+The following is the intended direction for future work, not a description of modules that already exist.
+
+Potential shared/core layer:
+- connection and reconnection protocol
+- player identity, lobby, ready checks, host permissions and settings validation
+- authoritative phase machine, timer lifecycle and safe transition guards
+- shared state projection/broadcast and per-player visibility rules
+- common image acquisition, image validation and reusable canvas-piece model/editor
+- common reusable UI primitives and responsive layout conventions
+- shared testing utilities and regression suite
+
+Potential game-mode layer:
+- mode ID and mode-specific settings
+- declared phases and legal transitions
+- mode-specific action validation/handlers
+- round construction and progression rules
+- mode-specific scoring/voting/results
+- bot strategy for that mode
+
+Recommended migration:
+1. Document and test existing behaviour first.
+2. Identify clear boundaries inside the current code; do not move everything at once.
+3. Extract one shared responsibility at a time while Shuffle still uses it.
+4. Keep existing protocol and UI behaviour stable during extraction unless change is explicitly intended.
+5. Add tests before and after each extraction.
+6. Add a second simple mode only after the shared boundaries are proven by tests.
+7. Keep Shuffle as a regression mode in every future test pass.
+
+Do not invent abstractions purely to make the code look modular. Each abstraction should reduce duplication or isolate a real source of bugs.
+
+11. AI CONTRIBUTOR CHECKLIST
+----------------------------
+At the start of each task:
+- Fetch/inspect current main, current version, relevant functions and latest changelog.
+- Read this file, but verify important details in source.
+- Identify the exact expected behaviour and which existing behaviours must remain unchanged.
+- For bug reports, reproduce or trace the reported path before editing.
+- Check whether a prior changelog entry describes a similar bug/fix.
+- Prefer the smallest surgical change.
+
+Before a change:
+- State intended files and impact.
+- Do not change unrelated gameplay/UI systems.
+- Preserve server authority, phase/timer guards, message ordering and state privacy.
+- Treat z-order, alpha hit-testing, cut restoration, reconnect/resume, set rotation and final Copy as sensitive regression areas.
+
+After a change:
+- Review the diff.
+- Run relevant tests and report exact results.
+- Update CHANGELOG.md and this spec when architecture/rules/issues materially change.
+- Keep version references aligned for code releases.
+- Do not claim visual/browser verification if only source-level checks were performed.
+- Keep changes on main in this project's established workflow; do not create a branch or PR unless the user changes that instruction.
+- Always obtain the user's confirmation before committing changes.
+
+12. DOCUMENTATION CHANGE LOG
+----------------------------
+2026-10-15 — Initial technical handover document prepared from an audit of the V1.6.94 main-branch source, package metadata, multiplayer test and CHANGELOG.md. Documentation only; no gameplay changes are intended.
