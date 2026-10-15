@@ -1,3 +1,7 @@
+## V1.6.89
+- Made the canvas hover cursor use the same alpha-pixel hit testing as click-through selection, so transparent areas only show the grab cursor when an opaque piece exists underneath.
+- Keeps a grabbing cursor while dragging and uses the normal cursor over empty canvas.
+
 ## V1.6.88
 - Made all six collage toolbar buttons equal-sized in a consistent 3 × 2 grid.
 - Restored the earlier editor edge-clearance approach: visible overflow, no panel clipping/masking, and reserved right-side space for the border and shadow.
