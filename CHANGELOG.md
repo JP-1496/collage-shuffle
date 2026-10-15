@@ -1,3 +1,7 @@
+## V1.6.93
+- Fixed the Final Results Copy button being clipped: the artwork remains inside its clipped canvas viewport, while Copy now sits in a separate row beneath it within the same masterpiece card.
+- Preserved the existing working PNG copy implementation and Round 2+ toolbar layout.
+
 ## V1.6.92
 - Moved the existing working Copy action to each masterpiece on Final Results only; each button is attached to its own gallery item and scrolls with it.
 - Removed Copy buttons from the final slideshow and voting stage. The existing PNG-copy implementation is unchanged.
