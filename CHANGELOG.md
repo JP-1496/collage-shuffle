@@ -1,3 +1,7 @@
+## V1.6.82
+- Restored an explicit All option for Round 1 starting images while retaining the numeric 1–40 control for specific counts.
+- Reorganised Host Game into separate Game Options and Timers columns, with responsive layouts and consistent card/control sizing.
+
 ## V1.6.81
 - Replaced Images per player and Round 1 starting images dropdowns with compact numeric inputs, capped at 5 and 40.
 - Added external decrement/increment buttons to numeric inputs and tightened Host Game spacing so the footer remains accessible.
