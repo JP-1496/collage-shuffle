@@ -361,4 +361,5 @@ After a change:
 2026-10-15 — Initial technical handover document prepared from an audit of the V1.6.94 main-branch source, package metadata, multiplayer test and CHANGELOG.md. Documentation only; no gameplay changes are intended.
 
 
-2026-10-15 — V1.7.11 preparation: Developer Mode has per-section Chill/Cool/Dark music style preferences and generated Web Audio preview tones while final user-provided tracks are pending. These previews are test-only and do not replace the intended music assets. In-game testing and approval are pending; do not merge to main until the user approves.
+2026-10-15 — V1.7.11: Developer Mode gained per-section Chill/Cool/Dark music style preferences and generated Web Audio preview tones while final user-provided tracks are pending. The change was merged to main. These preview tones were not yet connected to gameplay background music.
+2026-10-15 — V1.7.12 implementation branch: connected generated Web Audio patterns to menu/lobby, creation, final showcase/voting, and results; added section transitions/fades and live Music volume control. Source syntax checks passed. Browser playback and multiplayer regression tests still need to be run; the change has not been merged or deployed.
