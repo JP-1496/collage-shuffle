@@ -1,3 +1,7 @@
+## V1.7.5 — Host settings layout fix
+- Moved the Shuffle mode summary above the two-column settings grid so Game options and Timers remain side by side.
+- Updated client, server, package and cache-busting versions to V1.7.5.
+
 ## V1.7.4 — White-screen hotfix
 - Fixed JavaScript syntax errors caused by apostrophes in player-facing strings, which prevented the client app from loading.
 - Updated runtime, package and cache-busting version references to V1.7.4.
