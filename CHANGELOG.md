@@ -1,3 +1,9 @@
+## V1.7.1 — Cut Outta Here! rebrand
+- Rebranded the home screen and in-game sidebar to “CUT OUTTA HERE!”.
+- Set the tagline to “Cut. Create. Chaos.” and updated the browser title, join screen and developer-mode branding.
+- Updated the displayed/runtime/package version to 1.7.1 and refreshed the technical handover document.
+- Preserved existing gameplay behaviour, storage keys and internal test configuration.
+
 ## V1.7.0 — Scrap Book home screen wording
 - Removed the small “SHUFFLE • SCRAP BOOK” label above the title logo.
 - Changed the home-screen tagline to “Cut. Create. Chaos.”

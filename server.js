@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.7.0';
+const VERSION = '1.7.1';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = process.env.COLLAGE_TEST_MODE === '1' ? 2 : 3;
 const app = express();
@@ -599,4 +599,4 @@ wss.on('connection',ws=>{
 });
 setInterval(()=>{for(const ws of wss.clients){if(ws.isAlive===false){ws.terminate();continue;}ws.isAlive=false;try{ws.ping()}catch{}}},HEARTBEAT_MS);
 setInterval(checkExpiredRounds,250);
-http.listen(PORT,'0.0.0.0',()=>console.log(`Collage ${VERSION} listening on ${PORT}`));
+http.listen(PORT,'0.0.0.0',()=>console.log(`Cut Outta Here! ${VERSION} listening on ${PORT}`));
