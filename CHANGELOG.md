@@ -1,3 +1,6 @@
+## V1.6.86
+- Renamed the setting to “Max Round 1 starting images” and clarified that it caps the available pool rather than guaranteeing that many images.
+
 ## V1.6.85
 - Reused the Host checks image pool switch styling for the Round 1 All toggle, including matching dimensions, knob, border and green active state.
 
