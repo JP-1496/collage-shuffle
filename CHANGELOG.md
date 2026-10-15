@@ -1,3 +1,9 @@
+## V1.6.91
+- Restored the browser's normal right-click menu on masterpiece images; right-click no longer triggers a custom copy action.
+- Added an explicit “Copy masterpiece PNG” action to final showcase and voting collages.
+- Fixed whole-collage export coordinates and sizing so every piece is drawn together on a white background with its rotation and flips preserved. Clipboard image write falls back to downloading the PNG if unavailable.
+- Improved Round 2+ toolbar layout with four equal-width buttons in a clear 2 × 2 grid.
+
 ## V1.6.90
 - Right-clicking any part of a masterpiece in the final slideshow or voting cards now copies the complete collage as a single PNG on a white background; falls back to downloading the PNG where image clipboard writing is unavailable.
 - Grouped Round 2+ toolbar controls into two pairs: Flip H/Flip V and Back/Front.
