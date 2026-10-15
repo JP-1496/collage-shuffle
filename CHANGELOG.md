@@ -1,3 +1,7 @@
+## V1.6.84
+- Vertically aligned the Round 1 All toggle and its label.
+- Fully disabled the Round 1 numeric input and decrement/increment buttons while All is enabled, preserving the chosen number when toggled back off.
+
 ## V1.6.83
 - Replaced the Round 1 starting images dropdown with an All toggle switch.
 - When All is enabled, the numeric field remains visible but is greyed out to show that its value is ignored; switching All off restores numeric selection.
