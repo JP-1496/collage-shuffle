@@ -2,7 +2,7 @@ CUT OUTTA HERE! — TECHNICAL SPECIFICATION AND AI HANDOVER LOG
 ====================================================
 
 Document type: Reference only (.txt)
-Current code baseline audit: V1.7.6
+Current code baseline audit: V1.7.7
 Repository: JP-1496/collage-shuffle
 Default branch: main
 Last prepared: 2026-10-15

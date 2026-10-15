@@ -1,3 +1,8 @@
+## V1.7.7 — Host validation placement
+- Removed the duplicate Back button from the bottom-right host actions.
+- Moved nickname validation feedback into the bottom-right action area beside Create Lobby, so errors no longer push settings down.
+- Updated client, server, package and cache-busting versions to V1.7.7.
+
 ## V1.7.6 — Host nickname visibility
 - Added a visible nickname field to Host Game setup so first-time hosts can enter their name without scrolling.
 - Moved host validation feedback to the top of the page and focus the nickname field when Create Lobby is clicked without a name.
