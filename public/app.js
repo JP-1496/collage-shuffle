@@ -27,9 +27,10 @@ let previewAudioContext=null,previewAudioTimer=null,previewAudioTimeout=null,pre
 let backgroundAudioContext=null,backgroundMusicSession=null,backgroundMusicPausedForPreview=false;
 function stopBackgroundMusic(){
  const session=backgroundMusicSession;backgroundMusicSession=null;if(!session)return;
+ if(session.mode==='made')return;
  if(session.timer)clearInterval(session.timer);
  try{session.master.gain.cancelScheduledValues(session.ctx.currentTime);session.master.gain.setTargetAtTime(0,session.ctx.currentTime,0.12)}catch{}
- setTimeout(()=>{session.nodes.forEach(n=>{try{n.stop()}catch{};try{n.disconnect()}catch{}});try{session.master.disconnect()}catch{}},500);
+ setTimeout(()=>{(session.nodes||[]).forEach(n=>{try{n.stop()}catch{};try{n.disconnect()}catch{}});try{session.master?.disconnect()}catch{}},500);
 }
 function updateBackgroundMusicVolume(){
  const session=backgroundMusicSession;if(!session)return;
