@@ -1,3 +1,7 @@
+## V1.7.8 — Lobby name default
+- Changed the default lobby name from “My Collage” to “My Lobby”.
+- Updated client, server, package and cache-busting versions to V1.7.8.
+
 ## V1.7.7 — Host validation placement
 - Removed the duplicate Back button from the bottom-right host actions.
 - Moved nickname validation feedback into the bottom-right action area beside Create Lobby, so errors no longer push settings down.
