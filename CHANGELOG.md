@@ -1,3 +1,8 @@
+## V1.6.87
+- Fixed the collage toolbar panel overflowing its available width, with responsive sizing and safer button wrapping.
+- Improved the Round 1 warning text wrapping and spacing.
+- Removed greyed-out/disabled visual treatment from toolbar and submit controls; unavailable actions remain safely handled by their action functions.
+
 ## V1.6.86
 - Renamed the setting to “Max Round 1 starting images” and clarified that it caps the available pool rather than guaranteeing that many images.
 
