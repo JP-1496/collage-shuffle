@@ -1,3 +1,6 @@
+## V1.6.85
+- Reused the Host checks image pool switch styling for the Round 1 All toggle, including matching dimensions, knob, border and green active state.
+
 ## V1.6.84
 - Vertically aligned the Round 1 All toggle and its label.
 - Fully disabled the Round 1 numeric input and decrement/increment buttons while All is enabled, preserving the chosen number when toggled back off.
