@@ -15,7 +15,7 @@ Keep this document useful, but never treat it as more authoritative than the cur
 
 1. PROJECT PURPOSE AND DEVELOPMENT PRINCIPLES
 ---------------------------------------------
-Cut Outta Here! (formerly Scrap Book / Collage) is a browser-first multiplayer party game. Shuffle is the current established mode and should be treated as the working technical baseline for future modes.
+Cut Outta Here! is the current name of this browser-first multiplayer party game. The project was previously called Collage and, before that, briefly Scrap Book. Shuffle is the current established game mode and should be treated as the working technical baseline for future modes.
 
 Long-term goal: build additional game modes on top of proven technical foundations rather than copy/paste the whole game or repeatedly rewrite multiplayer and round handling.
 
