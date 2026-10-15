@@ -1741,3 +1741,22 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 
 /* Timer fields: numeric seconds inputs for quick testing. */
 .hostTimerInput{display:flex;align-items:center;gap:8px;margin-top:6px}.hostTimerInput span{font-size:12px;font-weight:800;color:#514a60;white-space:nowrap}.hostTimerInput input{width:100%;min-width:0;padding:10px 12px;border:3px solid var(--ink);border-radius:14px;background:#fff;font:inherit;font-weight:800}.devField input[type=number]{width:100%;padding:10px 12px;border:3px solid var(--ink);border-radius:12px;background:#fff;font:inherit;font-weight:800}
+
+/* V1.6.81 compact number steppers and Host Game viewport fit */
+.numberStepper{display:flex;align-items:stretch;gap:5px;width:100%;min-width:0}
+.numberStepper input{flex:1 1 auto;width:100%;min-width:0;height:34px;margin:0;padding:4px 8px;border:2px solid var(--ink);border-radius:9px;background:#fff;font:inherit;font-weight:900}
+.numberStepper input::-webkit-inner-spin-button,.numberStepper input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.numberStepper input[type=number]{-moz-appearance:textfield}
+.numberStepper .stepButton{flex:0 0 30px;width:30px;padding:0 4px;border:2px solid var(--ink);border-radius:8px;box-shadow:2px 2px 0 var(--ink);background:#fff;font-size:18px;line-height:1}
+.hostTimerInput .numberStepper{flex:1}
+.hostShell{height:100dvh;min-height:0;overflow:auto;padding:8px 18px 10px}
+.hostSettingsGrid{gap:7px;flex:0 0 auto}
+.settingCard{min-height:70px;padding:7px 9px;gap:9px}
+.settingCard .cardBody{flex:1;min-width:0}
+.settingCard small{white-space:normal;line-height:1.15}
+.settingCard select,.settingCard .numberStepper input{height:31px}
+.hostTimerInput{margin-top:3px}
+.hostTimerInput span{font-size:11px}
+.hostFooter{flex:0 0 auto;min-height:0;margin-top:8px;padding-bottom:4px}
+.hostError{margin:6px 0 0}
+@media(max-height:850px) and (min-width:651px){.v16Main{overflow-y:auto}.v16Main .hostShell{height:auto!important;min-height:100%!important;overflow:visible!important;padding-top:4px!important;padding-bottom:8px!important}.v16Main .hostSettingsGrid{gap:6px}.v16Main .settingCard{min-height:65px;padding:6px 8px}.v16Main .settingCard .cardIcon{width:32px;height:32px;flex-basis:32px}.v16Main .settingCard small{margin:2px 0 3px}.v16Main .hostFooter{margin-top:6px}}
