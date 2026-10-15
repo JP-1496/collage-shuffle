@@ -1,3 +1,7 @@
+## V1.7.2 — Stacked home title
+- Split the home-screen title into three centred lines: “CUT”, “OUTTA”, and “HERE!”.
+- Updated the title styling to remain within the viewport on desktop and mobile.
+
 ## V1.7.1 — Cut Outta Here! rebrand
 - Rebranded the home screen and in-game sidebar to “CUT OUTTA HERE!”.
 - Set the tagline to “Cut. Create. Chaos.” and updated the browser title, join screen and developer-mode branding.
