@@ -1,3 +1,8 @@
+## V1.6.88
+- Made all six collage toolbar buttons equal-sized in a consistent 3 × 2 grid.
+- Restored the earlier editor edge-clearance approach: visible overflow, no panel clipping/masking, and reserved right-side space for the border and shadow.
+- Kept the warning and Submit button within the panel width.
+
 ## V1.6.87
 - Fixed the collage toolbar panel overflowing its available width, with responsive sizing and safer button wrapping.
 - Improved the Round 1 warning text wrapping and spacing.
