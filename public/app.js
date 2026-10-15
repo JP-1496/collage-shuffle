@@ -177,6 +177,7 @@ function developerMode(){
 function saveDeveloperSettings(){
  const d=developerSettings(),el=id=>document.getElementById(id),num=id=>Number(el(id)?.value);
  d.showBotButton=!!el('devBotButton')?.checked;
+ d.defaultMusicVolume=Math.max(0,Math.min(100,Math.round(num('devDefaultMusicVolume')??d.defaultMusicVolume??DEFAULT_AUDIO_SETTINGS.music)));
  d.musicStyles=Object.fromEntries(MUSIC_SECTIONS.map(([key])=>[key,['chill','cool','dark'].includes(el('devMusic-'+key)?.value)?el('devMusic-'+key).value:'chill']));
  d.hostDefaults={capacity:num('devCapacity'),imagesPerPlayer:Math.max(1,Math.min(5,Math.floor(num('devImages')||1))),round1Images:Math.max(1,Math.min(40,Math.floor(num('devRound1')||1))),imageSeconds:Math.max(10,Math.min(600,num('devImageTimer')||120)),creationSeconds:Math.max(10,Math.min(600,num('devCreationTimer')||120)),promptSeconds:Math.max(10,Math.min(600,num('devPromptTimer')||60)),votingSeconds:Math.max(10,Math.min(600,num('devVotingTimer')||45)),hostApproval:!!el('devApproval')?.checked};
  d.hostDefaults.round1Images=Math.min(d.hostDefaults.round1Images,40);
