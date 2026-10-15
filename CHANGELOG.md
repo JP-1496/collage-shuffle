@@ -1,3 +1,9 @@
+## V1.7.11 — Per-section music style preview
+- Added independent Chill, Cool and Dark selections for the main menu/lobby, creation, voting/show-off, and final results sections in Developer Mode.
+- Saved each section's selection locally in the browser, separate from Music/SFX volume settings.
+- Added generated Web Audio placeholder previews for testing style selection until the final WAV tracks are uploaded; these are previews only, not the final soundtrack integration.
+- Updated client, server, package and cache-busting versions to V1.7.11.
+
 ## V1.7.10 — Music and SFX volume controls
 - Added separate Music and SFX volume sliders to the main menu and in-game sidebar.
 - Saved volume preferences in the browser and synchronised the slider values across both locations.
