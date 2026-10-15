@@ -1,3 +1,7 @@
+## V1.6.80
+- Set all Host Game and Developer Mode timer inputs to accept whole seconds from 10 through 600 (10 seconds to 10 minutes).
+- Clamp typed timer values to the same minimum and maximum.
+
 ## V1.6.79
 - Replaced timer dropdowns in Host Game settings with numeric seconds inputs for faster, precise testing.
 - Updated Developer Mode timer defaults to use seconds-based inputs; values remain local and do not change the version.
