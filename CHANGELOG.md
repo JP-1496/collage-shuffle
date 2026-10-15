@@ -1,3 +1,7 @@
+## V1.6.81
+- Replaced Images per player and Round 1 starting images dropdowns with compact numeric inputs, capped at 5 and 40.
+- Added external decrement/increment buttons to numeric inputs and tightened Host Game spacing so the footer remains accessible.
+
 ## V1.6.80
 - Set all Host Game and Developer Mode timer inputs to accept whole seconds from 10 through 600 (10 seconds to 10 minutes).
 - Clamp typed timer values to the same minimum and maximum.
