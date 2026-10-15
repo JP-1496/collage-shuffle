@@ -1,3 +1,9 @@
+## V1.7.3 — Copy and terminology pass
+- Standardised nickname prompts to “Your Nickname”, simplified home actions to “Host” and “Join”, and renamed server settings to “Game Settings”.
+- Updated ready, waiting and image-pool review wording; player-facing errors now use plain-English explanations.
+- Replaced player-facing “masterpiece” wording with “creation”.
+- Added a concise Shuffle mode flow summary. The visual instruction booklet is not included in this release.
+
 ## V1.7.2 — Stacked home title
 - Split the home-screen title into three centred lines: “CUT”, “OUTTA”, and “HERE!”.
 - Updated the title styling to remain within the viewport on desktop and mobile.
