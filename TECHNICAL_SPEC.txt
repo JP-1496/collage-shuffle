@@ -2,7 +2,7 @@ CUT OUTTA HERE! — TECHNICAL SPECIFICATION AND AI HANDOVER LOG
 ====================================================
 
 Document type: Reference only (.txt)
-Current code baseline audit: V1.7.10
+Current code baseline audit: V1.7.11
 Repository: JP-1496/collage-shuffle
 Default branch: main
 Last prepared: 2026-10-15
@@ -350,3 +350,6 @@ After a change:
 12. DOCUMENTATION CHANGE LOG
 ----------------------------
 2026-10-15 — Initial technical handover document prepared from an audit of the V1.6.94 main-branch source, package metadata, multiplayer test and CHANGELOG.md. Documentation only; no gameplay changes are intended.
+
+
+2026-10-15 — V1.7.11 preparation: Developer Mode has per-section Chill/Cool/Dark music style preferences and generated Web Audio preview tones while final user-provided tracks are pending. These previews are test-only and do not replace the intended music assets. In-game testing and approval are pending; do not merge to main until the user approves.
