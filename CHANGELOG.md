@@ -1,3 +1,8 @@
+## V1.6.79
+- Replaced timer dropdowns in Host Game settings with numeric seconds inputs for faster, precise testing.
+- Updated Developer Mode timer defaults to use seconds-based inputs; values remain local and do not change the version.
+- Timer values are constrained to 1–3600 seconds.
+
 ## V1.6.78
 - Added a hidden Developer Mode entry point: click the homepage build badge seven times and enter the developer PIN.
 - Added locally saved host defaults for capacity, images per player, Round 1 images, phase timers, and host image-pool approval.
