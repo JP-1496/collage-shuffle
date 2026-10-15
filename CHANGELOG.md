@@ -1,3 +1,8 @@
+## V1.7.6 — Host nickname visibility
+- Added a visible nickname field to Host Game setup so first-time hosts can enter their name without scrolling.
+- Moved host validation feedback to the top of the page and focus the nickname field when Create Lobby is clicked without a name.
+- Updated client, server, package and cache-busting versions to V1.7.6.
+
 ## V1.7.5 — Host settings layout fix
 - Moved the Shuffle mode summary above the two-column settings grid so Game options and Timers remain side by side.
 - Updated client, server, package and cache-busting versions to V1.7.5.

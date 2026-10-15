@@ -1955,3 +1955,11 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 
 /* V1.7.3 — concise Shuffle overview */
 .modeSummary{display:flex;flex-direction:column;gap:5px;margin:0 0 10px;padding:9px 12px;background:var(--yellow);border:2px solid var(--ink);border-radius:12px;font-size:13px;font-weight:800;line-height:1.35}.modeSummary b{font-size:11px;letter-spacing:.12em}.modeSummary span{overflow-wrap:anywhere}@media(max-width:520px){.modeSummary{font-size:11px;padding:7px 9px}}
+
+/* V1.7.6 — Keep host nickname visible and validation near the top. */
+.hostErrorTop{margin:0 0 8px!important;padding:8px 12px;border:2px solid var(--ink);border-radius:10px;background:#ffe0e8;font-weight:900}
+.hostNameCard{box-sizing:border-box;width:100%;margin:0 0 10px}
+.hostNameCard .cardBody{min-width:0;flex:1}
+.hostNameCard input{box-sizing:border-box;width:100%;min-width:0;border:2px solid var(--ink);border-radius:10px;background:#fff;font:inherit;font-weight:800;font-size:15px;padding:7px 9px}
+.hostNameCard input:focus{outline:3px solid var(--purple);outline-offset:1px}
+@media(max-height:700px){.hostNameCard{min-height:56px;padding:6px 10px;margin-bottom:7px}.hostNameCard .cardIcon{width:32px;height:32px;flex-basis:32px}}
