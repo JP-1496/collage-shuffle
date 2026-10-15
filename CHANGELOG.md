@@ -1,3 +1,8 @@
+## V1.6.92
+- Moved the existing working Copy action to each masterpiece on Final Results only; each button is attached to its own gallery item and scrolls with it.
+- Removed Copy buttons from the final slideshow and voting stage. The existing PNG-copy implementation is unchanged.
+- Rebuilt the Round 2+ toolbar as four direct grid buttons so Flip H/Flip V occupy the first row and Back/Front the second, with equal sizing and readable labels.
+
 ## V1.6.91
 - Restored the browser's normal right-click menu on masterpiece images; right-click no longer triggers a custom copy action.
 - Added an explicit “Copy masterpiece PNG” action to final showcase and voting collages.
