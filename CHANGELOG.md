@@ -1,3 +1,11 @@
+## V1.7.12 — Automatic background music
+- Added generated placeholder background music that starts after the browser's first user interaction and loops continuously while the game is open.
+- Automatically switches between the selected Chill, Cool or Dark style for the main menu/lobby, creation phases, final showcase/voting, and final results.
+- Added gentle fades when changing sections and applied the existing Music volume slider to live playback, including mute.
+- Kept Developer Mode preview buttons; previews temporarily pause background music and background playback resumes afterwards.
+- Placeholder synth music is temporary and will be replaced by the planned WAV soundtrack assets.
+- Updated client, server, package and cache-busting versions to V1.7.12.
+
 ## V1.7.11 — Per-section music style preview
 - Added independent Chill, Cool and Dark selections for the main menu/lobby, creation, voting/show-off, and final results sections in Developer Mode.
 - Saved each section's selection locally in the browser, separate from Music/SFX volume settings.
