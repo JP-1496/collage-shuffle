@@ -1,5 +1,6 @@
 ## V1.7.9 — Remove lobby hint
 - Removed the explanatory sentence beneath the lobby title, leaving the lobby header cleaner.
+- Clarified the current game name is Cut Outta Here!; Collage is the former project name (following the earlier Scrap Book name).
 - Updated client, server, package and cache-busting versions to V1.7.9.
 
 ## V1.7.8 — Lobby name default
