@@ -1,3 +1,7 @@
+## V1.7.4 — White-screen hotfix
+- Fixed JavaScript syntax errors caused by apostrophes in player-facing strings, which prevented the client app from loading.
+- Updated runtime, package and cache-busting version references to V1.7.4.
+
 ## V1.7.3 — Copy and terminology pass
 - Standardised nickname prompts to “Your Nickname”, simplified home actions to “Host” and “Join”, and renamed server settings to “Game Settings”.
 - Updated ready, waiting and image-pool review wording; player-facing errors now use plain-English explanations.
