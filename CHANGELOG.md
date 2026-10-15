@@ -1,3 +1,7 @@
+## V1.6.90
+- Right-clicking any part of a masterpiece in the final slideshow or voting cards now copies the complete collage as a single PNG on a white background; falls back to downloading the PNG where image clipboard writing is unavailable.
+- Grouped Round 2+ toolbar controls into two pairs: Flip H/Flip V and Back/Front.
+
 ## V1.6.89
 - Made the canvas hover cursor use the same alpha-pixel hit testing as click-through selection, so transparent areas only show the grab cursor when an opaque piece exists underneath.
 - Keeps a grabbing cursor while dragging and uses the normal cursor over empty canvas.
