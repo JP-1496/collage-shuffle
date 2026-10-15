@@ -1738,3 +1738,6 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 .devActions{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap}
 .devSaved{margin:0;text-align:right;font-size:13px;font-weight:800;color:#245b3d}
 @media(max-width:600px){.devShell{padding:16px 12px 28px}.devCard{padding:14px}.devActions button{width:100%}}
+
+/* Timer fields: numeric seconds inputs for quick testing. */
+.hostTimerInput{display:flex;align-items:center;gap:8px;margin-top:6px}.hostTimerInput span{font-size:12px;font-weight:800;color:#514a60;white-space:nowrap}.hostTimerInput input{width:100%;min-width:0;padding:10px 12px;border:3px solid var(--ink);border-radius:14px;background:#fff;font:inherit;font-weight:800}.devField input[type=number]{width:100%;padding:10px 12px;border:3px solid var(--ink);border-radius:12px;background:#fff;font:inherit;font-weight:800}
