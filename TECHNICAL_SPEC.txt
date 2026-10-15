@@ -1,8 +1,8 @@
-COLLAGE — TECHNICAL SPECIFICATION AND AI HANDOVER LOG
+SCRAP BOOK — TECHNICAL SPECIFICATION AND AI HANDOVER LOG
 ====================================================
 
 Document type: Reference only (.txt)
-Current code baseline audited: V1.6.94
+Current code baseline audited: V1.7.0
 Repository: JP-1496/collage-shuffle
 Default branch: main
 Last prepared: 2026-10-15
@@ -15,7 +15,7 @@ Keep this document useful, but never treat it as more authoritative than the cur
 
 1. PROJECT PURPOSE AND DEVELOPMENT PRINCIPLES
 ---------------------------------------------
-Collage is a browser-first multiplayer party game. Shuffle is the current established mode and should be treated as the working technical baseline for future modes.
+Scrap Book (formerly Collage) is a browser-first multiplayer party game. Shuffle is the current established mode and should be treated as the working technical baseline for future modes.
 
 Long-term goal: build additional game modes on top of proven technical foundations rather than copy/paste the whole game or repeatedly rewrite multiplayer and round handling.
 
@@ -44,9 +44,9 @@ Audited files:
 - TECHNICAL_SPEC.txt — this document; reference only.
 
 Current audited package:
-- package version: 1.6.94
-- server.js VERSION: 1.6.94
-- public/index.html cache query strings: 1.6.94
+- package version: 1.7.0
+- server.js VERSION: 1.7.0
+- public/index.html cache query strings: 1.7.0
 - Node engine: >=18
 - Runtime dependencies: express and ws
 - Test commands: npm test; npm run test:e2e

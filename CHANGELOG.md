@@ -1,3 +1,8 @@
+## V1.7.0 — Scrap Book rebrand
+- Began the V1.7.0 overhaul with a title-only rebrand: changed the home-screen title logo and in-game sidebar logo from “COLLAGE” to “SCRAP BOOK”.
+- Preserved the existing typography, colours, shadows, layout and overall visual styling; no gameplay behaviour changed.
+- Updated the document title, runtime/package version and HTML cache-busting references to V1.7.0.
+
 ## V1.6.94
 - Fixed the root cause of the missing Final Results Copy button: the gallery item was forced into a square with overflow hidden, clipping anything beneath the artwork.
 - Allowed each result card to grow vertically while keeping the artwork itself square and clipped.
