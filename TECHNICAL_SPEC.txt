@@ -1,8 +1,14 @@
+V1.7.12 CHANGE NOTE
+--------------------
+- Automatic generated background music now runs during the menu/lobby and game sections, follows per-section Chill/Cool/Dark selections, fades on transitions, and respects the Music volume slider.
+- Generated tones are temporary test music only. Integrate the final user-supplied WAV tracks in a later version; do not describe the placeholder synth as the finished soundtrack.
+- Verify playback in a real browser after deployment. The browser may require an initial user gesture to unlock Web Audio.
+
 CUT OUTTA HERE! — TECHNICAL SPECIFICATION AND AI HANDOVER LOG
 ====================================================
 
 Document type: Reference only (.txt)
-Current code baseline audit: V1.7.11
+Current code baseline audit: V1.7.12
 Repository: JP-1496/collage-shuffle
 Default branch: main
 Last prepared: 2026-10-15
@@ -13,13 +19,16 @@ This is a plain-text reference file. The game does not import, execute, serve, o
 
 Keep this document useful, but never treat it as more authoritative than the current source code. When code and this document disagree, inspect the code and tests, determine the intended behaviour, then update this document.
 
-AUDIO SETTINGS — V1.7.10
------------------------
-- The main menu and in-game sidebar expose independent Music and SFX volume sliders.
-- Music means looping/background audio. SFX means one-shot event sounds such as round endings and winner announcements.
-- Values are saved in localStorage under cutOuttaHereAudioSettings and synchronised between both slider locations.
-- Audio elements should identify their category with data-audio-type="music" or data-audio-type="sfx" so the shared volume settings can be applied. Future sound playback should use these categories consistently.
-- Volume controls and persistence are implemented; this change does not add music tracks or sound-effect assets.
+AUDIO PLAYBACK — V1.7.12
+-------------------------
+- Music and SFX volume sliders appear on the main menu and in-game sidebar. Values persist in localStorage under cutOuttaHereAudioSettings.
+- V1.7.12 adds generated Web Audio background music; no final WAV assets are integrated yet.
+- Background music starts after the browser receives a user interaction, then loops and changes section/style when the game state changes.
+- Section mapping: home/host/join/lobby = menu; IMAGE_SUBMISSION, HOST_APPROVAL, PROMPT_SUBMISSION and ROUND = creation; FINAL_SHOWCASE = voting/show-off; FINAL = results.
+- Per-section Chill/Cool/Dark choices are stored locally in collageDeveloperSettings.musicStyles.
+- Section transitions fade out the old generated pattern and fade in the next. The Music slider adjusts the live master gain; 0% mutes playback.
+- Developer Mode preview buttons remain available. A preview temporarily pauses background music, then restores the current section's background pattern when finished.
+- Browser autoplay restrictions may defer sound until the user interacts with the page. SFX volume is configured but one-shot SFX are not implemented.
 
 1. PROJECT PURPOSE AND DEVELOPMENT PRINCIPLES
 ---------------------------------------------
@@ -52,9 +61,9 @@ Audited files:
 - TECHNICAL_SPEC.txt — this document; reference only.
 
 Current audited package:
-- package version: 1.7.0
-- server.js VERSION: 1.7.0
-- public/index.html cache query strings: 1.7.0
+- package version: 1.7.12
+- server.js VERSION: 1.7.12
+- public/index.html cache query strings: 1.7.12
 - Node engine: >=18
 - Runtime dependencies: express and ws
 - Test commands: npm test; npm run test:e2e
