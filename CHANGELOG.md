@@ -1,3 +1,7 @@
+## V1.6.83
+- Replaced the Round 1 starting images dropdown with an All toggle switch.
+- When All is enabled, the numeric field remains visible but is greyed out to show that its value is ignored; switching All off restores numeric selection.
+
 ## V1.6.82 — Auto-update trigger
 - No gameplay changes. This commit is a small documentation-only update to trigger the GitHub sync/build workflow.
 
