@@ -1,3 +1,8 @@
+## V1.6.94
+- Fixed the root cause of the missing Final Results Copy button: the gallery item was forced into a square with overflow hidden, clipping anything beneath the artwork.
+- Allowed each result card to grow vertically while keeping the artwork itself square and clipped.
+- Updated the Copy button's canvas lookup to find the artwork in its new wrapper, preserving the existing copy-to-Paint flow.
+
 ## V1.6.93
 - Fixed the Final Results Copy button being clipped: the artwork remains inside its clipped canvas viewport, while Copy now sits in a separate row beneath it within the same masterpiece card.
 - Preserved the existing working PNG copy implementation and Round 2+ toolbar layout.
