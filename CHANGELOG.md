@@ -1,6 +1,9 @@
 ## V1.6.77
 - Corrected click-through hit-testing to use rendered piece geometry, including rotation and flips.
 - Transparent pixels now allow selection and dragging of visible pieces underneath; clicks on empty transparent areas no longer select the covering piece.
+- Added a hidden Developer Mode entry point: click the homepage build badge seven times and enter the developer PIN.
+- Added locally saved host defaults and a local toggle for showing the lobby bot button. Developer settings do not change the displayed game version.
+- Developer Mode is a local convenience feature; its PIN and UI toggles are not server-side security controls.
 
 ## V1.6.76
 - Added alpha-aware canvas hit-testing for piece selection and dragging: transparent pixels click through to the topmost visible piece underneath.
