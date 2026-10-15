@@ -1,3 +1,8 @@
+## V1.7.0 — Scrap Book home screen wording
+- Removed the small “SHUFFLE • SCRAP BOOK” label above the title logo.
+- Changed the home-screen tagline to “Cut. Create. Chaos.”
+- Kept the Scrap Book title styling and all gameplay behaviour unchanged.
+
 ## V1.7.0 — Scrap Book rebrand
 - Began the V1.7.0 overhaul with a title-only rebrand: changed the home-screen title logo and in-game sidebar logo from “COLLAGE” to “SCRAP BOOK”.
 - Preserved the existing typography, colours, shadows, layout and overall visual styling; no gameplay behaviour changed.
