@@ -1968,3 +1968,22 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 .hostActions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap}
 .hostErrorBottom{margin:0!important;padding:9px 12px;border:2px solid var(--ink);border-radius:12px;background:#ffe0e8;color:var(--ink);font-weight:900;font-size:12px;max-width:min(420px,100%);box-sizing:border-box}
 @media(max-width:650px){.hostErrorBottom{flex:1 1 100%;max-width:100%;text-align:center}.hostActions{width:100%}.hostActions>button{flex:1}}
+
+
+/* V1.8.0 — Persistent Music and SFX volume controls. */
+.audioControls{background:rgba(255,255,255,.86);border:3px solid var(--ink);border-radius:16px;padding:10px 12px;box-shadow:4px 4px 0 var(--ink);text-align:left;color:var(--ink)}
+.audioControlsTitle{font-size:11px;font-weight:1000;letter-spacing:.12em;margin-bottom:7px}
+.audioControl{display:block;min-width:0;margin-top:7px}
+.audioControlTop{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;line-height:1.2}
+.audioControlTop output{font-size:12px;font-weight:1000;font-variant-numeric:tabular-nums}
+.audioControl input[type=range]{display:block;width:100%;height:18px;margin:4px 0 1px;accent-color:var(--pink);cursor:pointer}
+.audioControl small{display:block;font-size:10px;font-weight:700;line-height:1.2;opacity:.72}
+.audioControlsMenu{max-width:390px;margin:12px auto 0}
+.audioControlsSidebar{padding:8px 9px;box-shadow:2px 2px 0 var(--ink);border-width:2px}
+.audioControlsSidebar .audioControlsTitle{margin-bottom:4px}
+.audioControlsSidebar .audioControl{margin-top:5px}
+.audioControlsSidebar .audioControlTop{font-size:12px}
+.audioControlsSidebar .audioControl small{font-size:9px}
+.audioControlsSidebar .audioControl input[type=range]{height:16px;margin:2px 0 0}
+@media(max-width:650px){.audioControlsSidebar{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;padding:6px 8px}.audioControlsSidebar .audioControlsTitle{grid-column:1/-1;margin:0}.audioControlsSidebar .audioControl{margin:0}.audioControlsSidebar .audioControl small{display:none}.audioControlsMenu{margin-top:8px}.audioControl small{font-size:9px}}
+@media(max-height:760px) and (min-width:651px){.audioControlsSidebar{padding:6px 8px}.audioControlsSidebar .audioControl{margin-top:3px}.audioControlsSidebar .audioControl small{display:none}.audioControlsSidebar .audioControl input[type=range]{height:14px}}
