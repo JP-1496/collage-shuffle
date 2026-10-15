@@ -1717,3 +1717,24 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
   margin:0;
   z-index:1;
 }
+
+/* Developer Mode — deliberately isolated from the normal player UI */
+.buildBadge{cursor:pointer;border:0;font:inherit;font-weight:1000;letter-spacing:.08em}
+.devShell{max-width:1000px;min-height:100dvh;height:auto;overflow:visible;padding:24px 18px 40px;gap:16px}
+.devHeader{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.devHeader h2{font-size:clamp(30px,5vw,44px);margin:8px 0}
+.devHeader p,.devCard>p{margin:6px 0;color:#514a5f}
+.devPill{background:#171321;color:white;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:900;letter-spacing:.1em}
+.devCard{background:rgba(255,255,255,.9);border:3px solid var(--ink);border-radius:20px;padding:18px;box-shadow:5px 5px 0 var(--ink)}
+.devCard h3{margin:0 0 8px;font-size:21px}
+.devGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px}
+.devField{display:flex;flex-direction:column;gap:7px;font-weight:800}
+.devField select{width:100%;padding:10px;border:2px solid var(--ink);border-radius:10px;background:white;font:inherit}
+.devCheck{display:flex;align-items:flex-start;gap:10px;padding:12px;background:#fffaf2;border:2px solid #ded8e8;border-radius:12px;grid-column:1/-1}
+.devCheck input{width:20px;height:20px;accent-color:var(--purple);flex-shrink:0}
+.devCheck span{display:flex;flex-direction:column;gap:4px}
+.devCheck small{font-weight:500;color:#514a5f}
+.devWarning{font-size:13px!important;background:#fff3cd;border-radius:10px;padding:10px}
+.devActions{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap}
+.devSaved{margin:0;text-align:right;font-size:13px;font-weight:800;color:#245b3d}
+@media(max-width:600px){.devShell{padding:16px 12px 28px}.devCard{padding:14px}.devActions button{width:100%}}
