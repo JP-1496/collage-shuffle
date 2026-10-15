@@ -1,8 +1,8 @@
-## V1.8.0 — Music and SFX volume controls
+## V1.7.10 — Music and SFX volume controls
 - Added separate Music and SFX volume sliders to the main menu and in-game sidebar.
 - Saved volume preferences in the browser and synchronised the slider values across both locations.
 - Defined Music as looping background audio and SFX as one-shot event audio; volume settings are ready for audio playback integration.
-- Updated client, server, package and cache-busting versions to V1.8.0.
+- Updated client, server, package and cache-busting versions to V1.7.10.
 
 ## V1.7.9 — Remove lobby hint
 - Removed the explanatory sentence beneath the lobby title, leaving the lobby header cleaner.
