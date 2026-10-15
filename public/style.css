@@ -1896,3 +1896,15 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 .v16Main .round2Toolbar .toolbarGroup button{width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important;white-space:nowrap!important}
 .v16Main .showcaseStage .voteCanvas,.v16Main .voteCard .voteCanvas{background:#fff;cursor:context-menu}
 .v16Main .showcaseStage .voteCanvas img,.v16Main .voteCard .voteCanvas img{pointer-events:none}
+
+
+/* V1.6.91 — Consistent Round 2 toolbar and explicit whole-masterpiece export */
+.v16Main .round2Toolbar{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;width:100%!important;min-width:0!important}
+.v16Main .round2Toolbar .toolbarGroup{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;min-width:0!important;width:100%!important}
+.v16Main .round2Toolbar .toolbarGroup button{width:100%!important;min-width:0!important;max-width:none!important;height:38px!important;min-height:38px!important;padding:5px 4px!important;white-space:nowrap!important;font-size:clamp(10px,2.7vw,12px)!important;box-sizing:border-box!important}
+.v16Main .masterpieceExportTarget{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:8px;min-width:0}
+.v16Main .masterpieceExportTarget .voteCanvas{width:100%;background:#fff}
+.v16Main .copyMasterpieceBtn{align-self:center;width:auto;max-width:100%;padding:8px 14px;border:2px solid var(--ink);border-radius:999px;background:var(--pink);color:var(--ink);font-weight:900;cursor:pointer;white-space:normal}
+.v16Main .showcaseStage .masterpieceExportTarget{width:100%;max-width:100%}
+.v16Main .showcaseStage .masterpieceExportTarget .voteCanvas{width:100%}
+.v16Main .showcaseStage .copyMasterpieceBtn{margin:0 auto 4px}
