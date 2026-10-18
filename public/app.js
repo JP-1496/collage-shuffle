@@ -52,10 +52,10 @@ function syncBackgroundMusic(){
   backgroundAudioContext=backgroundAudioContext||new Ctx();
   const ctx=backgroundAudioContext;
   if(ctx.state!=='running')ctx.resume().catch(()=>{});
-  if(backgroundMusicSession&&backgroundMusicSession.section===section&&backgroundMusicSession.style===style){updateBackgroundMusicVolume();return;}
+  if(backgroundMusicSession&&backgroundMusicSession.section===section&&backgroundMusicSession.style===style){updateBackgroundMusicVolume();if(backgroundMusicSession.mode==='made'&&madeBackgroundAudio&&madeBackgroundAudio.paused)madeBackgroundAudio.play().catch(e=>console.warn('Made '+section+' music is waiting for browser playback permission',e));return;}
   stopBackgroundMusic();
   if(style==='made'&&(section==='menu'||section==='creation')){
-   const track=section==='menu'?'/audio/tinkle.mp3':'/audio/plinky-idea-2-for-game.mp3';
+   const track=section==='menu'?'/audio/tinkle.mp3':'/audio/Plinky%20Idea%202%20for%20game.mp3';
    const audio=new Audio(track);audio.loop=true;audio.preload='auto';audio.volume=getAudioSettings().music/100;madeBackgroundAudio=audio;backgroundMusicSession={section,style,mode:'made'};
    audio.play().catch(e=>console.warn('Made '+section+' music could not start until playback is allowed',e));return;
   }
@@ -97,7 +97,7 @@ function previewMusic(section){
  const d=developerSettings(),style=d.musicStyles?.[section]||'chill';
  try{
   if(style==='made'&&(section==='menu'||section==='creation')){
-   const track=section==='menu'?'/audio/tinkle.mp3':'/audio/plinky-idea-2-for-game.mp3';
+   const track=section==='menu'?'/audio/tinkle.mp3':'/audio/Plinky%20Idea%202%20for%20game.mp3';
    const audio=new Audio(track);audio.preload='auto';audio.volume=getAudioSettings().music/100;madePreviewAudio=audio;
    audio.play().catch(e=>{console.warn('Made music preview unavailable',e);const status=document.getElementById('musicPreviewStatus');if(status)status.textContent='Could not play '+track.split('/').pop()+'. Check that '+track+' is available.';});
    previewAudioTimeout=setTimeout(()=>{previewAudioTimeout=null;if(madePreviewAudio){madePreviewAudio.pause();madePreviewAudio.currentTime=0;madePreviewAudio=null;}backgroundMusicPausedForPreview=false;syncBackgroundMusic();const status=document.getElementById('musicPreviewStatus');if(status)status.textContent='Preview finished. Background music resumed.';},6500);
