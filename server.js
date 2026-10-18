@@ -165,6 +165,7 @@ app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
 function send(pid, msg){ const ws=sockets.get(pid); if(ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(msg)); }
 function broadcast(g){ for(const p of g.players) send(p.id,{type:'STATE',state:stateFor(g,p.id)}); }
+function broadcastSubmissionProgress(g){const submissionStatus=Object.fromEntries(Object.entries(g.collages).map(([pid,c])=>[pid,!!c.submitted]));for(const p of g.players)send(p.id,{type:'SUBMISSION_PROGRESS',round:g.round,submissionStatus});}
 function botList(g){ return g.players.filter(p=>p.isBot); }
 function botDelay(g,fn,ms=500){
   if(!BOTS_ENABLED)return;
@@ -582,8 +583,9 @@ function handle(g,pid,a){
       // if all currently connected players have submitted.
       const requiredPlayers=g.players.filter(x=>x.connected||x.isBot);
       const submitted=requiredPlayers.filter(x=>g.collages[x.id]?.submitted).length;
+      // Progress updates contain only submission flags, not image-heavy collage state.
+      broadcastSubmissionProgress(g);
       if(requiredPlayers.length>0 && submitted===requiredPlayers.length) finishRound(g);
-      else broadcast(g);
       return;
     }
     case 'FINAL_NEW_PLAYERS': {if(g.phase==='FINAL'&&p.host)restartNewPlayers(g);break;}
