@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.7.20';
+const VERSION = '1.7.21';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = process.env.COLLAGE_TEST_MODE === '1' ? 2 : 3;
 const app = express();
@@ -391,15 +391,14 @@ function beginRound(g){
     g.setLineage=Object.fromEntries(ids.map(pid=>[pid,pid]));
     g.seenSetLineages=Object.fromEntries(ids.map(pid=>[pid,[]]));
   }else{
-    // Move every current set forward exactly one slot each round. Using a constant
-    // one-slot shift (rather than shifting by the round number) guarantees that
-    // every set visits every other player exactly once for any player count.
-    for(const sourceId of ids){
-      const sourceSlot=g.rotationSlots[sourceId];
-      const recipientSlot=(sourceSlot+1)%n;
-      const recipient=ids.find(pid=>g.rotationSlots[pid]===recipientSlot);
-      if(!recipient||recipient===sourceId)throw new Error('Invalid cyclic round assignment');
-      g.roundPlayerSets[sourceId]=recipient;
+    // Map each recipient directly to the previous player's set in a fixed cycle.
+    // Keeping this as recipient -> owner makes the inverse routing explicit and
+    // prevents a recipient from being handed their own set.
+    for(let i=0;i<n;i++){
+      const recipient=ids[i];
+      const owner=ids[(i-1+n)%n];
+      if(!owner||owner===recipient)throw new Error('Invalid cyclic round assignment');
+      g.roundPlayerSets[recipient]=owner;
     }
   }
   g.votes={};g.collages={};
@@ -407,7 +406,8 @@ function beginRound(g){
   else {
     const nextLineage={};
     for(const p of g.players){
-      const owner=Object.keys(g.roundPlayerSets).find(sourceId=>g.roundPlayerSets[sourceId]===p.id);
+      const owner=g.roundPlayerSets[p.id];
+      if(!owner||owner===p.id)throw new Error('Round routing attempted to return a set to its owner');
       nextLineage[p.id]=g.setLineage[owner]||owner;
       g.collages[p.id]={playerId:p.id,promptId:g.currentPromptId,pieces:scatter(g.travelingSets[owner]||[]),submitted:false};
     }
@@ -445,8 +445,10 @@ function finishRound(g){
   for(const [pid,c] of Object.entries(g.collages)){
     if(!c.submitted){
       c.submitted=true;
-      if(g.round===0)c.pieces=(c.pieces||[]).filter(pieceIntersectsCanvas);
-      g.travelingSets[pid]=clone(c.pieces||[]);
+      if(g.round===0)c.pieces=(c.pieces||[]).filter(pieceIntersectsCanvas).map(piece=>({...piece,sourceSetId:pid}));
+      const timedOutPieces=clone(c.pieces||[]).map(piece=>({...piece,createdBy:piece.createdBy||pid}));
+      c.pieces=timedOutPieces;
+      g.travelingSets[pid]=clone(timedOutPieces);
       g.finalResults[g.round].collages[pid]=clone(c);
     }
   }
