@@ -578,14 +578,12 @@ function handle(g,pid,a){
       g.travelingSets[pid]=clone(submittedPieces);
       g.finalResults[g.round].collages[pid]=clone(c);
       sockets.get(pid)?.send(JSON.stringify({type:'SUBMISSION_ACCEPTED',round:g.round}));
-      // A disconnected player must not hold everyone else at this round forever.
-      // Their latest SYNC_COLLAGE is preserved and finishRound safely finalises it
-      // if all currently connected players have submitted.
-      const requiredPlayers=g.players.filter(x=>x.connected||x.isBot);
-      const submitted=requiredPlayers.filter(x=>g.collages[x.id]?.submitted).length;
+      // Only advance early when every player has actually submitted. A brief
+      // disconnect must not reduce the required count and skip a round for others.
+      // The round timer remains the fallback for players who leave permanently.
       // Progress updates contain only submission flags, not image-heavy collage state.
       broadcastSubmissionProgress(g);
-      if(requiredPlayers.length>0 && submitted===requiredPlayers.length) finishRound(g);
+      if(g.players.length>0 && g.players.every(x=>g.collages[x.id]?.submitted)) finishRound(g);
       return;
     }
     case 'FINAL_NEW_PLAYERS': {if(g.phase==='FINAL'&&p.host)restartNewPlayers(g);break;}
