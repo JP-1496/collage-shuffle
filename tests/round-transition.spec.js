@@ -94,7 +94,7 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     await expect(p1.locator('.playerAvatar[data-avatar="5"]')).toHaveCSS('height', '52px');
     await expect(p1.locator('.playerAvatar[data-avatar="5"]')).toHaveCSS('border-radius', '50%');
 
-    await p2.getByRole('button', { name: /Ready up/ }).click();
+    await p2.getByRole('button', { name: /Ready/ }).click();
     await expect(p1.getByRole('button', { name: /Start Game/ })).toBeEnabled();
     await p1.getByRole('button', { name: /Start Game/ }).click();
 
