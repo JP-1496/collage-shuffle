@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.7.17';
+const VERSION = '1.7.18';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = process.env.COLLAGE_TEST_MODE === '1' ? 2 : 3;
 const app = express();
@@ -325,9 +325,17 @@ function stateFor(g,pid){
     s.finalResults=g.finalResults.map(r=>({promptId:r.promptId,tally:r.tally||{},collages:Object.fromEntries(Object.entries(r.collages||{}).map(([k,c])=>[k,{...c,playerId:k}]))}));
   }
   if(g.phase==='FINAL_SHOWCASE'){
-    s.finalResults=g.finalResults.map((r,i)=>i===g.finalIndex
-      ? {promptId:r.promptId,collages:Object.fromEntries(Object.entries(r.collages||{}).map(([k,c])=>[k,{...c,playerId:k}]))}
-      : {promptId:r.promptId});
+    s.finalResults=g.finalResults.map((r,i)=>{
+      if(i!==g.finalIndex)return {promptId:r.promptId};
+      if(g.finalStage==='SLIDESHOW'){
+        const entries=Object.entries(r.collages||{});
+        const entry=entries[g.finalSlideIndex||0];
+        s.showcaseTotal=entries.length;
+        s.showcaseCollage=entry?{...entry[1],playerId:entry[0]}:null;
+        return {promptId:r.promptId};
+      }
+      return {promptId:r.promptId,collages:Object.fromEntries(Object.entries(r.collages||{}).map(([k,c])=>[k,{...c,playerId:k}]))};
+    });
     s.finalStage=g.finalStage||'SLIDESHOW';
     s.finalSlideIndex=g.finalSlideIndex||0;
     s.myFinalVote=g.finalVotes[g.finalIndex]?.[pid]||null;
@@ -569,15 +577,13 @@ function handle(g,pid,a){
       g.travelingSets[pid]=clone(submittedPieces);
       g.finalResults[g.round].collages[pid]=clone(c);
       sockets.get(pid)?.send(JSON.stringify({type:'SUBMISSION_ACCEPTED',round:g.round}));
-      // Count every player in the lobby, not only players whose sockets are
-      // currently connected. A brief disconnect must not let others advance
-      // before that player's creation has been submitted.
-      const requiredPlayers=g.players;
+      // A disconnected player must not hold everyone else at this round forever.
+      // Their latest SYNC_COLLAGE is preserved and finishRound safely finalises it
+      // if all currently connected players have submitted.
+      const requiredPlayers=g.players.filter(x=>x.connected||x.isBot);
       const submitted=requiredPlayers.filter(x=>g.collages[x.id]?.submitted).length;
-      // Broadcast the accepted count first. WebSocket delivery preserves message
-      // order, so clients receive the completed submission count before the next-round state.
-      broadcast(g);
       if(requiredPlayers.length>0 && submitted===requiredPlayers.length) finishRound(g);
+      else broadcast(g);
       return;
     }
     case 'FINAL_NEW_PLAYERS': {if(g.phase==='FINAL'&&p.host)restartNewPlayers(g);break;}
@@ -598,7 +604,7 @@ wss.on('connection',ws=>{
     if(m.type==='ACTION'){const pid=m.playerId;if(sockets.get(pid)!==ws)return;const g=[...games.values()].find(x=>x.players.some(p=>p.id===pid));if(g)handle(g,pid,m.action);}
   }catch(e){ws.send(JSON.stringify({type:'ERROR',message:'Invalid message.'}));}});
   ws.on('error',()=>{});
-  ws.on('close',()=>{for(const g of games.values()){const p=g.players.find(p=>sockets.get(p.id)===ws);if(p){p.connected=false;if(g.phase==='PROMPT_SUBMISSION')finishPromptSubmission(g);else broadcast(g);}}});
+  ws.on('close',()=>{for(const g of games.values()){const p=g.players.find(p=>sockets.get(p.id)===ws);if(p){p.connected=false;if(g.phase==='PROMPT_SUBMISSION')finishPromptSubmission(g);else if(g.phase==='ROUND'&&g.players.some(x=>x.connected)&&g.players.filter(x=>x.connected).every(x=>g.collages[x.id]?.submitted))finishRound(g);else broadcast(g);}}});
 });
 setInterval(()=>{for(const ws of wss.clients){if(ws.isAlive===false){ws.terminate();continue;}ws.isAlive=false;try{ws.ping()}catch{}}},HEARTBEAT_MS);
 setInterval(checkExpiredRounds,250);
