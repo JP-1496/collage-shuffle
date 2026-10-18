@@ -1,4 +1,4 @@
-const VERSION=globalThis.COLLAGE_VERSION||'1.7.21';
+const VERSION=globalThis.COLLAGE_VERSION||'1.7.22';
 const MIN_PLAYERS=3;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
@@ -495,11 +495,34 @@ function ingredientDragOver(e,id){if(!ingredientDragId||ingredientDragId===id)re
 function ingredientDrop(e,targetId){e.preventDefault();const sourceId=ingredientDragId||e.dataTransfer.getData('text/plain');if(!sourceId||sourceId===targetId)return;const ordered=[...state.pieces].sort((x,y)=>(Number(y.z)||0)-(Number(x.z)||0));const from=ordered.findIndex(p=>p.id===sourceId),to=ordered.findIndex(p=>p.id===targetId);if(from<0||to<0)return;const [piece]=ordered.splice(from,1);ordered.splice(to,0,piece);ordered.forEach((p,i)=>{p.z=ordered.length-i-1});ingredientDragEnd();syncCollage();render(true)}
 function ingredientDragEnd(){ingredientDragId=null;document.querySelectorAll('.ingredientRow').forEach(row=>row.classList.remove('dragging','dropTarget'))}
 async function deletePiece(){if(state.game?.phase!=='ROUND'||state.game?.round!==0||state.game?.submissionStatus?.[state.pid]||!state.selected)return;const piece=state.pieces.find(p=>p.id===state.selected);state.pieces=state.pieces.filter(p=>p.id!==state.selected);clearSelection();try{await restoreDeletedCut(piece)}catch(e){console.warn('Could not restore deleted cut to source image',e)}syncCollage();render(true)}function rotate(d){const p=state.pieces.find(x=>x.id===state.selected);if(p){p.rotation=(p.rotation||0)+d;syncCollage();render(true)}}function flip(axis){const p=state.pieces.find(x=>x.id===state.selected);if(p){const k=axis==='x'?'flipX':'flipY';p[k]=!p[k];syncCollage();render(true)}}function layer(d){const p=state.pieces.find(x=>x.id===state.selected);if(!p)return;const ordered=[...state.pieces].sort((a,b)=>(a.z||0)-(b.z||0));const idx=ordered.findIndex(x=>x.id===p.id);const target=Math.max(0,Math.min(ordered.length-1,idx+d));if(target===idx)return;const other=ordered[target];const z=p.z||0;p.z=other.z||0;other.z=z;syncCollage();render(true)}
-function resizePiece(d){const p=state.pieces.find(x=>x.id===state.selected);if(p){p.w=Math.max(.1,(p.w||24)+d);syncCollage();render(true)}}function syncCollage(){if(state.game?.phase!=='ROUND'||state.game?.submissionStatus?.[state.pid])return;clearTimeout(state.syncTimer);const pieces=state.pieces.map(p=>({...p}));state.syncTimer=setTimeout(()=>{state.syncTimer=null;if(state.game?.phase==='ROUND'&&!state.game?.submissionStatus?.[state.pid])send({type:'SYNC_COLLAGE',pieces:state.pieces.map(p=>({...p}))})},200)}function submitCollage(){
+function resizePiece(d){const p=state.pieces.find(x=>x.id===state.selected);if(p){p.w=Math.max(.1,(p.w||24)+d);syncCollage();render(true)}}function syncCollage(){if(state.game?.phase!=='ROUND'||state.game?.submissionStatus?.[state.pid])return;clearTimeout(state.syncTimer);const pieces=state.pieces.map(p=>({...p}));state.syncTimer=setTimeout(()=>{state.syncTimer=null;if(state.game?.phase==='ROUND'&&!state.game?.submissionStatus?.[state.pid])send({type:'SYNC_COLLAGE',pieces:state.pieces.map(p=>({...p}))})},200)}function captureVisibleCanvasEdits(){
+  // Dragging updates the live DOM for responsiveness. Read the final inline
+  // values before submitting so the server gets the canvas the player sees,
+  // even if the last pointer movement has not reached the debounced sync yet.
+  const canvas=document.querySelector('#canvas');
+  if(!canvas)return;
+  for(const p of state.pieces){
+    const wrap=[...canvas.querySelectorAll('[data-piece]')].find(el=>el.dataset.piece===String(p.id));
+    if(!wrap)continue;
+    const style=wrap.style;
+    const readPercent=(value,fallback)=>{const n=parseFloat(value);return Number.isFinite(n)?n:fallback};
+    p.x=readPercent(style.left,p.x);
+    p.y=readPercent(style.top,p.y);
+    p.w=readPercent(style.width,p.w||24);
+    p.h=readPercent(style.height,p.h||p.w*(p.ratio||.75));
+    const rotation=style.transform?.match(/rotate\(([-+\d.e]+)deg\)/);
+    if(rotation)p.rotation=Number(rotation[1])||0;
+    const z=Number(style.zIndex);
+    if(Number.isFinite(z))p.z=z;
+  }
+}
+function submitCollage(){
   if(state.game?.phase!=='ROUND'||state.game?.submissionStatus?.[state.pid])return;
   clearTimeout(state.syncTimer);state.syncTimer=null;
+  captureVisibleCanvasEdits();
   const pieces=(state.game.round===0?state.pieces.filter(pieceIntersectsCanvas):state.pieces).map(p=>({...p}));
-  state.pieces=pieces;clearSelection();
+  state.pieces=pieces;
+  clearSelection();
   if(!send({type:'SUBMIT_COLLAGE',pieces})){
     state.error='Your creation couldn’t be submitted because the connection was lost. Please reconnect and try again.';
     render(true);
