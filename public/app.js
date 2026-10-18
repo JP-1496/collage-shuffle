@@ -52,7 +52,7 @@ function syncBackgroundMusic(){
   backgroundAudioContext=backgroundAudioContext||new Ctx();
   const ctx=backgroundAudioContext;
   if(ctx.state!=='running')ctx.resume().catch(()=>{});
-  if(backgroundMusicSession&&backgroundMusicSession.section===section&&backgroundMusicSession.style===style){updateBackgroundMusicVolume();return;}
+  if(backgroundMusicSession&&backgroundMusicSession.section===section&&backgroundMusicSession.style===style){updateBackgroundMusicVolume();if(backgroundMusicSession.mode==='made'&&madeBackgroundAudio&&madeBackgroundAudio.paused)madeBackgroundAudio.play().catch(e=>console.warn('Made '+section+' music is waiting for browser playback permission',e));return;}
   stopBackgroundMusic();
   if(style==='made'&&(section==='menu'||section==='creation')){
    const track=section==='menu'?'/audio/tinkle.mp3':'/audio/Plinky%20Idea%202%20for%20game.mp3';
