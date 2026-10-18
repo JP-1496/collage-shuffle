@@ -1,3 +1,8 @@
+## V1.7.16 — Multiplayer submission reliability
+- Round completion now waits for every player in the lobby to submit, rather than counting only currently connected sockets; transient disconnects can no longer trigger early progression.
+- Kept the existing round timer as the fallback for players who do not submit.
+- Updated client, server, package and cache-busting versions to V1.7.16.
+
 ## V1.7.15 — Made creation music
 - Made menu/lobby continues to use `public/audio/tinkle.mp3` on loop.
 - Made creation phase now uses `public/audio/plinky-idea-2-for-game.mp3` on loop, with the existing Music volume setting.

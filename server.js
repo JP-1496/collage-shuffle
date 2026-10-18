@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.7.15';
+const VERSION = '1.7.16';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = process.env.COLLAGE_TEST_MODE === '1' ? 2 : 3;
 const app = express();
@@ -569,12 +569,15 @@ function handle(g,pid,a){
       g.travelingSets[pid]=clone(submittedPieces);
       g.finalResults[g.round].collages[pid]=clone(c);
       sockets.get(pid)?.send(JSON.stringify({type:'SUBMISSION_ACCEPTED',round:g.round}));
-      const connected=g.players.filter(x=>x.connected);
-      const submitted=connected.filter(x=>g.collages[x.id]?.submitted).length;
+      // Count every player in the lobby, not only players whose sockets are
+      // currently connected. A brief disconnect must not let others advance
+      // before that player's creation has been submitted.
+      const requiredPlayers=g.players;
+      const submitted=requiredPlayers.filter(x=>g.collages[x.id]?.submitted).length;
       // Broadcast the accepted count first. WebSocket delivery preserves message
       // order, so clients receive the completed submission count before the next-round state.
       broadcast(g);
-      if(connected.length>0 && submitted===connected.length) finishRound(g);
+      if(requiredPlayers.length>0 && submitted===requiredPlayers.length) finishRound(g);
       return;
     }
     case 'FINAL_NEW_PLAYERS': {if(g.phase==='FINAL'&&p.host)restartNewPlayers(g);break;}
