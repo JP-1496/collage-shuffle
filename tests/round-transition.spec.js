@@ -20,7 +20,7 @@ async function createPlayer(browser, nickname, label) {
     } catch {}
   });
   await page.goto('/');
-  await page.locator('input[placeholder="Nickname"]').fill(nickname);
+  await page.locator('input[placeholder="Your Nickname"]').fill(nickname);
   const avatar = label === 'P1' ? '5' : '12';
   await page.getByRole('button', { name: `Character ${avatar}` }).click();
   await expect(page.locator('.avatars button')).toHaveCount(24);
@@ -74,7 +74,9 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     }
 
     await p1.getByRole('button', { name: /Host Game/ }).click();
-    await p1.locator('.hostSettingsGrid select').nth(1).selectOption('2');
+    await p1.locator('.hostOptionsGrid select').first().selectOption('2');
+    await p1.locator('#hostImages').fill('2');
+    await p1.locator('#hostImages').press('Tab');
     await p1.getByRole('button', { name: /Create Lobby/ }).click();
 
     await expect(p1.locator('.v16Code b')).toBeVisible();
@@ -110,14 +112,14 @@ test('two players can submit Round 1 and both reach Round 2', async ({ browser }
     await p2.locator('#prompt').press('Shift+Enter');
     await p2.locator('#prompt').pressSequentially('Across the finish line');
     await expect(p2.locator('#prompt')).toHaveValue(['A penguin who thinks it is a racing driver', 'Across the finish line'].join(String.fromCharCode(10)));
-    await p1.locator('#prompt').press('Enter');
+    await p1.getByRole('button', { name: /Submit Prompt/ }).click();
     await p2.getByRole('button', { name: /Submit Prompt/ }).click();
 
     await expect(p1.getByText('ROUND 1 OF 2')).toBeVisible();
     await expect(p2.getByText('ROUND 1 OF 2')).toBeVisible();
 
-    const submit1 = p1.getByRole('button', { name: /Submit collage/ });
-    const submit2 = p2.getByRole('button', { name: /Submit collage/ });
+    const submit1 = p1.getByRole('button', { name: /Submit creation/ });
+    const submit2 = p2.getByRole('button', { name: /Submit creation/ });
 
     await expect(submit1).toBeEnabled();
     await expect(submit2).toBeEnabled();
