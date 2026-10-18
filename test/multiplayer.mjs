@@ -18,6 +18,9 @@ assert.match(appSource,/async function compressImageData\(data,maxEdge=1400,qual
 assert.match(appSource,/send\(\{type:'ADD_SOURCES_BATCH',images:valid\}\)/,'File uploads should be batched to avoid repeated full-state broadcasts');
 assert.match(appSource,/out\.toDataURL\('image\/webp',0\.86\)/,'Cut-out image payloads should use compressed WebP');
 assert.match(appSource,/requestAnimationFrame\(\(\)=>\{state\._cursorHitTestPending=false/,'Canvas pointer hit testing should be throttled to animation frames');
+assert.match(serverSource,/const owner=g\.roundPlayerSets\[p\.id\]/,'Round routing must explicitly resolve each recipient to another player’s set');
+assert.match(serverSource,/owner===p\.id/,'Round routing must reject self-assignment');
+assert.match(serverSource,/timedOutPieces=clone\(c\.pieces\|\|\[\]\)/,'Timer-expired collages must be finalised and routed like submitted collages');
 assert.match(serverSource,/showcaseCollage/,'Showcase state should send only the active slide during slideshow');
 assert.match(appSource,/g\.showcaseCollage/,'Showcase client should render the compact slide payload');
 assert.match(appSource,/object-fit:fill;/,'Final canvas pieces should render with explicit fill sizing');
