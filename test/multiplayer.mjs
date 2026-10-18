@@ -47,6 +47,9 @@ function connect(){
 async function nextState(client, predicate){
   return waitFor(()=>[...client.messages].reverse().find(m=>m.type==='STATE'&&predicate(m.state))?.state);
 }
+async function nextSubmissionProgress(client, expected){
+  return waitFor(()=>[...client.messages].reverse().find(m=>m.type==='SUBMISSION_PROGRESS'&&Object.values(m.submissionStatus||{}).filter(Boolean).length===expected));
+}
 function action(client,playerId,action){client.ws.send(JSON.stringify({type:'ACTION',playerId,action}));}
 
 async function runSubmissionCountScenario(playerCount, reverseOrder=false){
@@ -83,11 +86,8 @@ async function runSubmissionCountScenario(playerCount, reverseOrder=false){
     for(let i=0;i<submitOrder.length;i++){
       action(submitOrder[i].client,submitOrder[i].playerId,{type:'SUBMIT_COLLAGE',pieces});
       const expected=i+1;
-      const receivedStates=await Promise.all(players.map(p=>nextState(p.client,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===expected)));
-      for(const state of receivedStates){
-        assert.equal(Object.values(state.submissionStatus).filter(Boolean).length,expected);
-        assert.equal(state.players.length,playerCount);
-      }
+      const receivedProgress=await Promise.all(players.map(p=>nextSubmissionProgress(p.client,expected)));
+      for(const message of receivedProgress)assert.equal(Object.values(message.submissionStatus).filter(Boolean).length,expected);
     }
 
     const r2=await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
@@ -280,10 +280,10 @@ async function main(){
     assert.equal(submittedHost.submissionStatus[gj.playerId],false);
     action(guest,gj.playerId,{type:'SUBMIT_COLLAGE',pieces:p2});
     const submittedBoth=await Promise.all([
-      nextState(host,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===2),
-      nextState(guest,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===2)
+      nextSubmissionProgress(host,2),
+      nextSubmissionProgress(guest,2)
     ]);
-    for(const s of submittedBoth)assert.equal(Object.values(s.submissionStatus).filter(Boolean).length,2);
+    for(const message of submittedBoth)assert.equal(Object.values(message.submissionStatus).filter(Boolean).length,2);
 
     const r2h=await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
     const r2g=await nextState(guest,s=>s.phase==='ROUND'&&s.round===1);
