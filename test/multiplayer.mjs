@@ -13,6 +13,8 @@ assert.match(packageJson.version,/^\d+\.\d+\.\d+$/);
 assert.ok(serverSource.includes(`const VERSION = '${packageJson.version}';`),'Server version must match package.json');
 assert.match(serverSource,/app\.get\('\/build\.js'/);
 assert.match(appSource,/globalThis\.COLLAGE_VERSION/);
+assert.match(appSource,/state\.ws\.send\(JSON\.stringify\(\{type:'CLIENT_PING'\}\)\)/,'Client heartbeat must use the standalone ping message handled by the server');
+assert.match(appSource,/requestAnimationFrame\(\(\)=>\{state\._cursorHitTestPending=false/,'Canvas pointer hit testing should be throttled to animation frames');
 assert.match(serverSource,/showcaseCollage/,'Showcase state should send only the active slide during slideshow');
 assert.match(appSource,/g\.showcaseCollage/,'Showcase client should render the compact slide payload');
 assert.match(appSource,/object-fit:fill;/,'Final canvas pieces should render with explicit fill sizing');
