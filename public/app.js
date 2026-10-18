@@ -19,7 +19,7 @@ const state={screen:'home',name:localStorage.getItem('collageName')||'',avatar:/
 const app=document.querySelector('#app');
 const DEV_SETTINGS_KEY='collageDeveloperSettings';
 const DEV_PIN='3256';
-const DEFAULT_DEV_SETTINGS={showBotButton:true,defaultMusicVolume:60,musicStyles:{menu:'made',creation:'chill',voting:'chill',results:'chill'},hostDefaults:{capacity:8,imagesPerPlayer:1,round1Images:8,imageSeconds:120,creationSeconds:120,promptSeconds:60,votingSeconds:45,hostApproval:false}};
+const DEFAULT_DEV_SETTINGS={showBotButton:true,defaultMusicVolume:5,musicStyles:{menu:'made',creation:'made',voting:'chill',results:'chill'},hostDefaults:{capacity:8,imagesPerPlayer:2,round1Images:'all',imageSeconds:120,creationSeconds:180,promptSeconds:60,votingSeconds:45,hostApproval:false}};
 function developerSettings(){try{const saved=JSON.parse(localStorage.getItem(DEV_SETTINGS_KEY)||'{}');return {...DEFAULT_DEV_SETTINGS,...saved,musicStyles:{...DEFAULT_DEV_SETTINGS.musicStyles,...(saved.musicStyles||{})},hostDefaults:{...DEFAULT_DEV_SETTINGS.hostDefaults,...(saved.hostDefaults||{})}};}catch{return JSON.parse(JSON.stringify(DEFAULT_DEV_SETTINGS));}}
 const MUSIC_STYLE_OPTIONS=[['chill','Chill'],['cool','Cool'],['dark','Dark'],['made','Made']];
 const MUSIC_SECTIONS=[['menu','Main menu / lobby'],['creation','Creation'],['voting','Voting / show-off'],['results','Final results']];
@@ -185,7 +185,7 @@ function developerMode(){
  '<section class="devCard"><h3>🎮 Host defaults</h3><p>Applied when you open Host Game. You can still change these settings for an individual lobby.</p><div class="devGrid">'+
  select('devCapacity','Default player capacity','capacity',Array.from({length:15},(_,i)=>[i+2,(i+2)+' players']))+
  '<label class="devField"><span>Images per player</span>'+numberStepper('devImages',Math.min(5,Number(h.imagesPerPlayer)||1),1,5)+'</label>'+
- '<label class="devField"><span>Max Round 1 starting images</span>'+numberStepper('devRound1',Math.min(40,Number(h.round1Images)||8),1,40)+'</label>'+
+ '<label class="devField"><span>Max Round 1 starting images</span><select id="devRound1" onchange="saveDeveloperSettings()"><option value="all" '+(h.round1Images==='all'?'selected':'')+'>All</option>'+Array.from({length:40},(_,i)=>i+1).map(v=>'<option value="'+v+'" '+(String(h.round1Images)===String(v)?'selected':'')+'>'+v+'</option>').join('')+'</select></label>'+
  timerInput('devImageTimer','Image pool timer','imageSeconds')+timerInput('devCreationTimer','Creation timer','creationSeconds')+timerInput('devPromptTimer','Prompt timer','promptSeconds')+timerInput('devVotingTimer','Voting timer','votingSeconds')+
  '<label class="devCheck"><input id="devApproval" type="checkbox" '+(h.hostApproval?'checked':'')+' onchange="saveDeveloperSettings()"><span><b>Host checks image pool</b><small>Enable approval by default for new lobbies.</small></span></label></div></section>'+
  '<section class="devCard"><h3>🧪 Testing tools</h3><label class="devCheck"><input id="devBotButton" type="checkbox" '+(d.showBotButton?'checked':'')+' onchange="saveDeveloperSettings()"><span><b>Show “+ Bot” button in lobby</b><small>Controls whether the bot button is shown in your local interface.</small></span></label><p class="devWarning">This is a local convenience setting, not a security control. It does not disable bot actions on the server.</p></section>'+
@@ -196,8 +196,8 @@ function saveDeveloperSettings(){
  d.showBotButton=!!el('devBotButton')?.checked;
  d.defaultMusicVolume=Math.max(0,Math.min(100,Math.round(num('devDefaultMusicVolume')??d.defaultMusicVolume??DEFAULT_AUDIO_SETTINGS.music)));
  d.musicStyles=Object.fromEntries(MUSIC_SECTIONS.map(([key])=>[key,['chill','cool','dark','made'].includes(el('devMusic-'+key)?.value)?el('devMusic-'+key).value:'chill']));
- d.hostDefaults={capacity:num('devCapacity'),imagesPerPlayer:Math.max(1,Math.min(5,Math.floor(num('devImages')||1))),round1Images:Math.max(1,Math.min(40,Math.floor(num('devRound1')||1))),imageSeconds:Math.max(10,Math.min(600,num('devImageTimer')||120)),creationSeconds:Math.max(10,Math.min(600,num('devCreationTimer')||120)),promptSeconds:Math.max(10,Math.min(600,num('devPromptTimer')||60)),votingSeconds:Math.max(10,Math.min(600,num('devVotingTimer')||45)),hostApproval:!!el('devApproval')?.checked};
- d.hostDefaults.round1Images=Math.min(d.hostDefaults.round1Images,40);
+ d.hostDefaults={capacity:num('devCapacity'),imagesPerPlayer:Math.max(1,Math.min(5,Math.floor(num('devImages')||1))),round1Images:el('devRound1')?.value==='all'?'all':Math.max(1,Math.min(40,Math.floor(num('devRound1')||1))),imageSeconds:Math.max(10,Math.min(600,num('devImageTimer')||120)),creationSeconds:Math.max(10,Math.min(600,num('devCreationTimer')||120)),promptSeconds:Math.max(10,Math.min(600,num('devPromptTimer')||60)),votingSeconds:Math.max(10,Math.min(600,num('devVotingTimer')||45)),hostApproval:!!el('devApproval')?.checked};
+ if(d.hostDefaults.round1Images!=='all')d.hostDefaults.round1Images=Math.min(d.hostDefaults.round1Images,40);
  localStorage.setItem(DEV_SETTINGS_KEY,JSON.stringify(d));
  const saved=el('devSaved');if(saved)saved.textContent='✓ Saved locally — version unchanged.';if(!Object.prototype.hasOwnProperty.call(JSON.parse(localStorage.getItem(AUDIO_SETTINGS_KEY)||'{}'),'music'))updateBackgroundMusicVolume();
 }
