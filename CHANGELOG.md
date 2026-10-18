@@ -1,3 +1,10 @@
+## V1.7.18 — Multiplayer responsiveness and final canvas fidelity
+- During the final slideshow, send only the current creation to each client; send all creations when voting starts, reducing repeated image payloads.
+- Avoid the duplicate full-state broadcast when the last connected player submits and the game immediately advances.
+- Let active players progress when a participant disconnects; preserve and finalise the disconnected participant's latest saved collage, and advance if the remaining connected players have all submitted.
+- Always render final-canvas pieces with explicit width and height, using the same fallback height calculation as the editor when a piece has no saved height.
+- Updated runtime, package and cache-busting versions to V1.7.18.
+
 ## V1.7.16 — Multiplayer submission reliability
 - Round completion now waits for every player in the lobby to submit, rather than counting only currently connected sockets; transient disconnects can no longer trigger early progression.
 - Kept the existing round timer as the fallback for players who do not submit.
