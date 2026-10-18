@@ -14,6 +14,9 @@ assert.ok(serverSource.includes(`const VERSION = '${packageJson.version}';`),'Se
 assert.match(serverSource,/app\.get\('\/build\.js'/);
 assert.match(appSource,/globalThis\.COLLAGE_VERSION/);
 assert.match(appSource,/state\.ws\.send\(JSON\.stringify\(\{type:'CLIENT_PING'\}\)\)/,'Client heartbeat must use the standalone ping message handled by the server');
+assert.match(appSource,/async function compressImageData\(data,maxEdge=1400,quality=0\.82\)/,'Image uploads should be resized/compressed before transfer');
+assert.match(appSource,/send\(\{type:'ADD_SOURCES_BATCH',images:valid\}\)/,'File uploads should be batched to avoid repeated full-state broadcasts');
+assert.match(appSource,/out\.toDataURL\('image\/webp',0\.86\)/,'Cut-out image payloads should use compressed WebP');
 assert.match(appSource,/requestAnimationFrame\(\(\)=>\{state\._cursorHitTestPending=false/,'Canvas pointer hit testing should be throttled to animation frames');
 assert.match(serverSource,/showcaseCollage/,'Showcase state should send only the active slide during slideshow');
 assert.match(appSource,/g\.showcaseCollage/,'Showcase client should render the compact slide payload');
