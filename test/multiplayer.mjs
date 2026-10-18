@@ -315,7 +315,11 @@ async function main(){
     const afterInvalid=host.messages.at(-1)?.state;
     assert.equal(afterInvalid?.myFinalVote,gj.playerId);
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
-    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1);
+    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1&&s.finalStage==='SLIDESHOW');
+    action(host,hj.playerId,{type:'FINAL_NEXT_SLIDE'});
+    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1&&s.finalStage==='SLIDESHOW'&&s.finalSlideIndex===1);
+    action(host,hj.playerId,{type:'FINAL_NEXT_SLIDE'});
+    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1&&s.finalStage==='VOTE');
     action(host,hj.playerId,{type:'FINAL_VOTE',targetId:gj.playerId});
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');
