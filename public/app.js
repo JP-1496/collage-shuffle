@@ -1,4 +1,4 @@
-const VERSION=globalThis.COLLAGE_VERSION||'1.7.14';
+const VERSION=globalThis.COLLAGE_VERSION||'1.7.15';
 const MIN_PLAYERS=3;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
@@ -54,9 +54,10 @@ function syncBackgroundMusic(){
   if(ctx.state!=='running')ctx.resume().catch(()=>{});
   if(backgroundMusicSession&&backgroundMusicSession.section===section&&backgroundMusicSession.style===style){updateBackgroundMusicVolume();return;}
   stopBackgroundMusic();
-  if(style==='made'&&section==='menu'){
-   const audio=new Audio('/audio/tinkle.mp3');audio.loop=true;audio.preload='auto';audio.volume=getAudioSettings().music/100;madeBackgroundAudio=audio;backgroundMusicSession={section,style,mode:'made'};
-   audio.play().catch(e=>console.warn('Made menu music could not start until playback is allowed',e));return;
+  if(style==='made'&&(section==='menu'||section==='creation')){
+   const track=section==='menu'?'/audio/tinkle.mp3':'/audio/plinky-idea-2-for-game.mp3';
+   const audio=new Audio(track);audio.loop=true;audio.preload='auto';audio.volume=getAudioSettings().music/100;madeBackgroundAudio=audio;backgroundMusicSession={section,style,mode:'made'};
+   audio.play().catch(e=>console.warn('Made '+section+' music could not start until playback is allowed',e));return;
   }
   const synthStyle=style==='made'?'chill':style;
   const master=ctx.createGain();master.gain.setValueAtTime(0.0001,ctx.currentTime);master.connect(ctx.destination);
@@ -95,11 +96,12 @@ function previewMusic(section){
  stopMusicPreview(false);backgroundMusicPausedForPreview=true;stopBackgroundMusic();
  const d=developerSettings(),style=d.musicStyles?.[section]||'chill';
  try{
-  if(style==='made'&&section==='menu'){
-   const audio=new Audio('/audio/tinkle.mp3');audio.preload='auto';audio.volume=getAudioSettings().music/100;madePreviewAudio=audio;
-   audio.play().catch(e=>{console.warn('Made music preview unavailable',e);const status=document.getElementById('musicPreviewStatus');if(status)status.textContent='Could not play tinkle.mp3. Check that /audio/tinkle.mp3 is available.';});
+  if(style==='made'&&(section==='menu'||section==='creation')){
+   const track=section==='menu'?'/audio/tinkle.mp3':'/audio/plinky-idea-2-for-game.mp3';
+   const audio=new Audio(track);audio.preload='auto';audio.volume=getAudioSettings().music/100;madePreviewAudio=audio;
+   audio.play().catch(e=>{console.warn('Made music preview unavailable',e);const status=document.getElementById('musicPreviewStatus');if(status)status.textContent='Could not play '+track.split('/').pop()+'. Check that '+track+' is available.';});
    previewAudioTimeout=setTimeout(()=>{previewAudioTimeout=null;if(madePreviewAudio){madePreviewAudio.pause();madePreviewAudio.currentTime=0;madePreviewAudio=null;}backgroundMusicPausedForPreview=false;syncBackgroundMusic();const status=document.getElementById('musicPreviewStatus');if(status)status.textContent='Preview finished. Background music resumed.';},6500);
-   const status=document.getElementById('musicPreviewStatus');if(status)status.textContent='Playing your Made track: tinkle.mp3';return;
+   const status=document.getElementById('musicPreviewStatus');if(status)status.textContent='Playing your Made track: '+track.split('/').pop();return;
   }
   const previewStyle=style==='made'?'chill':style;
   const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)throw new Error('Web Audio unavailable');
@@ -115,7 +117,7 @@ function previewMusic(section){
 }
 document.addEventListener('pointerdown',()=>{if(backgroundAudioContext&&backgroundAudioContext.state!=='running')backgroundAudioContext.resume().catch(()=>{});syncBackgroundMusic();},{passive:true});
 document.addEventListener('keydown',()=>{if(backgroundAudioContext&&backgroundAudioContext.state!=='running')backgroundAudioContext.resume().catch(()=>{});syncBackgroundMusic();});
-function musicStyleControlsHTML(d){const defaultVolume=Math.max(0,Math.min(100,Number(d.defaultMusicVolume??DEFAULT_AUDIO_SETTINGS.music)));return '<section class="devCard"><h3>🎵 Music style testing</h3><p>Choose a style independently for each game section. Choices save in this browser. Made uses your uploaded tinkle.mp3 on the main menu / lobby; other styles are generated placeholders.</p><label class="devField"><span>Default Music Volume <output id="devDefaultMusicVolumeValue">'+defaultVolume+'%</output></span><input id="devDefaultMusicVolume" type="range" min="0" max="100" step="1" value="'+defaultVolume+'" aria-label="Default music volume" oninput="document.getElementById(\'devDefaultMusicVolumeValue\').textContent=this.value+\'%\';saveDeveloperSettings()"><small>Used when no Music volume preference has been saved. An existing Music slider preference takes priority.</small></label><div class="devGrid">'+MUSIC_SECTIONS.map(([key,label])=>'<label class="devField"><span>'+label+'</span><select id="devMusic-'+key+'" onchange="saveDeveloperSettings()">'+MUSIC_STYLE_OPTIONS.map(([v,t])=>'<option value="'+v+'" '+((d.musicStyles?.[key]||'chill')===v?'selected':'')+'>'+t+'</option>').join('')+'</select><button type="button" class="secondary" onclick="previewMusic(\''+key+'\')">▶ Preview '+label+'</button></label>').join('')+'</div><p id="musicPreviewStatus" class="devSaved" role="status">No preview playing.</p></section>';}
+function musicStyleControlsHTML(d){const defaultVolume=Math.max(0,Math.min(100,Number(d.defaultMusicVolume??DEFAULT_AUDIO_SETTINGS.music)));return '<section class="devCard"><h3>🎵 Music style testing</h3><p>Choose a style independently for each game section. Choices save in this browser. Made uses tinkle.mp3 on the main menu / lobby and Plinky Idea 2 for game.mp3 during creation; other styles are generated placeholders.</p><label class="devField"><span>Default Music Volume <output id="devDefaultMusicVolumeValue">'+defaultVolume+'%</output></span><input id="devDefaultMusicVolume" type="range" min="0" max="100" step="1" value="'+defaultVolume+'" aria-label="Default music volume" oninput="document.getElementById(\'devDefaultMusicVolumeValue\').textContent=this.value+\'%\';saveDeveloperSettings()"><small>Used when no Music volume preference has been saved. An existing Music slider preference takes priority.</small></label><div class="devGrid">'+MUSIC_SECTIONS.map(([key,label])=>'<label class="devField"><span>'+label+'</span><select id="devMusic-'+key+'" onchange="saveDeveloperSettings()">'+MUSIC_STYLE_OPTIONS.map(([v,t])=>'<option value="'+v+'" '+((d.musicStyles?.[key]||'chill')===v?'selected':'')+'>'+t+'</option>').join('')+'</select><button type="button" class="secondary" onclick="previewMusic(\''+key+'\')">▶ Preview '+label+'</button></label>').join('')+'</div><p id="musicPreviewStatus" class="devSaved" role="status">No preview playing.</p></section>';}
 
 let devEntryClicks=0,devEntryReset=null;
 document.addEventListener('click',e=>{const entry=e.target.closest('[data-dev-entry]');if(!entry)return;e.preventDefault();devEntryClicks++;clearTimeout(devEntryReset);devEntryReset=setTimeout(()=>{devEntryClicks=0},2500);if(devEntryClicks<7)return;devEntryClicks=0;clearTimeout(devEntryReset);const pin=window.prompt('Developer access PIN');if(pin===DEV_PIN){state.screen='dev';state.error='';render(true);}else if(pin!==null)window.alert('Incorrect PIN.');});
