@@ -1,4 +1,4 @@
-const VERSION=globalThis.COLLAGE_VERSION||'1.7.13';
+const VERSION=globalThis.COLLAGE_VERSION||'1.7.15';
 const MIN_PLAYERS=3;
 const AVATAR_SPRITE_PATH='/avatars/avatar-sprite.b64';
 let AVATAR_SPRITE='';
@@ -19,20 +19,22 @@ const state={screen:'home',name:localStorage.getItem('collageName')||'',avatar:/
 const app=document.querySelector('#app');
 const DEV_SETTINGS_KEY='collageDeveloperSettings';
 const DEV_PIN='3256';
-const DEFAULT_DEV_SETTINGS={showBotButton:true,defaultMusicVolume:60,musicStyles:{menu:'chill',creation:'chill',voting:'chill',results:'chill'},hostDefaults:{capacity:8,imagesPerPlayer:1,round1Images:8,imageSeconds:120,creationSeconds:120,promptSeconds:60,votingSeconds:45,hostApproval:false}};
+const DEFAULT_DEV_SETTINGS={showBotButton:true,defaultMusicVolume:60,musicStyles:{menu:'made',creation:'chill',voting:'chill',results:'chill'},hostDefaults:{capacity:8,imagesPerPlayer:1,round1Images:8,imageSeconds:120,creationSeconds:120,promptSeconds:60,votingSeconds:45,hostApproval:false}};
 function developerSettings(){try{const saved=JSON.parse(localStorage.getItem(DEV_SETTINGS_KEY)||'{}');return {...DEFAULT_DEV_SETTINGS,...saved,musicStyles:{...DEFAULT_DEV_SETTINGS.musicStyles,...(saved.musicStyles||{})},hostDefaults:{...DEFAULT_DEV_SETTINGS.hostDefaults,...(saved.hostDefaults||{})}};}catch{return JSON.parse(JSON.stringify(DEFAULT_DEV_SETTINGS));}}
-const MUSIC_STYLE_OPTIONS=[['chill','Chill'],['cool','Cool'],['dark','Dark']];
+const MUSIC_STYLE_OPTIONS=[['chill','Chill'],['cool','Cool'],['dark','Dark'],['made','Made']];
 const MUSIC_SECTIONS=[['menu','Main menu / lobby'],['creation','Creation'],['voting','Voting / show-off'],['results','Final results']];
 let previewAudioContext=null,previewAudioTimer=null,previewAudioTimeout=null,previewAudioNodes=[];
-let backgroundAudioContext=null,backgroundMusicSession=null,backgroundMusicPausedForPreview=false;
+let backgroundAudioContext=null,backgroundMusicSession=null,backgroundMusicPausedForPreview=false,madeBackgroundAudio=null,madePreviewAudio=null;
 function stopBackgroundMusic(){
+ if(madeBackgroundAudio){madeBackgroundAudio.pause();madeBackgroundAudio.currentTime=0;madeBackgroundAudio=null;}
  const session=backgroundMusicSession;backgroundMusicSession=null;if(!session)return;
+ if(session.mode==='made')return;
  if(session.timer)clearInterval(session.timer);
  try{session.master.gain.cancelScheduledValues(session.ctx.currentTime);session.master.gain.setTargetAtTime(0,session.ctx.currentTime,0.12)}catch{}
- setTimeout(()=>{session.nodes.forEach(n=>{try{n.stop()}catch{};try{n.disconnect()}catch{}});try{session.master.disconnect()}catch{}},500);
+ setTimeout(()=>{(session.nodes||[]).forEach(n=>{try{n.stop()}catch{};try{n.disconnect()}catch{}});try{session.master?.disconnect()}catch{}},500);
 }
 function updateBackgroundMusicVolume(){
- const session=backgroundMusicSession;if(!session)return;
+ const session=backgroundMusicSession;if(madeBackgroundAudio){madeBackgroundAudio.volume=getAudioSettings().music/100;return;}if(!session)return;
  const target=getAudioSettings().music/100*0.16;
  try{session.master.gain.setTargetAtTime(target,session.ctx.currentTime,0.12)}catch{}
 }
@@ -52,12 +54,18 @@ function syncBackgroundMusic(){
   if(ctx.state!=='running')ctx.resume().catch(()=>{});
   if(backgroundMusicSession&&backgroundMusicSession.section===section&&backgroundMusicSession.style===style){updateBackgroundMusicVolume();return;}
   stopBackgroundMusic();
+  if(style==='made'&&(section==='menu'||section==='creation')){
+   const track=section==='menu'?'/audio/tinkle.mp3':'/audio/plinky-idea-2-for-game.mp3';
+   const audio=new Audio(track);audio.loop=true;audio.preload='auto';audio.volume=getAudioSettings().music/100;madeBackgroundAudio=audio;backgroundMusicSession={section,style,mode:'made'};
+   audio.play().catch(e=>console.warn('Made '+section+' music could not start until playback is allowed',e));return;
+  }
+  const synthStyle=style==='made'?'chill':style;
   const master=ctx.createGain();master.gain.setValueAtTime(0.0001,ctx.currentTime);master.connect(ctx.destination);
   const session={ctx,master,nodes:[],timer:null,section,style,step:0};backgroundMusicSession=session;
   const patterns={chill:[0,4,7,11,7,4,2,7],cool:[0,7,12,10,7,3,10,14],dark:[0,3,6,10,6,3,1,6]};
   const bassPatterns={chill:[0,-5,-3,-7],cool:[0,-5,-2,-7],dark:[0,-7,-6,-3]};
   const base={menu:220,creation:261.63,voting:293.66,results:196}[section]||220;
-  const wave=style==='dark'?'triangle':style==='cool'?'square':'sine';
+  const wave=synthStyle==='dark'?'triangle':synthStyle==='cool'?'square':'sine';
   const note=(frequency,duration,level,waveType)=>{
    const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=waveType;osc.frequency.value=frequency;
    gain.gain.setValueAtTime(0.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(level,ctx.currentTime+0.035);gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+duration);
@@ -66,8 +74,8 @@ function syncBackgroundMusic(){
   };
   const play=()=>{
    if(backgroundMusicSession!==session)return;
-   const melody=patterns[style]||patterns.chill,bass=bassPatterns[style]||bassPatterns.chill,index=session.step;
-   note(base*Math.pow(2,melody[index%melody.length]/12),0.34,style==='cool'?0.075:0.11,wave);
+   const melody=patterns[synthStyle]||patterns.chill,bass=bassPatterns[synthStyle]||bassPatterns.chill,index=session.step;
+   note(base*Math.pow(2,melody[index%melody.length]/12),0.34,synthStyle==='cool'?0.075:0.11,wave);
    if(index%2===0)note(base*0.5*Math.pow(2,bass[(index/2)%bass.length]/12),0.72,0.065,style==='cool'?'triangle':'sine');
    if(index%4===2)note(base*1.5,0.16,0.025,'sine');
    session.step++;
@@ -78,6 +86,7 @@ function syncBackgroundMusic(){
  }catch(e){console.warn('Background music unavailable',e);}
 }
 function stopMusicPreview(resumeBackground=true){
+ if(madePreviewAudio){madePreviewAudio.pause();madePreviewAudio.currentTime=0;madePreviewAudio=null;}
  if(previewAudioTimer){clearInterval(previewAudioTimer);previewAudioTimer=null;}
  if(previewAudioTimeout){clearTimeout(previewAudioTimeout);previewAudioTimeout=null;}
  previewAudioNodes.forEach(n=>{try{n.stop()}catch{}});previewAudioNodes=[];
@@ -87,20 +96,28 @@ function previewMusic(section){
  stopMusicPreview(false);backgroundMusicPausedForPreview=true;stopBackgroundMusic();
  const d=developerSettings(),style=d.musicStyles?.[section]||'chill';
  try{
+  if(style==='made'&&(section==='menu'||section==='creation')){
+   const track=section==='menu'?'/audio/tinkle.mp3':'/audio/plinky-idea-2-for-game.mp3';
+   const audio=new Audio(track);audio.preload='auto';audio.volume=getAudioSettings().music/100;madePreviewAudio=audio;
+   audio.play().catch(e=>{console.warn('Made music preview unavailable',e);const status=document.getElementById('musicPreviewStatus');if(status)status.textContent='Could not play '+track.split('/').pop()+'. Check that '+track+' is available.';});
+   previewAudioTimeout=setTimeout(()=>{previewAudioTimeout=null;if(madePreviewAudio){madePreviewAudio.pause();madePreviewAudio.currentTime=0;madePreviewAudio=null;}backgroundMusicPausedForPreview=false;syncBackgroundMusic();const status=document.getElementById('musicPreviewStatus');if(status)status.textContent='Preview finished. Background music resumed.';},6500);
+   const status=document.getElementById('musicPreviewStatus');if(status)status.textContent='Playing your Made track: '+track.split('/').pop();return;
+  }
+  const previewStyle=style==='made'?'chill':style;
   const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)throw new Error('Web Audio unavailable');
   previewAudioContext=previewAudioContext||new Ctx();const ctx=previewAudioContext;ctx.resume().catch(()=>{});
   const master=ctx.createGain();master.gain.value=getAudioSettings().music/100*0.12;master.connect(ctx.destination);
   const patterns={chill:[0,4,7,11,7,4,2,7],cool:[0,7,12,10,7,3,10,14],dark:[0,3,6,10,6,3,1,6]};
   const base={menu:220,creation:261.63,voting:293.66,results:196}[section]||220;let step=0;
-  const play=()=>{const notes=patterns[style]||patterns.chill,osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=style==='dark'?'triangle':style==='cool'?'square':'sine';osc.frequency.value=base*Math.pow(2,notes[step%notes.length]/12);gain.gain.setValueAtTime(0.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(0.24,ctx.currentTime+0.025);gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.34);osc.connect(gain);gain.connect(master);osc.start();osc.stop(ctx.currentTime+0.36);previewAudioNodes.push(osc);step++;};
+  const play=()=>{const notes=patterns[previewStyle]||patterns.chill,osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=previewStyle==='dark'?'triangle':previewStyle==='cool'?'square':'sine';osc.frequency.value=base*Math.pow(2,notes[step%notes.length]/12);gain.gain.setValueAtTime(0.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(0.24,ctx.currentTime+0.025);gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.34);osc.connect(gain);gain.connect(master);osc.start();osc.stop(ctx.currentTime+0.36);previewAudioNodes.push(osc);step++;};
   play();previewAudioTimer=setInterval(play,380);
   previewAudioTimeout=setTimeout(()=>{previewAudioTimeout=null;if(previewAudioTimer){clearInterval(previewAudioTimer);previewAudioTimer=null;}try{master.gain.setTargetAtTime(0,ctx.currentTime,0.18)}catch{};previewAudioNodes.forEach(n=>{try{n.stop()}catch{}});previewAudioNodes=[];backgroundMusicPausedForPreview=false;syncBackgroundMusic();const status=document.getElementById('musicPreviewStatus');if(status)status.textContent='Preview finished. Background music resumed.';},6500);
-  const status=document.getElementById('musicPreviewStatus');if(status)status.textContent='Playing a generated '+style+' test preview for '+MUSIC_SECTIONS.find(x=>x[0]===section)[1]+'. This is a placeholder, not your final track.';
+  const status=document.getElementById('musicPreviewStatus');if(status)status.textContent='Playing a generated '+previewStyle+' test preview for '+MUSIC_SECTIONS.find(x=>x[0]===section)[1]+(style==='made'?' (Made track is assigned to Main menu / lobby only).':'. This is a placeholder, not your final track.');
  }catch(e){backgroundMusicPausedForPreview=false;syncBackgroundMusic();console.warn('Music preview unavailable',e);}
 }
 document.addEventListener('pointerdown',()=>{if(backgroundAudioContext&&backgroundAudioContext.state!=='running')backgroundAudioContext.resume().catch(()=>{});syncBackgroundMusic();},{passive:true});
 document.addEventListener('keydown',()=>{if(backgroundAudioContext&&backgroundAudioContext.state!=='running')backgroundAudioContext.resume().catch(()=>{});syncBackgroundMusic();});
-function musicStyleControlsHTML(d){const defaultVolume=Math.max(0,Math.min(100,Number(d.defaultMusicVolume??DEFAULT_AUDIO_SETTINGS.music)));return '<section class="devCard"><h3>🎵 Music style testing</h3><p>Choose a style independently for each game section. Choices save in this browser. Use Preview to hear a generated placeholder until your finished tracks are uploaded.</p><label class="devField"><span>Default Music Volume <output id="devDefaultMusicVolumeValue">'+defaultVolume+'%</output></span><input id="devDefaultMusicVolume" type="range" min="0" max="100" step="1" value="'+defaultVolume+'" aria-label="Default music volume" oninput="document.getElementById(\'devDefaultMusicVolumeValue\').textContent=this.value+\'%\';saveDeveloperSettings()"><small>Used when no Music volume preference has been saved. An existing Music slider preference takes priority.</small></label><div class="devGrid">'+MUSIC_SECTIONS.map(([key,label])=>'<label class="devField"><span>'+label+'</span><select id="devMusic-'+key+'" onchange="saveDeveloperSettings()">'+MUSIC_STYLE_OPTIONS.map(([v,t])=>'<option value="'+v+'" '+((d.musicStyles?.[key]||'chill')===v?'selected':'')+'>'+t+'</option>').join('')+'</select><button type="button" class="secondary" onclick="previewMusic(\''+key+'\')">▶ Preview '+label+'</button></label>').join('')+'</div><p id="musicPreviewStatus" class="devSaved" role="status">No preview playing.</p></section>';}
+function musicStyleControlsHTML(d){const defaultVolume=Math.max(0,Math.min(100,Number(d.defaultMusicVolume??DEFAULT_AUDIO_SETTINGS.music)));return '<section class="devCard"><h3>🎵 Music style testing</h3><p>Choose a style independently for each game section. Choices save in this browser. Made uses tinkle.mp3 on the main menu / lobby and Plinky Idea 2 for game.mp3 during creation; other styles are generated placeholders.</p><label class="devField"><span>Default Music Volume <output id="devDefaultMusicVolumeValue">'+defaultVolume+'%</output></span><input id="devDefaultMusicVolume" type="range" min="0" max="100" step="1" value="'+defaultVolume+'" aria-label="Default music volume" oninput="document.getElementById(\'devDefaultMusicVolumeValue\').textContent=this.value+\'%\';saveDeveloperSettings()"><small>Used when no Music volume preference has been saved. An existing Music slider preference takes priority.</small></label><div class="devGrid">'+MUSIC_SECTIONS.map(([key,label])=>'<label class="devField"><span>'+label+'</span><select id="devMusic-'+key+'" onchange="saveDeveloperSettings()">'+MUSIC_STYLE_OPTIONS.map(([v,t])=>'<option value="'+v+'" '+((d.musicStyles?.[key]||'chill')===v?'selected':'')+'>'+t+'</option>').join('')+'</select><button type="button" class="secondary" onclick="previewMusic(\''+key+'\')">▶ Preview '+label+'</button></label>').join('')+'</div><p id="musicPreviewStatus" class="devSaved" role="status">No preview playing.</p></section>';}
 
 let devEntryClicks=0,devEntryReset=null;
 document.addEventListener('click',e=>{const entry=e.target.closest('[data-dev-entry]');if(!entry)return;e.preventDefault();devEntryClicks++;clearTimeout(devEntryReset);devEntryReset=setTimeout(()=>{devEntryClicks=0},2500);if(devEntryClicks<7)return;devEntryClicks=0;clearTimeout(devEntryReset);const pin=window.prompt('Developer access PIN');if(pin===DEV_PIN){state.screen='dev';state.error='';render(true);}else if(pin!==null)window.alert('Incorrect PIN.');});
@@ -178,7 +195,7 @@ function saveDeveloperSettings(){
  const d=developerSettings(),el=id=>document.getElementById(id),num=id=>Number(el(id)?.value);
  d.showBotButton=!!el('devBotButton')?.checked;
  d.defaultMusicVolume=Math.max(0,Math.min(100,Math.round(num('devDefaultMusicVolume')??d.defaultMusicVolume??DEFAULT_AUDIO_SETTINGS.music)));
- d.musicStyles=Object.fromEntries(MUSIC_SECTIONS.map(([key])=>[key,['chill','cool','dark'].includes(el('devMusic-'+key)?.value)?el('devMusic-'+key).value:'chill']));
+ d.musicStyles=Object.fromEntries(MUSIC_SECTIONS.map(([key])=>[key,['chill','cool','dark','made'].includes(el('devMusic-'+key)?.value)?el('devMusic-'+key).value:'chill']));
  d.hostDefaults={capacity:num('devCapacity'),imagesPerPlayer:Math.max(1,Math.min(5,Math.floor(num('devImages')||1))),round1Images:Math.max(1,Math.min(40,Math.floor(num('devRound1')||1))),imageSeconds:Math.max(10,Math.min(600,num('devImageTimer')||120)),creationSeconds:Math.max(10,Math.min(600,num('devCreationTimer')||120)),promptSeconds:Math.max(10,Math.min(600,num('devPromptTimer')||60)),votingSeconds:Math.max(10,Math.min(600,num('devVotingTimer')||45)),hostApproval:!!el('devApproval')?.checked};
  d.hostDefaults.round1Images=Math.min(d.hostDefaults.round1Images,40);
  localStorage.setItem(DEV_SETTINGS_KEY,JSON.stringify(d));

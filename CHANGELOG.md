@@ -1,3 +1,15 @@
+## V1.7.15 — Made creation music
+- Made menu/lobby continues to use `public/audio/tinkle.mp3` on loop.
+- Made creation phase now uses `public/audio/plinky-idea-2-for-game.mp3` on loop, with the existing Music volume setting.
+- Made preview plays the correct track for Main menu / lobby and Creation.
+- Updated client, server, package and cache-busting versions to V1.7.15.
+
+## V1.7.14 — Made menu music
+- Added a fourth music style option, Made, to the per-section music selectors.
+- Main menu / lobby Made playback and preview use the uploaded `public/audio/tinkle.mp3` track on loop, respecting the in-game Music volume setting.
+- Made is the default main menu / lobby style on fresh settings; other sections retain generated placeholder music if Made is selected there.
+- Updated client, server, package and cache-busting versions to V1.7.14.
+
 ## V1.7.13 — Developer default music volume
 - Added a Default Music Volume slider to Developer Mode, saved locally alongside other developer preferences.
 - Uses the configured default only when no Music volume preference has been saved; an existing in-game Music slider preference remains in control.
