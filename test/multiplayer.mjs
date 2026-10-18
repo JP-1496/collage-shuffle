@@ -13,6 +13,10 @@ assert.match(packageJson.version,/^\d+\.\d+\.\d+$/);
 assert.ok(serverSource.includes(`const VERSION = '${packageJson.version}';`),'Server version must match package.json');
 assert.match(serverSource,/app\.get\('\/build\.js'/);
 assert.match(appSource,/globalThis\.COLLAGE_VERSION/);
+assert.match(serverSource,/showcaseCollage/,'Showcase state should send only the active slide during slideshow');
+assert.match(appSource,/g\.showcaseCollage/,'Showcase client should render the compact slide payload');
+assert.match(appSource,/object-fit:fill;/,'Final canvas pieces should render with explicit fill sizing');
+assert.match(serverSource,/g\.finalStage==='VOTE'&&result\?\.collages/,'Votes must only be accepted during the voting stage');
 assert.match(serverSource,/MAX_SEARCH_RESULTS=100/);
 assert.match(serverSource,/dgControl_list/);
 assert.match(serverSource,/MAX_IMAGE_WIDTH=3840/);
@@ -42,6 +46,9 @@ function connect(){
 }
 async function nextState(client, predicate){
   return waitFor(()=>[...client.messages].reverse().find(m=>m.type==='STATE'&&predicate(m.state))?.state);
+}
+async function nextSubmissionProgress(client, expected){
+  return waitFor(()=>[...client.messages].reverse().find(m=>m.type==='SUBMISSION_PROGRESS'&&Object.values(m.submissionStatus||{}).filter(Boolean).length===expected));
 }
 function action(client,playerId,action){client.ws.send(JSON.stringify({type:'ACTION',playerId,action}));}
 
@@ -79,11 +86,8 @@ async function runSubmissionCountScenario(playerCount, reverseOrder=false){
     for(let i=0;i<submitOrder.length;i++){
       action(submitOrder[i].client,submitOrder[i].playerId,{type:'SUBMIT_COLLAGE',pieces});
       const expected=i+1;
-      const receivedStates=await Promise.all(players.map(p=>nextState(p.client,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===expected)));
-      for(const state of receivedStates){
-        assert.equal(Object.values(state.submissionStatus).filter(Boolean).length,expected);
-        assert.equal(state.players.length,playerCount);
-      }
+      const receivedProgress=await Promise.all(players.map(p=>nextSubmissionProgress(p.client,expected)));
+      for(const message of receivedProgress)assert.equal(Object.values(message.submissionStatus).filter(Boolean).length,expected);
     }
 
     const r2=await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
@@ -153,14 +157,18 @@ async function runBotScenario(){
     await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
     action(host,joined.playerId,{type:'SUBMIT_COLLAGE',pieces:[{...pieces[0],x:60,y:40,rotation:15,flipX:true}]});
     const finalState=await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===0&&s.finalStage==='SLIDESHOW');
-    assert.equal(Object.keys(finalState.finalResults[0].collages||{}).length,2);
+    assert.equal(finalState.showcaseTotal,2);
+    assert.ok(finalState.showcaseCollage?.pieces?.length>=0);
+    assert.ok(!finalState.finalResults[0].collages);
     action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
     await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===0&&s.finalStage==='SLIDESHOW'&&s.finalSlideIndex===1);
     action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
     await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===0&&s.finalStage==='VOTE');
     action(host,joined.playerId,{type:'FINAL_VOTE',targetId:bot.id});
     const secondFinalState=await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1&&s.finalStage==='SLIDESHOW');
-    assert.equal(Object.keys(secondFinalState.finalResults[1].collages||{}).length,2);
+    assert.equal(secondFinalState.showcaseTotal,2);
+    assert.ok(secondFinalState.showcaseCollage);
+    assert.ok(!secondFinalState.finalResults[1].collages);
     action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
     await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1&&s.finalStage==='SLIDESHOW'&&s.finalSlideIndex===1);
     action(host,joined.playerId,{type:'FINAL_NEXT_SLIDE'});
@@ -272,10 +280,10 @@ async function main(){
     assert.equal(submittedHost.submissionStatus[gj.playerId],false);
     action(guest,gj.playerId,{type:'SUBMIT_COLLAGE',pieces:p2});
     const submittedBoth=await Promise.all([
-      nextState(host,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===2),
-      nextState(guest,s=>s.phase==='ROUND'&&s.round===0&&Object.values(s.submissionStatus||{}).filter(Boolean).length===2)
+      nextSubmissionProgress(host,2),
+      nextSubmissionProgress(guest,2)
     ]);
-    for(const s of submittedBoth)assert.equal(Object.values(s.submissionStatus).filter(Boolean).length,2);
+    for(const message of submittedBoth)assert.equal(Object.values(message.submissionStatus).filter(Boolean).length,2);
 
     const r2h=await nextState(host,s=>s.phase==='ROUND'&&s.round===1);
     const r2g=await nextState(guest,s=>s.phase==='ROUND'&&s.round===1);
@@ -288,11 +296,18 @@ async function main(){
     action(host,hj.playerId,{type:'SUBMIT_COLLAGE',pieces:r2h.currentPieces});
     action(guest,gj.playerId,{type:'SUBMIT_COLLAGE',pieces:r2g.currentPieces});
 
-    const show=await nextState(host,s=>s.phase==='FINAL_SHOWCASE');
-    assert.ok(show.finalResults[0].collages);
-    assert.ok(show.finalResults[0].collages[hj.playerId]);
-    assert.deepEqual(show.finalResults[0].collages[hj.playerId].pieces.map(p=>p.z),[8,2],'front/back z-order must survive sync and final submission');
-    assert.ok(!show.finalResults[1].collages);
+    const show=await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalStage==='SLIDESHOW');
+    assert.ok(show.showcaseCollage);
+    assert.equal(show.showcaseTotal,2);
+    assert.ok(!show.finalResults[0].collages);
+    action(host,hj.playerId,{type:'FINAL_NEXT_SLIDE'});
+    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalStage==='SLIDESHOW'&&s.finalSlideIndex===1);
+    action(host,hj.playerId,{type:'FINAL_NEXT_SLIDE'});
+    const voteState=await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalStage==='VOTE');
+    assert.ok(voteState.finalResults[0].collages);
+    assert.ok(voteState.finalResults[0].collages[hj.playerId]);
+    assert.deepEqual(voteState.finalResults[0].collages[hj.playerId].pieces.map(p=>p.z),[8,2],'front/back z-order must survive sync and final submission');
+    assert.ok(!voteState.finalResults[1].collages);
 
     action(host,hj.playerId,{type:'FINAL_VOTE',targetId:gj.playerId});
     await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.myFinalVote===gj.playerId);
@@ -300,7 +315,11 @@ async function main(){
     const afterInvalid=host.messages.at(-1)?.state;
     assert.equal(afterInvalid?.myFinalVote,gj.playerId);
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
-    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1);
+    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1&&s.finalStage==='SLIDESHOW');
+    action(host,hj.playerId,{type:'FINAL_NEXT_SLIDE'});
+    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1&&s.finalStage==='SLIDESHOW'&&s.finalSlideIndex===1);
+    action(host,hj.playerId,{type:'FINAL_NEXT_SLIDE'});
+    await nextState(host,s=>s.phase==='FINAL_SHOWCASE'&&s.finalIndex===1&&s.finalStage==='VOTE');
     action(host,hj.playerId,{type:'FINAL_VOTE',targetId:gj.playerId});
     action(guest,gj.playerId,{type:'FINAL_VOTE',targetId:hj.playerId});
     await nextState(host,s=>s.phase==='FINAL');

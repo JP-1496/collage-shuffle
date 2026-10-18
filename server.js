@@ -4,7 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import crypto from 'crypto';
 import { readFileSync } from 'node:fs';
 
-const VERSION = '1.7.17';
+const VERSION = '1.7.18';
 const HEARTBEAT_MS = 10000;
 const MIN_PLAYERS = process.env.COLLAGE_TEST_MODE === '1' ? 2 : 3;
 const app = express();
@@ -165,6 +165,7 @@ app.get('*', (_, res) => res.sendFile(process.cwd() + '/public/index.html'));
 
 function send(pid, msg){ const ws=sockets.get(pid); if(ws?.readyState===WebSocket.OPEN) ws.send(JSON.stringify(msg)); }
 function broadcast(g){ for(const p of g.players) send(p.id,{type:'STATE',state:stateFor(g,p.id)}); }
+function broadcastSubmissionProgress(g){const submissionStatus=Object.fromEntries(Object.entries(g.collages).map(([pid,c])=>[pid,!!c.submitted]));for(const p of g.players)send(p.id,{type:'SUBMISSION_PROGRESS',round:g.round,submissionStatus});}
 function botList(g){ return g.players.filter(p=>p.isBot); }
 function botDelay(g,fn,ms=500){
   if(!BOTS_ENABLED)return;
@@ -325,9 +326,17 @@ function stateFor(g,pid){
     s.finalResults=g.finalResults.map(r=>({promptId:r.promptId,tally:r.tally||{},collages:Object.fromEntries(Object.entries(r.collages||{}).map(([k,c])=>[k,{...c,playerId:k}]))}));
   }
   if(g.phase==='FINAL_SHOWCASE'){
-    s.finalResults=g.finalResults.map((r,i)=>i===g.finalIndex
-      ? {promptId:r.promptId,collages:Object.fromEntries(Object.entries(r.collages||{}).map(([k,c])=>[k,{...c,playerId:k}]))}
-      : {promptId:r.promptId});
+    s.finalResults=g.finalResults.map((r,i)=>{
+      if(i!==g.finalIndex)return {promptId:r.promptId};
+      if(g.finalStage==='SLIDESHOW'){
+        const entries=Object.entries(r.collages||{});
+        const entry=entries[g.finalSlideIndex||0];
+        s.showcaseTotal=entries.length;
+        s.showcaseCollage=entry?{...entry[1],playerId:entry[0]}:null;
+        return {promptId:r.promptId};
+      }
+      return {promptId:r.promptId,collages:Object.fromEntries(Object.entries(r.collages||{}).map(([k,c])=>[k,{...c,playerId:k}]))};
+    });
     s.finalStage=g.finalStage||'SLIDESHOW';
     s.finalSlideIndex=g.finalSlideIndex||0;
     s.myFinalVote=g.finalVotes[g.finalIndex]?.[pid]||null;
@@ -569,21 +578,20 @@ function handle(g,pid,a){
       g.travelingSets[pid]=clone(submittedPieces);
       g.finalResults[g.round].collages[pid]=clone(c);
       sockets.get(pid)?.send(JSON.stringify({type:'SUBMISSION_ACCEPTED',round:g.round}));
-      // Count every player in the lobby, not only players whose sockets are
-      // currently connected. A brief disconnect must not let others advance
-      // before that player's creation has been submitted.
-      const requiredPlayers=g.players;
+      // A disconnected player must not hold everyone else at this round forever.
+      // Their latest SYNC_COLLAGE is preserved and finishRound safely finalises it
+      // if all currently connected players have submitted.
+      const requiredPlayers=g.players.filter(x=>x.connected||x.isBot);
       const submitted=requiredPlayers.filter(x=>g.collages[x.id]?.submitted).length;
-      // Broadcast the accepted count first. WebSocket delivery preserves message
-      // order, so clients receive the completed submission count before the next-round state.
-      broadcast(g);
+      // Progress updates contain only submission flags, not image-heavy collage state.
+      broadcastSubmissionProgress(g);
       if(requiredPlayers.length>0 && submitted===requiredPlayers.length) finishRound(g);
       return;
     }
     case 'FINAL_NEW_PLAYERS': {if(g.phase==='FINAL'&&p.host)restartNewPlayers(g);break;}
     case 'FINAL_SAME_PLAYERS': {if(g.phase==='FINAL'&&p.host)restartSamePlayers(g);break;}
     case 'FINAL_NEXT_SLIDE': {if(g.phase==='FINAL_SHOWCASE'&&g.finalStage==='SLIDESHOW'&&p.host){nextFinalSlide(g);return;}send(pid,{type:'ERROR',message:'The slideshow can only be advanced by the host while it is active.'});break;}
-     case 'FINAL_VOTE': {const result=g.finalResults[g.finalIndex];const target=String(a.targetId||'');if(g.phase==='FINAL_SHOWCASE'&&result?.collages?.[target]&&target!==pid&&!g.finalVotes[g.finalIndex]?.[pid]){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=target;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected){finishFinalPrompt(g);return;}}break;}
+     case 'FINAL_VOTE': {const result=g.finalResults[g.finalIndex];const target=String(a.targetId||'');if(g.phase==='FINAL_SHOWCASE'&&g.finalStage==='VOTE'&&result?.collages?.[target]&&target!==pid&&!g.finalVotes[g.finalIndex]?.[pid]){g.finalVotes[g.finalIndex]??={};g.finalVotes[g.finalIndex][pid]=target;const connected=g.players.filter(x=>x.connected).length;if(Object.keys(g.finalVotes[g.finalIndex]).filter(k=>g.players.some(x=>x.id===k&&x.connected)).length>=connected){finishFinalPrompt(g);return;}}break;}
   }
   broadcast(g);
 }
@@ -598,7 +606,7 @@ wss.on('connection',ws=>{
     if(m.type==='ACTION'){const pid=m.playerId;if(sockets.get(pid)!==ws)return;const g=[...games.values()].find(x=>x.players.some(p=>p.id===pid));if(g)handle(g,pid,m.action);}
   }catch(e){ws.send(JSON.stringify({type:'ERROR',message:'Invalid message.'}));}});
   ws.on('error',()=>{});
-  ws.on('close',()=>{for(const g of games.values()){const p=g.players.find(p=>sockets.get(p.id)===ws);if(p){p.connected=false;if(g.phase==='PROMPT_SUBMISSION')finishPromptSubmission(g);else broadcast(g);}}});
+  ws.on('close',()=>{for(const g of games.values()){const p=g.players.find(p=>sockets.get(p.id)===ws);if(p){p.connected=false;if(g.phase==='PROMPT_SUBMISSION')finishPromptSubmission(g);else if(g.phase==='ROUND'&&g.players.some(x=>x.connected)&&g.players.filter(x=>x.connected).every(x=>g.collages[x.id]?.submitted))finishRound(g);else broadcast(g);}}});
 });
 setInterval(()=>{for(const ws of wss.clients){if(ws.isAlive===false){ws.terminate();continue;}ws.isAlive=false;try{ws.ping()}catch{}}},HEARTBEAT_MS);
 setInterval(checkExpiredRounds,250);
