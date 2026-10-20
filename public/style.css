@@ -1987,3 +1987,5 @@ html,body,#app{width:100%;height:100%;min-height:100%;margin:0}body{overflow:hid
 .audioControlsSidebar .audioControl input[type=range]{height:16px;margin:2px 0 0}
 @media(max-width:650px){.audioControlsSidebar{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;padding:6px 8px}.audioControlsSidebar .audioControlsTitle{grid-column:1/-1;margin:0}.audioControlsSidebar .audioControl{margin:0}.audioControlsSidebar .audioControl small{display:none}.audioControlsMenu{margin-top:8px}.audioControl small{font-size:9px}}
 @media(max-height:760px) and (min-width:651px){.audioControlsSidebar{padding:6px 8px}.audioControlsSidebar .audioControl{margin-top:3px}.audioControlsSidebar .audioControl small{display:none}.audioControlsSidebar .audioControl input[type=range]{height:14px}}
+
+.snapshotCanvas{background:#fff}.snapshotCanvas .flatSnapshot{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block;pointer-events:none}
