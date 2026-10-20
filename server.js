@@ -573,6 +573,7 @@ function handle(g,pid,a){
       const c=g.collages[pid];
       if(!c || c.submitted)break;
       c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:Number.isFinite(Number(x.z))?Number(x.z):i}));
+      if(typeof a.snapshot==='string'&&/^data:image\/png;base64,/.test(a.snapshot)&&a.snapshot.length<=4*1024*1024)c.snapshot=a.snapshot;
       if(g.round===0)c.pieces=c.pieces.filter(pieceIntersectsCanvas).map(piece=>({...piece,sourceSetId:pid}));
       c.submitted=true;
       const submittedPieces=clone(c.pieces||[]).map(piece=>piece.createdBy?piece:{...piece,createdBy:pid});
