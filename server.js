@@ -297,7 +297,7 @@ function checkExpiredRounds(){
   const now=Date.now();
   for(const g of games.values()){
     if(g.timerEndsAt && now>=g.timerEndsAt){
-      if(g.phase==='ROUND') finishRound(g);
+      if(g.phase==='ROUND'&&!g.roundExpiryPending){g.roundExpiryPending=true;schedule(g,1500,()=>{g.roundExpiryPending=false;finishRound(g)});}
       else if(g.phase==='FINAL_SHOWCASE') finishFinalPrompt(g);
       else if(g.phase==='IMAGE_SUBMISSION') finishImageSubmission(g);
     }
@@ -374,7 +374,7 @@ function assignRound1Sources(g){
 }
 function scatter(pieces){ return pieces.map((p,i)=>({...clone(p),id:id(),x:15+((i*37)%70),y:15+((i*53)%70),z:i})); }
 function beginRound(g){
-  g.roundFinishing=false;
+  g.roundFinishing=false;g.roundExpiryPending=false;
   if(!g.promptOrder.length) g.promptOrder=shuffle(g.prompts.map(p=>p.id));
   if(g.round>=g.players.length){transition(g,'FINAL');return;}
   const ids=g.players.map(p=>p.id);
@@ -573,7 +573,7 @@ function handle(g,pid,a){
       const c=g.collages[pid];
       if(!c || c.submitted)break;
       c.pieces=(Array.isArray(a.pieces)?a.pieces:[]).slice(0,100).map((x,i)=>({...x,id:x.id||id(),z:Number.isFinite(Number(x.z))?Number(x.z):i}));
-      if(typeof a.snapshot==='string'&&/^data:image\/png;base64,/.test(a.snapshot)&&a.snapshot.length<=4*1024*1024)c.snapshot=a.snapshot;
+      if(typeof a.snapshot==='string'&&/^data:image\/(?:png|jpeg);base64,/.test(a.snapshot)&&a.snapshot.length<=2*1024*1024)c.snapshot=a.snapshot;
       if(g.round===0)c.pieces=c.pieces.filter(pieceIntersectsCanvas).map(piece=>({...piece,sourceSetId:pid}));
       c.submitted=true;
       const submittedPieces=clone(c.pieces||[]).map(piece=>piece.createdBy?piece:{...piece,createdBy:pid});
